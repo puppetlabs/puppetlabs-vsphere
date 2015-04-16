@@ -74,7 +74,10 @@ Puppet::Type.type(:vsphere_machine).provide(:fog) do
     Puppet.info("Deleting machine #{name}")
     machine = client.servers.find_all { |server| server.name == name }
     fail "Found more than one machine named #{name}" if machine.count != 1
-    machine.first.stop
+    unless machine.first.power_state == 'poweredOff'
+      machine.first.stop
+      machine.first.wait_for { power_state == 'poweredOff' }
+    end
     machine.first.destroy
     @property_hash[:ensure] = :absent
   end
