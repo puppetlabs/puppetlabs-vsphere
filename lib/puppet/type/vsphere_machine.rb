@@ -1,3 +1,5 @@
+require_relative '../../puppet_x/puppetlabs/property/read_only'
+
 Puppet::Type.newtype(:vsphere_machine) do
   @doc = 'Type representing a virtual machine in VMWare vSphere.'
 
@@ -74,6 +76,23 @@ Puppet::Type.newtype(:vsphere_machine) do
     desc 'The name of the cluster compute resource with which to associate the virtual machine.'
     validate do |value|
       fail 'Virtual machine compute should be a String' unless value.is_a? String
+    end
+  end
+
+  read_only_properties = {
+    memory_reservation: 'memoryReservation',
+    cpu_reservation: 'cpuReservation',
+    number_ethernet_cards: 'numEthernetCards',
+    power_state: 'powerState',
+    tools_installer_mounted: 'toolsInstallerMounted',
+    snapshot_disabled: 'snapshotDisabled',
+    snapshot_locked: 'snapshotLocked',
+    snapshot_power_off_behavior: 'snapshotPowerOffBehavior',
+  }
+
+  read_only_properties.each do |property, value|
+    newproperty(property, :parent => PuppetX::Property::ReadOnly) do
+      desc "Information related to #{value} from the vSphere API."
     end
   end
 
