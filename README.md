@@ -107,6 +107,15 @@ property to `absent` in the manifest or using `puppet resouce` like so:
 
     puppet resource vsphere_machine /opdx1/vm/eng/garethr-test ensure=absent
 
+### A note on datacenters
+
+By default we will use the default datacenter for your installation. If
+this fails or if you have multiple virtual datacenters on vSphere you
+can specify which datacenter you are managing using the
+`VSPHERE_DATACENTER` environment variable like so:
+
+    VSPHERE_DATACENTER=my-datacenter puppet resource vpshere_machine
+
 
 ## Usage
 

@@ -25,9 +25,15 @@ module PuppetX
           password: ENV['VSPHERE_PASSWORD'],
           insecure: true,
         }
-        datacenter = ENV['VSPHERE_DATACENTER']
+        datacenter_name = ENV['VSPHERE_DATACENTER']
         vim = RbVmomi::VIM.connect credentials
-        vim.serviceInstance.find_datacenter(datacenter)
+        dc = vim.serviceInstance.find_datacenter(datacenter_name)
+        unless dc
+          message = "Unable to find datacenter"
+          message = message + " named #{datacenter_name} as specified in VSPHERE_DATACENTER" if datacenter_name
+          raise Puppet::Error, message
+        end
+        dc
       end
 
       def self.find_vms_in_folder(folder) # recursively go through a folder, dumping vm info
