@@ -1,3 +1,6 @@
+[![Build
+Status](https://magnum.travis-ci.com/puppetlabs/puppetlabs-vsphere.svg?token=RqtxRv25TsPVz69Qso5L)](https://magnum.travis-ci.com/puppetlabs/puppetlabs-vsphere)
+
 ####Table of Contents
 
 1. [Overview](#overview)

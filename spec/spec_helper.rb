@@ -1,7 +1,7 @@
 require 'rbvmomi'
 require 'puppetlabs_spec_helper/module_spec_helper'
 
-if ENV['PARSER'] == 'future'
+if ENV['FUTURE_PARSER'] == 'yes'
   RSpec.configure do |c|
     c.parser = 'future'
   end
