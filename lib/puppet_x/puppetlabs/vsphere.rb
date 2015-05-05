@@ -59,7 +59,7 @@ module PuppetX
       def initialize(path)
         @name = path.split('/')[-1]
         @datacenter = path.split('/')[1]
-        @folder = path.split('/')[3...-1].join('/')
+        @folder = path.split('/')[3...-1]
         @local_path = "/#{path.split('/')[3..-1].join('/')}"
       end
     end

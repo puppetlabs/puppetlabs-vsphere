@@ -109,4 +109,31 @@ describe 'vsphere_machine' do
 
   end
 
+  describe 'should be able to create a machine with a nested folder' do
+
+    before(:all) do
+      @name = SecureRandom.hex(8)
+      @path = "/opdx1/vm/eng/test/test/#{@name}"
+      @config = {
+        :name          => @path,
+        :ensure        => 'present',
+        :compute       => 'general1',
+        :template_path => '/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+        :memory        => 512,
+        :cpus          => 1,
+      }
+      PuppetManifest.new(@template, @config).apply
+      @machine = @client.get_machine(@path)
+    end
+
+    after(:all) do
+      new_config = @config.update({:ensure => 'absent'})
+      PuppetManifest.new(@template, new_config).apply
+    end
+
+    it 'with the specified name' do
+      expect(@machine.name).to eq(@name)
+    end
+
+  end
 end
