@@ -2,7 +2,6 @@ require 'spec_helper'
 
 type_class = Puppet::Type.type(:vsphere_machine)
 
-
 describe type_class do
 
   let :params do
@@ -21,8 +20,22 @@ describe type_class do
     ]
   end
 
+  let :read_only_properties do
+    [
+      :memory_reservation,
+      :cpu_reservation,
+      :number_ethernet_cards,
+      :power_state,
+      :tools_installer_mounted,
+      :snapshot_disabled,
+      :snapshot_locked,
+      :snapshot_power_off_behavior,
+    ]
+  end
+
   it 'should have expected properties' do
-    properties.each do |property|
+    all_properties = properties + read_only_properties
+    all_properties.each do |property|
       expect(type_class.properties.map(&:name)).to be_include(property)
     end
   end
@@ -82,6 +95,21 @@ describe type_class do
 
   it 'should support :stopped as a value to :ensure' do
     type_class.new(:name => 'sample', :ensure => :running)
+  end
+
+  [
+    :memory_reservation,
+    :cpu_reservation,
+    :number_ethernet_cards,
+    :power_state,
+    :tools_installer_mounted,
+    :snapshot_disabled,
+    :snapshot_locked,
+    :snapshot_power_off_behavior,
+  ].each do |property|
+    it "should require #{property} to be read only" do
+      expect(type_class).to be_read_only(property)
+    end
   end
 
   context 'with a full set of properties' do

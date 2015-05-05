@@ -45,3 +45,16 @@ RSpec::Matchers.define :require_integer_for do |property|
     "#{type_class} should require #{property} to be a Integer"
   end
 end
+
+RSpec::Matchers.define :be_read_only do |property|
+  match do |type_class|
+    config = {name: 'name'}
+    config[property] = 'invalid'
+    expect {
+      type_class.new(config)
+    }.to raise_error(Puppet::Error, /#{property} is read-only/)
+  end
+  failure_message do |type_class|
+    "#{type_class} should require #{property} to be read-only"
+  end
+end

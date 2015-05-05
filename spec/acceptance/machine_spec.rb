@@ -89,6 +89,22 @@ describe 'vsphere_machine' do
         expect(@result.stdout).to match(regex)
       end
 
+      [
+        'memory_reservation',
+        'cpu_reservation',
+        'number_ethernet_cards',
+        'power_state',
+        'tools_installer_mounted',
+        'snapshot_disabled',
+        'snapshot_locked',
+        'snapshot_power_off_behavior',
+      ].each do |read_only_property|
+        it "#{read_only_property} is reported" do
+            regex = /(#{read_only_property})(\s*)(=>)(\s*)/
+            expect(@result.stdout).to match(regex)
+        end
+      end
+
     end
 
   end

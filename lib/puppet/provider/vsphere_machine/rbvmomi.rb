@@ -38,6 +38,14 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
       cpus: machine.summary.config.numCpu,
       compute: compute,
       ensure: state,
+      memory_reservation: machine.summary.config.memoryReservation,
+      cpu_reservation: machine.summary.config.cpuReservation,
+      number_ethernet_cards: machine.summary.config.numEthernetCards,
+      power_state: machine.summary.runtime.powerState,
+      tools_installer_mounted: machine.summary.runtime.toolsInstallerMounted,
+      snapshot_disabled: machine.config.flags.snapshotDisabled,
+      snapshot_locked: machine.config.flags.snapshotLocked,
+      snapshot_power_off_behavior: machine.config.flags.snapshotPowerOffBehavior,
     }
   end
 
