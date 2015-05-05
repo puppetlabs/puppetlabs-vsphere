@@ -68,11 +68,22 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
     clone_spec.config.memoryMB = resource[:memory] if resource[:memory]
 
     template.CloneVM_Task(
-      :folder => datacenter.vmFolder.find(instance.folder),
+      :folder => find_or_create_folder(datacenter.vmFolder, instance.folder),
       :name => instance.name,
       :spec => clone_spec).wait_for_completion
 
     @property_hash[:ensure] = :present
+  end
+
+  def find_or_create_folder(root, parts)
+    if parts.empty?
+      root
+    else
+      part = parts.shift
+      folder = root.find(part)
+      folder = root.CreateFolder(:name => part) if folder.nil?
+      find_or_create_folder(folder, parts)
+    end
   end
 
   def destroy

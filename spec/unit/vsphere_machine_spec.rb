@@ -13,11 +13,18 @@ describe PuppetX::Puppetlabs::Vsphere::Machine do
   end
 
   it 'should extract a folder from a path' do
-    expect(machine.folder).to eq('eng')
+    expect(machine.folder).to eq(['eng'])
   end
 
   it 'should extract a local path from a path' do
     expect(machine.local_path).to eq('/eng/551425a5fc66efaf')
+  end
+
+  context 'with a deeply nested folder' do
+    let(:machine) { PuppetX::Puppetlabs::Vsphere::Machine.new('/opdx1/vm/eng/test/sample/551425a5fc66efaf') }
+    it 'should extract a folder from a path' do
+      expect(machine.folder).to eq(['eng', 'test', 'sample'])
+    end
   end
 
 end
