@@ -7,8 +7,8 @@ Status](https://magnum.travis-ci.com/puppetlabs/puppetlabs-vsphere.svg?token=Rqt
 2. [Description - What the module does and why it is useful](#module-description)
 3. [Setup](#setup)
   * [Requirements](#requirements)
-  * [Installing the vsphere module](#installing-the-vphere-module)
-4. [Getting Started with vpshere](#getting-started-with-vsphere)
+  * [Installing the vsphere module](#installing-the-vsphere-module)
+4. [Getting Started with vSphere](#getting-started-with-vsphere)
 5. [Usage - Configuration options and additional functionality](#usage)
 6. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
   * [Types](#types)
@@ -29,7 +29,7 @@ Managing vSphere machines using the Puppet DSL.
 * Ruby 1.9 or greater
 * RBVMOMI Ruby gem
 
-### Installing the vpshere module
+### Installing the vSphere module
 
 1. First install the required dependencies
 
@@ -50,7 +50,7 @@ Managing vSphere machines using the Puppet DSL.
 
     Once the gems are installed, restart Puppet Server.
 
-2. Set the following environment variables specific to your vpshere
+2. Set the following environment variables specific to your vSphere
    installation:
 
       ~~~
@@ -64,7 +64,7 @@ Managing vSphere machines using the Puppet DSL.
      `puppet module install puppetlabs-vsphere`
 
 
-## Getting started with vpshere
+## Getting started with vSphere
 
 This module allows for describing a vSphere machine using the Puppet
 DSL:
@@ -140,7 +140,7 @@ can specify which datacenter you are managing using the
 
 ### Parameters
 
-#### Type: vpshere_machine
+#### Type: vSphere_machine
 
 #####`ensure`
 Specifies the basic state of the resource. Valid values are 'present' and 'absent'.
