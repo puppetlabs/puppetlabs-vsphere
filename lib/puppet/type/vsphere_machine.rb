@@ -3,6 +3,10 @@ require_relative '../../puppet_x/puppetlabs/property/read_only'
 Puppet::Type.newtype(:vsphere_machine) do
   @doc = 'Type representing a virtual machine in VMWare vSphere.'
 
+  validate do
+    fail "Cannot specify both template and source_machine paths" if self[:template] && self[:source_machine]
+  end
+
   newproperty(:ensure) do
     newvalue(:present) do
       provider.create unless provider.exists?
@@ -50,6 +54,13 @@ Puppet::Type.newtype(:vsphere_machine) do
     end
   end
 
+  newparam(:source_machine) do
+    desc 'The path to an existing machine to use as the base for the new machine.'
+    validate do |value|
+      fail 'Virtual machine path should be a String' unless value.is_a? String
+    end
+  end
+
   newproperty(:memory) do
     desc 'The amount of memory in MB to use for the machine.'
     def insync?(is)
@@ -94,6 +105,10 @@ Puppet::Type.newtype(:vsphere_machine) do
     newproperty(property, :parent => PuppetX::Property::ReadOnly) do
       desc "Information related to #{value} from the vSphere API."
     end
+  end
+
+  autorequire(:vsphere_machine) do
+    self[:source_machine]
   end
 
 end
