@@ -59,8 +59,22 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
 
     power_on = args[:stopped] == true ? false : true
 
-    template = datacenter.find_vm(resource[:template])
-    raise Puppet::Error, "No template found at #{resource[:template]}" unless template
+    if resource[:template] && resource[:source_machine]
+      raise Puppet::Error, "Cannot use both template and source_machine at the same time"
+    elsif resource[:template]
+      create_from_template(resource[:template], power_on)
+    elsif resource[:source_machine]
+      create_from_vm(resource[:source_machine], power_on)
+    else
+      raise Puppet::Error, "Template or source_machine not provided"
+    end
+
+    @property_hash[:ensure] = :present
+  end
+
+  def create_from_template(path, power_on)
+    template = datacenter.find_vm(path)
+    raise Puppet::Error, "No template found at #{path}" unless template
 
     pool = datacenter.find_compute_resource(resource[:compute]).resourcePool
     raise Puppet::Error, "No resource pool found for compute #{resource[:compute]}" unless pool
@@ -79,8 +93,27 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
       :folder => find_or_create_folder(datacenter.vmFolder, instance.folder),
       :name => instance.name,
       :spec => clone_spec).wait_for_completion
+  end
 
-    @property_hash[:ensure] = :present
+  def create_from_vm(path, power_on)
+    base_machine = PuppetX::Puppetlabs::Vsphere::Machine.new(path)
+    vm = datacenter.find_vm(base_machine.local_path)
+    raise Puppet::Error, "No VM found at #{base_machine.local_path}" unless vm
+
+    relocate_spec = RbVmomi::VIM.VirtualMachineRelocateSpec
+    clone_spec = RbVmomi::VIM.VirtualMachineCloneSpec(
+      :location => relocate_spec,
+      :powerOn  => power_on,
+      :template => false)
+
+    clone_spec.config = RbVmomi::VIM.VirtualMachineConfigSpec(deviceChange: [])
+    clone_spec.config.numCPUs = resource[:cpus] if resource[:cpus]
+    clone_spec.config.memoryMB = resource[:memory] if resource[:memory]
+
+    vm.CloneVM_Task(
+      :folder => find_or_create_folder(datacenter.vmFolder, instance.folder),
+      :name   => instance.name,
+      :spec   => clone_spec).wait_for_completion
   end
 
   def find_or_create_folder(root, parts)

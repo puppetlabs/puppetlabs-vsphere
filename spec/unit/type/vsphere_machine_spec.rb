@@ -8,6 +8,7 @@ describe type_class do
     [
       :name,
       :template,
+      :source_machine,
     ]
   end
 
@@ -144,6 +145,12 @@ describe type_class do
       expect(@machine.property(:ensure).insync?(:running)).to be true
     end
 
+  end
+
+  it 'should prohibit source_machine and template to be set together' do
+    expect {
+      type_class.new({name: 'sample', source_machine: 'something', template: 'something'})
+    }.to raise_error(Puppet::Error, /Cannot specify both template and source_machine/)
   end
 
 end
