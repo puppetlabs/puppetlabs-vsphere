@@ -69,6 +69,7 @@ Managing vSphere machines using the Puppet DSL.
 This module allows for describing a vSphere machine using the Puppet
 DSL:
 
+*To create a new VM from a Template:*
 ~~~
 vsphere_machine { '/opdx1/vm/eng/sample':
   ensure   => present,
@@ -76,6 +77,15 @@ vsphere_machine { '/opdx1/vm/eng/sample':
   compute  => 'general1',
   memory   => 1024,
   cpus     => 1,
+}
+~~~
+
+*To create a new VM from an existing VM:*
+~~~
+vsphere_machine { '/opdx1/vm/eng/sample':
+  ensure   => present,
+  source_vm => '/eng/vms/source',
+  compute  => 'general1',
 }
 ~~~
 
@@ -144,8 +154,14 @@ identifier.
 machine.
 
 #####`template`
-*Required* The path within the specificed datacenter to the template to
-base the new virtual machine on.
+The path within the specified datacenter to the template to
+base the new virtual machine on. Specifying a template or a source_vm is required
+when specifying `ensure => 'present'`.
+
+#####`source_vm`
+The path within the specified datacenter to the virtual machine to
+base the new virtual machine on. Specifying a template or a source_vm is required
+when specifying `ensure => 'present'`.
 
 #####`memory`
 The amount of memory to allocate to the new machine. Defaults to the

@@ -3,6 +3,10 @@ require_relative '../../puppet_x/puppetlabs/property/read_only'
 Puppet::Type.newtype(:vsphere_machine) do
   @doc = 'Type representing a virtual machine in VMWare vSphere.'
 
+  validate do
+    fail "Cannot specify both template and source_vm paths" if self[:template] && self[:source_vm]
+  end
+
   newproperty(:ensure) do
     newvalue(:present) do
       provider.create unless provider.exists?
@@ -47,6 +51,13 @@ Puppet::Type.newtype(:vsphere_machine) do
     desc 'The template to use as the base for the new machine.'
     validate do |value|
       fail 'Virtual machine template should be a String' unless value.is_a? String
+    end
+  end
+
+  newparam(:source_vm) do
+    desc 'The path to the VM to use as the base for the new machine.'
+    validate do |value|
+      fail 'Virtual machine path should be a String' unless value.is_a? String
     end
   end
 

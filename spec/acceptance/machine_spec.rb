@@ -8,7 +8,6 @@ describe 'vsphere_machine' do
     @template = 'machine.pp.tmpl'
   end
 
-
   describe 'should be able to create a machine' do
 
     before(:all) do
@@ -135,5 +134,61 @@ describe 'vsphere_machine' do
       expect(@machine.name).to eq(@name)
     end
 
+  end
+
+  describe 'should be able to create a machine from another machine' do
+    before(:all) do
+      @name = SecureRandom.hex(8)
+
+      @source_path = "/opdx1/vm/eng/test/#{@name}_source"
+      @source_config = {
+        :name          => @source_path,
+        :ensure        => 'present',
+        :compute       => 'general1',
+        :template_path => '/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+        :memory        => 512,
+        :cpus          => 1,
+      }
+      PuppetManifest.new(@template, @source_config).apply
+      @source_machine = @client.get_machine(@source_path)
+
+      @clone_template = 'clone_vm.pp.tmpl'
+      @target_path = "/opdx1/vm/eng/test/clones/#{@name}_target"
+      source_vm_path = @source_path.clone
+      source_vm_path.slice!("/opdx1/vm")
+      @target_config = {
+        :name      => @target_path,
+        :ensure    => 'present',
+        :compute   => 'general1',
+        :source_vm => source_vm_path,
+      }
+      PuppetManifest.new(@clone_template, @target_config).apply
+      @target_machine = @client.get_machine(@target_path)
+    end
+
+    after(:all) do
+      new_source_config = @source_config.update({:ensure => 'absent'})
+      PuppetManifest.new(@template, new_source_config).apply
+
+      new_target_config = @target_config.update({:ensure => 'absent'})
+      PuppetManifest.new(@clone_template, new_target_config).apply
+    end
+
+    it 'should have same config as source vm' do
+      [
+        :cpuReservation,
+        :guestFullName,
+        :guestId,
+        :installBootRequired,
+        :memoryReservation,
+        :memorySizeMB,
+        :numCpu,
+        :numEthernetCards,
+        :numVirtualDisks,
+        :template,
+      ].each do |property|
+        expect(@source_machine.summary.config[property]).to eq(@target_machine.summary.config[property])
+      end
+    end
   end
 end
