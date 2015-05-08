@@ -98,6 +98,10 @@ describe type_class do
     type_class.new(:name => 'sample', :ensure => :running)
   end
 
+  it 'should support :unregistered as a value to :ensure' do
+    type_class.new(:name => 'sample', :ensure => :unregistered)
+  end
+
   [
     :memory_reservation,
     :cpu_reservation,

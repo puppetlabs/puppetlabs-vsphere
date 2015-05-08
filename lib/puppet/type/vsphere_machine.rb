@@ -11,6 +11,9 @@ Puppet::Type.newtype(:vsphere_machine) do
     newvalue(:present) do
       provider.create unless provider.exists?
     end
+    newvalue(:unregistered) do
+      provider.unregister if provider.exists?
+    end
     newvalue(:absent) do
       provider.destroy if provider.exists?
     end
@@ -35,7 +38,7 @@ Puppet::Type.newtype(:vsphere_machine) do
     end
     def insync?(is)
       is = :present if is == :running
-      is.to_s == should.to_s
+      is.to_s == should.to_s or (is.to_s == 'absent' and should.to_s == 'unregistered')
     end
   end
 

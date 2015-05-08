@@ -120,6 +120,14 @@ property to `absent` in the manifest or using `puppet resouce` like so:
 
     puppet resource vsphere_machine /opdx1/vm/eng/garethr-test ensure=absent
 
+To only remove the machine's definition, but leave the underlying configuration
+and disk files in place, you can set `ensure` to `unregistered`:
+
+    puppet resource vsphere_machine /opdx1/vm/eng/garethr-test ensure=unregistered
+
+Please note that the module currently provides no mechanism to clean up the
+files left behind by this operation.
+
 ### A note on datacenters
 
 By default we will use the default datacenter for your installation. If
@@ -143,7 +151,12 @@ can specify which datacenter you are managing using the
 #### Type: vSphere_machine
 
 #####`ensure`
-Specifies the basic state of the resource. Valid values are 'present' and 'absent'.
+Specifies the basic state of the resource. Valid values are 'present', 'running', stopped', 'unregistered', and 'absent'.
+* 'present', 'running': ensure that the VM is up and running. If the VM is not
+  there yet, a new one will be created as specified by the other properties.
+* 'stopped': ensure that the VM is created, but not running.
+* 'unregistered': ensure that the VM is not under active management in vSphere. This will keep the vmx/vhd files around.
+* 'absent': ensure that the VM and all its files are removed.
 
 #####`name`
 *Required* The full path for the machine, including the datacenter
