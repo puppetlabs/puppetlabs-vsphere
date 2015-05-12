@@ -127,6 +127,13 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
     end
   end
 
+  def unregister
+    Puppet.info("Unregistering machine #{name}")
+    stop if running?
+    machine.UnregisterVM
+    @property_hash[:ensure] = :unregistered
+  end
+
   def destroy
     Puppet.info("Deleting machine #{name}")
     stop if running?
