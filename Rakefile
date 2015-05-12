@@ -19,6 +19,7 @@ exclude_paths = [
 Rake::Task[:lint].clear
 
 PuppetLint.configuration.relative = true
+PuppetLint.configuration.disable_80chars
 PuppetLint.configuration.disable_class_inherits_from_params_class
 PuppetLint.configuration.fail_on_warnings = true
 PuppetLint::RakeTask.new :lint do |config|

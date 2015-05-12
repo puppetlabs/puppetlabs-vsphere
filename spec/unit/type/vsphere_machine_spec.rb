@@ -7,8 +7,7 @@ describe type_class do
   let :params do
     [
       :name,
-      :template,
-      :source_machine,
+      :source,
     ]
   end
 
@@ -18,6 +17,7 @@ describe type_class do
       :memory,
       :cpus,
       :compute,
+      :template,
     ]
   end
 
@@ -59,7 +59,6 @@ describe type_class do
 
   [
     'name',
-    'template',
     'compute',
   ].each do |property|
     it "should require #{property} to be a string" do
@@ -106,6 +105,28 @@ describe type_class do
     type_class.new(:name => 'sample', :ensure => :unregistered)
   end
 
+  it 'should default template to false' do
+    machine = type_class.new(:name => 'sample')
+    expect(machine[:template]).to eq(:false)
+  end
+
+  it 'should default ensure to present' do
+    machine = type_class.new(:name => 'sample')
+    expect(machine[:ensure]).to eq(:present)
+  end
+
+  it 'should support true as a value to template' do
+    expect{type_class.new(:name => 'sample', :template => true)}.to_not raise_error
+  end
+
+  it 'should support false as a value to template' do
+    expect{type_class.new(:name => 'sample', :template => false)}.to_not raise_error
+  end
+
+  it 'should require template to be a boolean' do
+    expect{type_class.new(:name => 'sample', :template => 'sample')}.to raise_error
+  end
+
   [
     :memory_reservation,
     :cpu_reservation,
@@ -125,6 +146,16 @@ describe type_class do
     end
   end
 
+  it 'should acknowledge stopped instance to be present' do
+    machine = type_class.new(:name => 'sample', :ensure => :present)
+    expect(machine.property(:ensure).insync?(:stopped)).to be true
+  end
+
+  it 'should acknowledge unregistered instance to be absent' do
+    machine = type_class.new(:name => 'sample', :ensure => :unregistered)
+    expect(machine.property(:ensure).insync?(:absent)).to be true
+  end
+
   context 'with a full set of properties' do
     before :all do
       @machine = type_class.new({
@@ -133,7 +164,7 @@ describe type_class do
         compute: 'general',
         memory: '1024',
         cpus: '1',
-        template: '/dc/org/templates/template',
+        source: '/dc/org/templates/template',
       })
     end
 
@@ -153,16 +184,24 @@ describe type_class do
       expect(@machine.property(:cpus).insync?('1')).to be true
     end
 
-    it 'should alias running to present for ensure values ' do
+    it 'should alias running to present for ensure values' do
       expect(@machine.property(:ensure).insync?(:running)).to be true
     end
 
   end
 
-  it 'should prohibit source_machine and template to be set together' do
+  it 'should prohibit specifying compute for templates' do
     expect {
-      type_class.new({name: 'sample', source_machine: 'something', template: 'something'})
-    }.to raise_error(Puppet::Error, /Cannot specify both template and source_machine/)
+      type_class.new({name: 'sample', compute: 'something', template: true})
+    }.to raise_error(Puppet::Error, /Cannot provide compute for a template/)
+  end
+
+  ['running', 'stopped'].each do |state|
+    it "should prohibit specifying ensure as #{state} for templates" do
+      expect {
+        type_class.new({name: 'sample', ensure: state, template: true})
+      }.to raise_error(Puppet::Error, /Templates can only be absent, present or unregistered./)
+    end
   end
 
 end

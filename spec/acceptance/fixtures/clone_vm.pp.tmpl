@@ -1,8 +1,0 @@
-vsphere_machine { '{{name}}':
-  ensure         => {{ensure}},
-  compute        => '{{compute}}',
-  source_machine => '{{source_machine}}',
-  {{#optional}}
-  {{k}}          => '{{v}}',
-  {{/optional}}
-}

@@ -1,10 +1,7 @@
 vsphere_machine { '{{name}}':
-  ensure   => {{ensure}},
-  template => '{{template_path}}',
-  compute  => '{{compute}}',
-  memory   => {{memory}},
-  cpus     => {{cpus}},
+  ensure  => {{ensure}},
+  source  => '{{source}}',
   {{#optional}}
-  {{k}}    => '{{v}}',
+  {{k}}   => '{{v}}',
   {{/optional}}
 }

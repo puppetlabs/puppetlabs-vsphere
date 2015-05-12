@@ -67,25 +67,14 @@ Managing vSphere machines using the Puppet DSL.
 ## Getting started with vSphere
 
 This module allows for describing a vSphere machine using the Puppet
-DSL:
+DSL. To create a new machine from a template or other machine:
 
-*To create a new VM from a Template:*
 ~~~
 vsphere_machine { '/opdx1/vm/eng/sample':
-  ensure   => present,
-  template => '/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
-  compute  => 'general1',
-  memory   => 1024,
-  cpus     => 1,
-}
-~~~
-
-*To create a new VM from an existing VM:*
-~~~
-vsphere_machine { '/opdx1/vm/eng/sample':
-  ensure         => present,
-  source_machine => '/opdx1/vm/eng/source',
-  compute        => 'general1',
+  ensure => present,
+  source => '/opdx1/vm/eng/source',
+  memory => 1024,
+  cpus   => 1,
 }
 ~~~
 
@@ -112,6 +101,7 @@ vsphere_machine { '/opdx1/vm/eng/sample':
   snapshot_disabled           => 'false',
   snapshot_locked             => 'false',
   snapshot_power_off_behavior => 'powerOff',
+  template                    => 'false',
   tools_installer_mounted     => 'false',
   uuid                        => '4218419b-3b98-18ca-e77f-93b567dda463',
 }
@@ -152,33 +142,35 @@ can specify which datacenter you are managing using the
 
 ### Parameters
 
-#### Type: vSphere_machine
+#### Type: vsphere_machine
 
 #####`ensure`
-Specifies the basic state of the resource. Valid values are 'present', 'running', stopped', 'unregistered', and 'absent'.
+Specifies the basic state of the resource. Valid values are 'present', 'running',
+stopped', 'unregistered', and 'absent'. Defaults to 'present'.
 * 'present', 'running': ensure that the VM is up and running. If the VM is not
   there yet, a new one will be created as specified by the other properties.
 * 'stopped': ensure that the VM is created, but not running.
-* 'unregistered': ensure that the VM is not under active management in vSphere. This will keep the vmx/vhd files around.
+* 'unregistered': ensure that the VM is not under active management in vSphere.
+  This will keep the vmx/vhd files around.
 * 'absent': ensure that the VM and all its files are removed.
+If the machine is a template then only present, absent and unregistered
+are valid states.
 
 #####`name`
 *Required* The full path for the machine, including the datacenter
 identifier.
 
 #####`compute`
-*Required* The name of the computre resource in which to launch the
-machine.
+The name of the compute resource in which to launch the
+machine. Defaults to the default resource pool for the datacenter.
+
+#####`source`
+The path within the specified datacenter to the virtual machine or
+template to base the new virtual machine on. Specifying a source
+is required when specifying `ensure => 'present'`.
 
 #####`template`
-The path within the specified datacenter to the template to
-base the new virtual machine on. Specifying a template or a source_machine
-is required when specifying `ensure => 'present'`.
-
-#####`source_machine`
-The path within the specified datacenter to the virtual machine to
-base the new virtual machine on. Specifying a template or a source_machine
-is required when specifying `ensure => 'present'`.
+Whether or not the machine is a template. Defaults to false.
 
 #####`memory`
 The amount of memory to allocate to the new machine. Defaults to the
