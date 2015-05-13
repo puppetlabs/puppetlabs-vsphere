@@ -102,6 +102,10 @@ Puppet::Type.newtype(:vsphere_machine) do
     snapshot_disabled: 'snapshotDisabled',
     snapshot_locked: 'snapshotLocked',
     snapshot_power_off_behavior: 'snapshotPowerOffBehavior',
+    guest_ip: 'ipAddress',
+    uuid: 'uuid',
+    instance_uuid: 'instanceUuid',
+    hostname: 'hostName',
   }
 
   read_only_properties.each do |property, value|

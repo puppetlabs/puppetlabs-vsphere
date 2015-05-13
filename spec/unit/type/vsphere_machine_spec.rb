@@ -31,6 +31,10 @@ describe type_class do
       :snapshot_disabled,
       :snapshot_locked,
       :snapshot_power_off_behavior,
+      :uuid,
+      :instance_uuid,
+      :guest_ip,
+      :hostname,
     ]
   end
 
@@ -111,6 +115,10 @@ describe type_class do
     :snapshot_disabled,
     :snapshot_locked,
     :snapshot_power_off_behavior,
+    :uuid,
+    :instance_uuid,
+    :guest_ip,
+    :hostname,
   ].each do |property|
     it "should require #{property} to be read only" do
       expect(type_class).to be_read_only(property)

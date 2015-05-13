@@ -102,6 +102,9 @@ vsphere_machine { '/opdx1/vm/eng/sample':
   compute                     => 'general1',
   cpu_reservation             => '0',
   cpus                        => '1',
+  guest_ip                    => '10.32.99.41',
+  hostname                    => 'debian',
+  instance_uuid               => '501870f2-f891-879f-2bb7-f87023789959',
   memory                      => '1024',
   memory_reservation          => '0',
   number_ethernet_cards       => '1',
@@ -110,6 +113,7 @@ vsphere_machine { '/opdx1/vm/eng/sample':
   snapshot_locked             => 'false',
   snapshot_power_off_behavior => 'powerOff',
   tools_installer_mounted     => 'false',
+  uuid                        => '4218419b-3b98-18ca-e77f-93b567dda463',
 }
 ~~~
 
@@ -211,3 +215,15 @@ machine.
 #####`snapshot_power_off_behaviour`
 *Read Only* Whether to revert to a snapshot when the machine is powered
 off.
+
+#####`uuid`
+*Read Only* the BIOS unique identifier
+
+#####`instance_uuid`
+*Read Only* unique identifier for the vSphere instance
+
+#####`hostname`
+*Read Only* the hostname of the machine is one is assigned
+
+#####`guest_ip`
+*Read Only* the IP address assigned to the machine
