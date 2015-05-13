@@ -32,6 +32,7 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
     resource_pool = machine.resourcePool
     compute = resource_pool ? resource_pool.parent.name : nil
     state = machine.runtime.powerState  == 'poweredOn' ? :running : :stopped
+    hostname = machine.summary.guest.hostName
     {
       name: "/#{name}",
       memory: machine.summary.config.memorySizeMB,
@@ -46,6 +47,10 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
       snapshot_disabled: machine.config.flags.snapshotDisabled,
       snapshot_locked: machine.config.flags.snapshotLocked,
       snapshot_power_off_behavior: machine.config.flags.snapshotPowerOffBehavior,
+      uuid: machine.summary.config.uuid,
+      instance_uuid: machine.summary.config.instanceUuid,
+      guest_ip: machine.guest_ip,
+      hostname: hostname == '(none)' ? nil : hostname,
     }
   end
 

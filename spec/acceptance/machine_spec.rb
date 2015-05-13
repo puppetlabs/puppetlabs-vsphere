@@ -97,6 +97,8 @@ describe 'vsphere_machine' do
         'snapshot_disabled',
         'snapshot_locked',
         'snapshot_power_off_behavior',
+        'uuid',
+        'instance_uuid',
       ].each do |read_only_property|
         it "#{read_only_property} is reported" do
             regex = /(#{read_only_property})(\s*)(=>)(\s*)/
