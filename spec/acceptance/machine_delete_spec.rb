@@ -8,15 +8,14 @@ shared_context 'a running vm' do
     @name = "CLOUD-#{SecureRandom.hex(8)}"
     @path = "/opdx1/vm/eng/#{@name}"
     @config = {
-      :name          => @path,
-      :compute       => 'general1',
-      :template_path => '/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
-      :memory        => 512,
-      :cpus          => 2,
+      :name    => @path,
+      :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
     }
     datacenter = @client.datacenter
-    template = datacenter.find_vm(@config[:template_path])
-    pool = datacenter.find_compute_resource(@config[:compute]).resourcePool
+    path = @config[:source]
+    path.slice!('/opdx1/vm')
+    template = datacenter.find_vm(path)
+    pool = datacenter.hostFolder.children.first.resourcePool
     relocate_spec = RbVmomi::VIM.VirtualMachineRelocateSpec(:pool => pool)
     clone_spec = RbVmomi::VIM.VirtualMachineCloneSpec(
       :location => relocate_spec,

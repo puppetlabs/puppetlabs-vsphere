@@ -7,12 +7,12 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
 
   mk_resource_methods
 
-  read_only(:cpus, :memory)
+  read_only(:cpus, :memory, :template)
 
   def self.instances
     begin
       find_vms_in_folder(datacenter.vmFolder).collect do |machine|
-        new(machine_to_hash(machine)) unless machine.summary.config.template
+        new(machine_to_hash(machine))
       end.compact
     rescue StandardError => e
       raise PuppetX::Puppetlabs::PrefetchError.new(self.resource_type.name.to_s, e.message)
@@ -38,6 +38,7 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
       memory: machine.summary.config.memorySizeMB,
       cpus: machine.summary.config.numCpu,
       compute: compute,
+      template: machine.summary.config.template,
       ensure: state,
       memory_reservation: machine.summary.config.memoryReservation,
       cpu_reservation: machine.summary.config.cpuReservation,
@@ -55,61 +56,35 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
   end
 
   def exists?
-    Puppet.info("Checking if machine #{name} exists")
+    Puppet.info("Checking if #{type_name} #{name} exists")
     @property_hash[:ensure] == :running || @property_hash[:ensure] == :stopped
   end
 
   def create(args={})
-    Puppet.info("Creating machine #{name}")
+    Puppet.info("Creating #{type_name} #{name}")
 
-    power_on = args[:stopped] == true ? false : true
+    raise Puppet::Error, "Must provide a source machine or template to base the new machine on" unless resource[:source]
 
-    if resource[:template] && resource[:source_machine]
-      raise Puppet::Error, "Cannot use both template and source_machine at the same time"
-    elsif resource[:template]
-      create_from_template(resource[:template], power_on)
-    elsif resource[:source_machine]
-      create_from_vm(resource[:source_machine], power_on)
+    base_machine = PuppetX::Puppetlabs::Vsphere::Machine.new(resource[:source])
+    vm = datacenter.find_vm(base_machine.local_path)
+    raise Puppet::Error, "No machine found at #{base_machine.local_path}" unless vm
+
+    if resource[:compute]
+      pool = datacenter.find_compute_resource(resource[:compute]).resourcePool
+      raise Puppet::Error, "No resource pool found for compute #{resource[:compute]}" unless pool
     else
-      raise Puppet::Error, "Template or source_machine not provided"
+      hosts = datacenter.hostFolder.children
+      raise Puppet::Error, "No resource pool found for default datacenter" if hosts.empty?
+      pool = hosts.first.resourcePool
     end
 
-    @property_hash[:ensure] = :present
-  end
-
-  def create_from_template(path, power_on)
-    template = datacenter.find_vm(path)
-    raise Puppet::Error, "No template found at #{path}" unless template
-
-    pool = datacenter.find_compute_resource(resource[:compute]).resourcePool
-    raise Puppet::Error, "No resource pool found for compute #{resource[:compute]}" unless pool
-
+    power_on = args[:stopped] == true ? false : true
+    power_on = false if is_template?
     relocate_spec = RbVmomi::VIM.VirtualMachineRelocateSpec(:pool => pool)
     clone_spec = RbVmomi::VIM.VirtualMachineCloneSpec(
       :location => relocate_spec,
-      :powerOn => power_on,
-      :template => false)
-
-    clone_spec.config = RbVmomi::VIM.VirtualMachineConfigSpec(deviceChange: [])
-    clone_spec.config.numCPUs = resource[:cpus] if resource[:cpus]
-    clone_spec.config.memoryMB = resource[:memory] if resource[:memory]
-
-    template.CloneVM_Task(
-      :folder => find_or_create_folder(datacenter.vmFolder, instance.folder),
-      :name => instance.name,
-      :spec => clone_spec).wait_for_completion
-  end
-
-  def create_from_vm(path, power_on)
-    base_machine = PuppetX::Puppetlabs::Vsphere::Machine.new(path)
-    vm = datacenter.find_vm(base_machine.local_path)
-    raise Puppet::Error, "No VM found at #{base_machine.local_path}" unless vm
-
-    relocate_spec = RbVmomi::VIM.VirtualMachineRelocateSpec
-    clone_spec = RbVmomi::VIM.VirtualMachineCloneSpec(
-      :location => relocate_spec,
-      :powerOn  => power_on,
-      :template => false)
+      :template => is_template?,
+      :powerOn => power_on)
 
     clone_spec.config = RbVmomi::VIM.VirtualMachineConfigSpec(deviceChange: [])
     clone_spec.config.numCPUs = resource[:cpus] if resource[:cpus]
@@ -117,8 +92,10 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
 
     vm.CloneVM_Task(
       :folder => find_or_create_folder(datacenter.vmFolder, instance.folder),
-      :name   => instance.name,
-      :spec   => clone_spec).wait_for_completion
+      :name => instance.name,
+      :spec => clone_spec).wait_for_completion
+
+    @property_hash[:ensure] = :present
   end
 
   def find_or_create_folder(root, parts)
@@ -133,14 +110,14 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
   end
 
   def unregister
-    Puppet.info("Unregistering machine #{name}")
+    Puppet.info("Unregistering #{type_name} #{name}")
     stop if running?
     machine.UnregisterVM
     @property_hash[:ensure] = :unregistered
   end
 
   def destroy
-    Puppet.info("Deleting machine #{name}")
+    Puppet.info("Deleting #{type_name} #{name}")
     stop if running?
     machine.Destroy_Task.wait_for_completion
     @property_hash[:ensure] = :absent
@@ -169,6 +146,14 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
 
     def instance
       PuppetX::Puppetlabs::Vsphere::Machine.new(name)
+    end
+
+    def is_template?
+      resource[:template].to_s == 'true'
+    end
+
+    def type_name
+      is_template? ? "template" : "machine"
     end
 
 end

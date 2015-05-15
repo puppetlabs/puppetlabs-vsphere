@@ -1,13 +1,17 @@
 require_relative '../../puppet_x/puppetlabs/property/read_only'
 
 Puppet::Type.newtype(:vsphere_machine) do
-  @doc = 'Type representing a virtual machine in VMWare vSphere.'
+  @doc = 'Type representing a virtual machine in VMware vSphere.'
 
   validate do
-    fail "Cannot specify both template and source_machine paths" if self[:template] && self[:source_machine]
+    if self[:template].to_s == 'true'
+      fail 'Cannot provide compute for a template.' if self[:compute]
+      fail 'Templates can only be absent, present or unregistered.' unless self[:ensure] =~ /^(absent|present|unregistered)$/
+    end
   end
 
   newproperty(:ensure) do
+    defaultto :present
     newvalue(:present) do
       provider.create unless provider.exists?
     end
@@ -37,8 +41,10 @@ Puppet::Type.newtype(:vsphere_machine) do
       current == desired ? current : "changed #{current} to #{desired}"
     end
     def insync?(is)
-      is = :present if is == :running
-      is.to_s == should.to_s or (is.to_s == 'absent' and should.to_s == 'unregistered')
+      is.to_s == should.to_s or
+        (is.to_s == 'absent' and should.to_s == 'unregistered') or
+        (is.to_s == 'running' and should.to_s == 'present' ) or
+        (is.to_s == 'stopped' and should.to_s == 'present' )
     end
   end
 
@@ -50,15 +56,8 @@ Puppet::Type.newtype(:vsphere_machine) do
     end
   end
 
-  newparam(:template) do
-    desc 'The template to use as the base for the new machine.'
-    validate do |value|
-      fail 'Virtual machine template should be a String' unless value.is_a? String
-    end
-  end
-
-  newparam(:source_machine) do
-    desc 'The path to an existing machine to use as the base for the new machine.'
+  newparam(:source) do
+    desc 'The path to an existing machine or template to use as the base for the new machine.'
     validate do |value|
       fail 'Virtual machine path should be a String' unless value.is_a? String
     end
@@ -93,6 +92,15 @@ Puppet::Type.newtype(:vsphere_machine) do
     end
   end
 
+  newproperty(:template) do
+    desc 'Whether or not this machine is a template.'
+    defaultto :false
+    newvalues(:true, :'false')
+    def insync?(is)
+      is.to_s == should.to_s
+    end
+  end
+
   read_only_properties = {
     memory_reservation: 'memoryReservation',
     cpu_reservation: 'cpuReservation',
@@ -115,7 +123,7 @@ Puppet::Type.newtype(:vsphere_machine) do
   end
 
   autorequire(:vsphere_machine) do
-    self[:source_machine]
+    self[:source]
   end
 
 end
