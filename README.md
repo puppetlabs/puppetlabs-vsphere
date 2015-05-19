@@ -107,6 +107,22 @@ vsphere_machine { '/opdx1/vm/eng/sample':
 }
 ~~~
 
+The module also supports customizing a vSphere machine using the Puppet DSL. To
+modify an existing machine:
+
+**Note** Customizing a running vSphere machine will perform a reboot of the machine.
+
+~~~
+vsphere_machine { '/opdx1/vm/eng/sample':
+  ensure       => present,
+  memory       => 1024,
+  cpus         => 1,
+  extra_config => {
+    'advanced.setting' => 'value',
+  }
+}
+~~~
+
 The read-only properties are documented in the reference section below.
 
 You can also delete the machine we created above by setting the `ensure`
@@ -179,6 +195,9 @@ same as the template or source machine.
 #####`cpus`
 The number of CPUs to allocate to the new machine. Defaults to the
 same as the template or source machine.
+
+#####`extra_config`
+A hash containing [vSphere extraConfig](https://www.vmware.com/support/developer/converter-sdk/conv55_apireference/vim.vm.ConfigInfo.html) settings for the virtual machine. Defaults to undef.
 
 #####`cpu_reservation`
 *Read Only* How many of the CPUs allocated are reserved just for this

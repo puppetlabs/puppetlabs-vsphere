@@ -14,10 +14,10 @@ describe 'vsphere_machine' do
       @name = "CLOUD-#{SecureRandom.hex(8)}"
       @path = "/opdx1/vm/eng/test/#{@name}"
       @config = {
-        :name    => @path,
-        :ensure  => 'present',
-        :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+        :name     => @path,
+        :ensure   => 'present',
         :optional => {
+          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
           :memory  => 512,
           :cpus    => 2,
           :compute => 'general1',
@@ -51,15 +51,6 @@ describe 'vsphere_machine' do
     it 'and should not fail to be applied multiple times' do
       success = PuppetManifest.new(@template, @config).apply[:exit_status].success?
       expect(success).to eq(true)
-    end
-
-    [:memory, :cpus].each do |read_only|
-      it "when trying to set read-only property #{read_only}" do
-        new_config = Marshal.load(Marshal.dump(@config))
-        new_config[:optional].update({read_only => 4})
-        success = PuppetManifest.new(@template, new_config).apply[:exit_status].success?
-        expect(success).to eq(false)
-      end
     end
 
     context 'when looked for using puppet resource' do
@@ -108,9 +99,7 @@ describe 'vsphere_machine' do
           expect(@result.stdout).to match(regex)
         end
       end
-
     end
-
   end
 
   describe 'should be able to create a machine within a nested folder' do
@@ -119,10 +108,10 @@ describe 'vsphere_machine' do
       @name = "CLOUD-#{SecureRandom.hex(8)}"
       @path = "/opdx1/vm/eng/test/test/#{@name}"
       @config = {
-        :name    => @path,
-        :ensure  => 'present',
-        :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+        :name     => @path,
+        :ensure   => 'present',
         :optional => {
+          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
           :compute => 'general1',
           :memory  => 512,
           :cpus    => 1,
@@ -149,10 +138,10 @@ describe 'vsphere_machine' do
 
       @source_path = "/opdx1/vm/eng/test/#{@name}-source"
       @source_config = {
-        :name    => @source_path,
-        :ensure  => 'present',
-        :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+        :name     => @source_path,
+        :ensure   => 'present',
         :optional => {
+          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
           :compute => 'general1',
           :memory  => 512,
           :cpus    => 1,
@@ -164,9 +153,11 @@ describe 'vsphere_machine' do
       @target_path = "/opdx1/vm/eng/test/#{@name}-target"
       source_vm_path = @source_path.clone
       @target_config = {
-        :name   => @target_path,
-        :ensure => 'present',
-        :source => source_vm_path,
+        :name     => @target_path,
+        :ensure   => 'present',
+        :optional => {
+          :source => source_vm_path,
+        }
       }
       PuppetManifest.new(@template, @target_config).apply
       @target_machine = @client.get_machine(@target_path)
@@ -206,8 +197,8 @@ describe 'vsphere_machine' do
       @config = {
         :name     => @path,
         :ensure   => 'present',
-        :source   => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
         :optional => {
+          :source   => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
           :template => true,
         }
       }
@@ -235,9 +226,11 @@ describe 'vsphere_machine' do
 
       @source_path = "/opdx1/vm/eng/test/#{@name}-source"
       @source_config = {
-        :name    => @source_path,
-        :ensure  => 'present',
-        :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+        :name     => @source_path,
+        :ensure   => 'present',
+        :optional => {
+          :source => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+        }
       }
       PuppetManifest.new(@template, @source_config).apply
       @source_machine = @client.get_machine(@source_path)
@@ -245,10 +238,10 @@ describe 'vsphere_machine' do
       @target_path = "/opdx1/vm/eng/test/#{@name}-target"
       source_vm_path = @source_path.clone
       @target_config = {
-        :name   => @target_path,
-        :ensure => 'present',
-        :source => source_vm_path,
+        :name     => @target_path,
+        :ensure   => 'present',
         :optional => {
+          :source   => source_vm_path,
           :template => true,
         }
       }
@@ -285,4 +278,63 @@ describe 'vsphere_machine' do
     end
   end
 
+  describe 'should be able to customize an existing machine' do
+    before(:all) do
+      @name = "CLOUD-#{SecureRandom.hex(8)}"
+
+      @path = "/opdx1/vm/eng/test/#{@name}"
+      @config = {
+        :name     => @path,
+        :ensure   => 'present',
+        :optional => {
+          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :compute => 'general1',
+          :cpus    => 1,
+          :memory  => 512,
+        }
+      }
+      PuppetManifest.new(@template, @config).apply
+      @config_before = @client.get_machine(@path).summary.config
+
+      @new_config = {
+        :name     => @path,
+        :ensure   => 'present',
+        :optional => {
+          :cpus    => 2,
+          :memory  => 1024,
+        }
+      }
+      PuppetManifest.new(@template, @new_config).apply
+      @config_after = @client.get_machine(@path).summary.config
+    end
+
+    it 'should have same config for unchanged properties' do
+      [
+        :cpuReservation,
+        :guestFullName,
+        :guestId,
+        :installBootRequired,
+        :memoryReservation,
+        :numEthernetCards,
+        :numVirtualDisks,
+      ].each do |property|
+        expect(@config_after[property]).to eq(@config_before[property])
+      end
+    end
+
+    it 'should have new config for changed properties' do
+      [
+        :numCpu,
+        :memorySizeMB,
+      ].each do |property|
+        expect(@config_after[property]).not_to eq(@config_before[property])
+        expect(@config_after[property].to_i).to eq(@config_before[property].to_i * 2)
+      end
+    end
+
+    after(:all) do
+      config = @config.update({:ensure => 'absent'})
+      PuppetManifest.new(@template, config).apply
+    end
+  end
 end
