@@ -7,8 +7,6 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
 
   mk_resource_methods
 
-  read_only(:cpus, :memory, :template)
-
   def self.instances
     begin
       find_vms_in_folder(datacenter.vmFolder).collect do |machine|
@@ -33,6 +31,11 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
     compute = resource_pool ? resource_pool.parent.name : nil
     state = machine.runtime.powerState  == 'poweredOn' ? :running : :stopped
     hostname = machine.summary.guest.hostName
+    extra_config = {}
+    machine.config.extraConfig.map do |setting|
+      extra_config[setting.key] = setting.value
+    end
+
     {
       name: "/#{name}",
       memory: machine.summary.config.memorySizeMB,
@@ -52,6 +55,7 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
       instance_uuid: machine.summary.config.instanceUuid,
       guest_ip: machine.guest_ip,
       hostname: hostname == '(none)' ? nil : hostname,
+      extra_config: extra_config,
     }
   end
 
@@ -96,6 +100,24 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
       :spec => clone_spec).wait_for_completion
 
     @property_hash[:ensure] = :present
+  end
+
+  def flush
+    config_spec = RbVmomi::VIM.VirtualMachineConfigSpec
+    config_spec.numCPUs = resource[:cpus] if resource[:cpus]
+    config_spec.memoryMB = resource[:memory] if resource[:memory]
+    if resource[:extra_config]
+      config_spec.extraConfig = resource[:extra_config].map do |k,v|
+        {:key => k, :value => v}
+      end
+    end
+
+    if config_spec.props.count > 0
+      power_on = running?
+      stop if power_on
+      machine.ReconfigVM_Task(:spec => config_spec).wait_for_completion
+      start if power_on
+    end
   end
 
   def find_or_create_folder(root, parts)

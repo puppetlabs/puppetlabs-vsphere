@@ -37,7 +37,7 @@ Puppet::Type.newtype(:vsphere_machine) do
     end
     def change_to_s(current, desired)
       current = :running if current == :present
-      desired = :running if desired == :present
+      desired = current if desired == :present
       current == desired ? current : "changed #{current} to #{desired}"
     end
     def insync?(is)
@@ -119,6 +119,17 @@ Puppet::Type.newtype(:vsphere_machine) do
   read_only_properties.each do |property, value|
     newproperty(property, :parent => PuppetX::Property::ReadOnly) do
       desc "Information related to #{value} from the vSphere API."
+    end
+  end
+
+  newproperty(:extra_config) do
+    desc 'Additional configuration information for the virtual machine.'
+    validate do |value|
+      fail 'Virtual machine extra_config should be a Hash' unless value.is_a? Hash
+    end
+    def insync?(is)
+      diff = is.merge(should)
+      diff == is
     end
   end
 

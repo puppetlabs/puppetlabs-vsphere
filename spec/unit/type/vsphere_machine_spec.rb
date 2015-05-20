@@ -18,6 +18,7 @@ describe type_class do
       :cpus,
       :compute,
       :template,
+      :extra_config,
     ]
   end
 
@@ -72,6 +73,14 @@ describe type_class do
   ].each do |property|
     it "should require #{property} to be a number" do
       expect(type_class).to require_integer_for(property)
+    end
+  end
+
+  [
+    'extra_config',
+  ].each do |param|
+    it "should require #{param}' to be a hash" do
+      expect(type_class).to require_hash_for(param)
     end
   end
 
