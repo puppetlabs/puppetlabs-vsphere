@@ -9,7 +9,7 @@ module PuppetX
         end
       end
 
-      def self.datacenter
+      def self.vim
         missing = ['VSPHERE_SERVER', 'VSPHERE_USER', 'VSPHERE_PASSWORD'] - ENV.keys
         unless missing.empty?
           message = 'To use this module you must provide the following Environment variables:'
@@ -25,9 +25,12 @@ module PuppetX
           password: ENV['VSPHERE_PASSWORD'],
           insecure: true,
         }
-        datacenter_name = ENV['VSPHERE_DATACENTER']
-        vim = RbVmomi::VIM.connect credentials
-        dc = vim.serviceInstance.find_datacenter(datacenter_name)
+        RbVmomi::VIM.connect credentials
+      end
+
+      def self.datacenter
+       datacenter_name = ENV['VSPHERE_DATACENTER']
+       dc = vim.serviceInstance.find_datacenter(datacenter_name)
         unless dc
           message = "Unable to find datacenter"
           message = message + " named #{datacenter_name} as specified in VSPHERE_DATACENTER" if datacenter_name
@@ -36,14 +39,12 @@ module PuppetX
         dc
       end
 
-      def self.find_vms_in_folder(folder) # recursively go through a folder, dumping vm info
-        folder.childEntity.collect do |child|
-          if child.class == RbVmomi::VIM::Folder
-            find_vms_in_folder(child)
-          elsif child.class == RbVmomi::VIM::VirtualMachine
-            child
-          end
-        end.flatten
+      def self.find_vms_in_folder(folder)
+        vim.serviceContent.viewManager.CreateContainerView({
+          container: folder,
+          type: ['VirtualMachine'],
+          recursive: true,
+        }).view
       end
 
       private
