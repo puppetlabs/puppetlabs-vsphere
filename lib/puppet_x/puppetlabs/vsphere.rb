@@ -20,11 +20,15 @@ module PuppetX
         end
 
         credentials = {
-          host: ENV['VSPHERE_SERVER'],
-          user: ENV['VSPHERE_USER'],
+          host:     ENV['VSPHERE_SERVER'],
+          user:     ENV['VSPHERE_USER'],
           password: ENV['VSPHERE_PASSWORD'],
-          insecure: true,
         }
+        # Handle optional connection options
+        credentials[:insecure] = ENV['VSPHERE_INSECURE'] || true
+        credentials[:ssl]      = ENV['VSPHERE_SSL'] if ENV['VSPHERE_SSL']
+        credentials[:port]     = ENV['VSPHERE_PORT'] if ENV['VSPHERE_PORT']
+
         RbVmomi::VIM.connect credentials
       end
 

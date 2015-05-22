@@ -53,10 +53,23 @@ Managing vSphere machines using the Puppet DSL.
 2. Set the following environment variables specific to your vSphere
    installation:
 
+  * Required Settings:
       ~~~
       export VSPHERE_SERVER='your-host'
       export VSPHERE_USER='your-username'
       export VSPHERE_PASSWORD='your-password'
+      ~~~
+
+  * Optional Settings:
+      ~~~
+      # To ignore SSL certificate errors. Defaults to true.
+      export VSPHERE_INSECURE='true or false'
+
+      # Whether to use SSL. Defaults to true.
+      export VSPHERE_SSL='true or false'
+
+      # Sets vSphere server port to connect to. Defaults to 443(SSL) or 80(non-SSL).
+      export VSPHERE_PORT='your-port'
       ~~~
 
 3. Finally install the module with:
