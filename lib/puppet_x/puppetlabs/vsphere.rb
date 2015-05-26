@@ -1,3 +1,5 @@
+require 'puppet_x/puppetlabs/vsphere_config'
+
 module PuppetX
   module Puppetlabs
     class Vsphere < Puppet::Provider
@@ -9,35 +11,27 @@ module PuppetX
         end
       end
 
+      def self.config
+        PuppetX::Puppetlabs::VsphereConfig.new
+      end
+
       def self.vim
-        missing = ['VSPHERE_SERVER', 'VSPHERE_USER', 'VSPHERE_PASSWORD'] - ENV.keys
-        unless missing.empty?
-          message = 'To use this module you must provide the following Environment variables:'
-          missing.each do |var|
-            message += "\n#{var}"
-          end
-          raise Puppet::Error, message
-        end
-
         credentials = {
-          host:     ENV['VSPHERE_SERVER'],
-          user:     ENV['VSPHERE_USER'],
-          password: ENV['VSPHERE_PASSWORD'],
+          host: config.host,
+          user: config.user,
+          password: config.password,
+          insecure: config.insecure,
+          ssl: config.ssl,
         }
-        # Handle optional connection options
-        credentials[:insecure] = ENV['VSPHERE_INSECURE'] || true
-        credentials[:ssl]      = ENV['VSPHERE_SSL'] if ENV['VSPHERE_SSL']
-        credentials[:port]     = ENV['VSPHERE_PORT'] if ENV['VSPHERE_PORT']
-
+        credentials[:port] = config.port if config.port
         RbVmomi::VIM.connect credentials
       end
 
       def self.datacenter
-       datacenter_name = ENV['VSPHERE_DATACENTER']
-       dc = vim.serviceInstance.find_datacenter(datacenter_name)
+        dc = vim.serviceInstance.find_datacenter(config.datacenter)
         unless dc
           message = "Unable to find datacenter"
-          message = message + " named #{datacenter_name} as specified in VSPHERE_DATACENTER" if datacenter_name
+          message = message + " named #{config.datacenter} as specified in VSPHERE_DATACENTER" if config.datacenter
           raise Puppet::Error, message
         end
         dc

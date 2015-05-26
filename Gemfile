@@ -1,6 +1,7 @@
 source "https://rubygems.org"
 
 gem 'rbvmomi'
+gem 'hocon'
 
 group :test do
   gem 'rake'
