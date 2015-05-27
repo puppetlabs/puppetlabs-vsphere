@@ -133,6 +133,15 @@ Puppet::Type.newtype(:vsphere_machine) do
     end
   end
 
+  newparam(:linked_clone) do
+    desc 'When creating the machine whether it should be a linked clone or not.'
+    defaultto :false
+    newvalues(:true, :'false')
+    def insync?(is)
+      is.to_s == should.to_s
+    end
+  end
+
   autorequire(:vsphere_machine) do
     self[:source]
   end

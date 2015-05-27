@@ -82,9 +82,19 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
       pool = hosts.first.resourcePool
     end
 
+    relocate_spec = if is_linked_clone?
+      vm.add_delta_disk_layer_on_all_disks
+      # although we wait for the previous task to complete I was able
+      # to sometimes trigger a race condition. I didn't find a suitable
+      # assertion to make but a small sleep appears to aleviate the issue
+      sleep 5
+      RbVmomi::VIM.VirtualMachineRelocateSpec(:pool => pool, :diskMoveType => :moveChildMostDiskBacking)
+    else
+      RbVmomi::VIM.VirtualMachineRelocateSpec(:pool => pool)
+    end
+
     power_on = args[:stopped] == true ? false : true
     power_on = false if is_template?
-    relocate_spec = RbVmomi::VIM.VirtualMachineRelocateSpec(:pool => pool)
     clone_spec = RbVmomi::VIM.VirtualMachineCloneSpec(
       :location => relocate_spec,
       :template => is_template?,
@@ -172,6 +182,10 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
 
     def is_template?
       resource[:template].to_s == 'true'
+    end
+
+    def is_linked_clone?
+      resource[:linked_clone].to_s == 'true'
     end
 
     def type_name

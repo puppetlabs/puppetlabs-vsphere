@@ -337,4 +337,76 @@ describe 'vsphere_machine' do
       PuppetManifest.new(@template, config).apply
     end
   end
+
+  describe 'should be able to create a linked clone from another machine' do
+    before(:all) do
+      @name = "CLOUD-#{SecureRandom.hex(8)}"
+
+      @source_path = "/opdx1/vm/eng/test/#{@name}-source"
+      @source_config = {
+        :name     => @source_path,
+        :ensure   => 'present',
+        :optional => {
+          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :compute => 'general1',
+          :memory  => 512,
+          :cpus    => 1,
+        }
+      }
+      PuppetManifest.new(@template, @source_config).apply
+      @source_machine = @client.get_machine(@source_path)
+
+      @target_path = "/opdx1/vm/eng/test/#{@name}-target"
+      source_vm_path = @source_path.clone
+      @target_config = {
+        :name     => @target_path,
+        :ensure   => 'present',
+        :optional => {
+          :source => source_vm_path,
+          :linked_clone => true,
+        }
+      }
+      PuppetManifest.new(@template, @target_config).apply
+      @target_machine = @client.get_machine(@target_path)
+      @disks = @target_machine.config.hardware.device.grep(RbVmomi::VIM::VirtualDisk)
+    end
+
+    after(:all) do
+      @client.destroy_machine(@target_path)
+      @client.destroy_machine(@source_path)
+    end
+
+    it 'should have same config as source vm' do
+      [
+        :cpuReservation,
+        :guestFullName,
+        :guestId,
+        :installBootRequired,
+        :memoryReservation,
+        :memorySizeMB,
+        :numCpu,
+        :numEthernetCards,
+        :numVirtualDisks,
+        :template,
+      ].each do |property|
+        expect(@source_machine.summary.config[property]).to eq(@target_machine.summary.config[property])
+      end
+    end
+
+    it 'should have a disk attached' do
+      expect(@disks).not_to be_empty
+    end
+
+    it 'should not have non linked disks' do
+      own_disks = @disks.select { |x| x.backing.parent == nil }
+      expect(own_disks).to be_empty
+    end
+
+    it 'should have the same disk attached as the source machine' do
+      source_disks = @source_machine.config.hardware.device.grep(RbVmomi::VIM::VirtualDisk)
+      expect(@disks.first.backing.parent.uuid).to eq(source_disks.first.backing.uuid)
+    end
+
+  end
+
 end
