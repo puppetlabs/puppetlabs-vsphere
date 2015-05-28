@@ -9,6 +9,7 @@ describe type_class do
       :name,
       :source,
       :linked_clone,
+      :create_command,
     ]
   end
 
@@ -81,6 +82,7 @@ describe type_class do
 
   [
     'extra_config',
+    'create_command',
   ].each do |param|
     it "should require #{param}' to be a hash" do
       expect(type_class).to require_hash_for(param)
@@ -155,7 +157,6 @@ describe type_class do
   it 'should require linked_clone to be a boolean' do
     expect{type_class.new(:name => 'sample', :linked_clone => 'sample')}.to raise_error
   end
-
 
   [
     :memory_reservation,
@@ -247,5 +248,31 @@ describe type_class do
       }.to raise_error(Puppet::Error, /Templates can only be absent, present or unregistered./)
     end
   end
+
+  context 'with a create_command specified' do
+    before :all do
+      @config = {
+        ensure: :present,
+        name: 'garethr-test',
+        source: '/dc/org/templates/template',
+        create_command: {
+          command: '/bin/ps',
+          user: 'root',
+          password: 'password',
+        }
+     }
+    end
+
+    ['command', 'user', 'password'].each do |key|
+      it "should require create_command to have a #{key} key" do
+        expect {
+          config = Marshal.load(Marshal.dump(@config))
+          config[:create_command].delete(key.to_sym)
+          type_class.new(config)
+        }.to raise_error(Puppet::Error, /for create_command you are missing the following keys: #{key}/)
+      end
+    end
+  end
+
 
 end

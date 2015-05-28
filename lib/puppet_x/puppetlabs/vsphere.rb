@@ -50,6 +50,10 @@ module PuppetX
           self.class.datacenter
         end
 
+        def vim
+          self.class.vim
+        end
+
     end
 
     class Vsphere::Machine

@@ -453,4 +453,106 @@ describe 'vsphere_machine' do
       @client.destroy_machine(@path)
     end
   end
+
+  describe 'should be able to create a machine and run a command on the guest' do
+
+    before(:all) do
+      @name = "CLOUD-#{SecureRandom.hex(8)}"
+      @path = "/opdx1/vm/eng/test/#{@name}"
+      template = 'machine_create_command.pp.tmpl'
+      @config = {
+        :name     => @path,
+        :ensure   => 'present',
+        :optional => {
+          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+        },
+        :create_command => {
+          :command => '/bin/ps',
+          :arguments => 'aux',
+          :user => ENV['VSPHERE_GUEST_USERNAME'],
+          :password => ENV['VSPHERE_GUEST_PASSWORD'],
+        }
+      }
+      PuppetManifest.new(template, @config).apply
+      @machine = @client.get_machine(@path)
+      @processes = @client.list_processes(@path)
+    end
+
+    after(:all) do
+      @client.destroy_machine(@path)
+    end
+
+    it 'with the specified name' do
+      expect(@machine.name).to eq(@name)
+    end
+
+    it 'with processes running on the guest' do
+      expect(@processes).not_to be_empty
+    end
+
+    it 'with the named process running on the guest' do
+      expect(@processes.first.name).to eq('ps')
+    end
+
+    it 'with the named process running the relevant command' do
+      expect(@processes.first.cmdLine).to eq('"/bin/ps" aux')
+    end
+
+    it 'with the named process owned by the correct user' do
+      expect(@processes.first.owner).to eq(ENV['VSPHERE_GUEST_USERNAME'])
+    end
+
+    it 'with the process having existed' do
+      expect(@processes.first.endTime).not_to be_nil
+    end
+
+    it 'with the process successfully run' do
+      expect(@processes.first.exitCode).to eq(0)
+    end
+  end
+
+  describe 'should create a machine but fail to run command on the guest' do
+
+    context 'with invalid guest credentials' do
+
+      before(:all) do
+        name = "CLOUD-#{SecureRandom.hex(8)}"
+        @path = "/opdx1/vm/eng/test/#{name}"
+        @template = 'machine_create_command.pp.tmpl'
+        @config = {
+          :name     => @path,
+          :ensure   => 'present',
+          :optional => {
+            :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          },
+          :create_command => {
+            :command => '/bin/ps',
+            :arguments => 'aux',
+            :user => 'invalid',
+            :password => 'invalid',
+          }
+        }
+        @apply = PuppetManifest.new(@template, @config).apply
+        @machine = @client.get_machine(@path)
+      end
+
+      after(:all) do
+        @client.destroy_machine(@path)
+      end
+
+      it 'should create a machine' do
+        expect(@machine).not_to be_nil
+      end
+
+      it 'should fail to apply successfully' do
+        success = @apply[:exit_status].success?
+        expect(success).to eq(false)
+      end
+
+      it 'should report the incorrect credentials' do
+        expect(@apply[:output].map { |i| i.include? 'Incorrect credentials for the guest machine' }.include? true).to eq(true)
+      end
+    end
+  end
+
 end

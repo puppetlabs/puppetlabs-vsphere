@@ -262,6 +262,26 @@ User provided description of the machine.
 #####`extra_config`
 A hash containing [vSphere extraConfig](https://www.vmware.com/support/developer/converter-sdk/conv55_apireference/vim.vm.ConfigInfo.html) settings for the virtual machine. Defaults to undef.
 
+
+#####`create_command`
+A hash containing details of a command to be run on the newly launched
+guest when it is first created. Note that this requires the guest to
+have a system user with a known password and for the machine to have
+VMware tools preinstalled.
+
+~~~
+create_command => {
+  command => '/bin/ps',
+  arguments => 'aux',
+  working_directory => '/',
+  user => 'root',
+  password => 'password',
+}
+~~~
+
+Both `working_directory` (defaults to `/`) and `arguments` (defaults to
+`nil`) are optional.
+
 #####`cpu_reservation`
 *Read Only* How many of the CPUs allocated are reserved just for this
 machine.
