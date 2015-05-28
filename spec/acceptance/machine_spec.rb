@@ -28,8 +28,7 @@ describe 'vsphere_machine' do
     end
 
     after(:all) do
-      new_config = @config.update({:ensure => 'absent'})
-      PuppetManifest.new(@template, new_config).apply
+      @client.destroy_machine(@path)
     end
 
     it 'with the specified name' do
@@ -122,8 +121,7 @@ describe 'vsphere_machine' do
     end
 
     after(:all) do
-      new_config = @config.update({:ensure => 'absent'})
-      PuppetManifest.new(@template, new_config).apply
+      @client.destroy_machine(@path)
     end
 
     it 'with the specified name' do
@@ -164,11 +162,8 @@ describe 'vsphere_machine' do
     end
 
     after(:all) do
-      new_source_config = @source_config.update({:ensure => 'absent'})
-      PuppetManifest.new(@template, new_source_config).apply
-
-      new_target_config = @target_config.update({:ensure => 'absent'})
-      PuppetManifest.new(@template, new_target_config).apply
+      @client.destroy_machine(@source_path)
+      @client.destroy_machine(@target_path)
     end
 
     it 'should have same config as source vm' do
@@ -207,8 +202,7 @@ describe 'vsphere_machine' do
     end
 
     after(:all) do
-      new_config = @config.update({:ensure => 'absent'})
-      PuppetManifest.new(@template, new_config).apply
+      @client.destroy_machine(@path)
     end
 
     it 'with the specified name' do
@@ -250,11 +244,8 @@ describe 'vsphere_machine' do
     end
 
     after(:all) do
-      new_source_config = @source_config.update({:ensure => 'absent'})
-      PuppetManifest.new(@template, new_source_config).apply
-
-      new_target_config = @target_config.update({:ensure => 'absent'})
-      PuppetManifest.new(@template, new_target_config).apply
+      @client.destroy_machine(@source_path)
+      @client.destroy_machine(@target_path)
     end
 
     it 'which is definitely a template' do
@@ -333,8 +324,7 @@ describe 'vsphere_machine' do
     end
 
     after(:all) do
-      config = @config.update({:ensure => 'absent'})
-      PuppetManifest.new(@template, config).apply
+      @client.destroy_machine(@path)
     end
   end
 

@@ -33,11 +33,7 @@ shared_context 'a running vm' do
   end
 
   after(:all) do
-    @machine = @client.get_machine(@path)
-    if @machine
-      @machine.PowerOffVM_Task.wait_for_completion if @machine.runtime.powerState == 'poweredOn'
-      @machine.Destroy_Task.wait_for_completion
-    end
+    @machine = @client.destroy_machine(@path)
   end
 end
 
