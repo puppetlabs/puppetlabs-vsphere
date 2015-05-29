@@ -33,20 +33,20 @@ Managing vSphere machines using the Puppet DSL.
 
 1. First install the required dependencies
 
-  * If you're using open source Puppet, the library gem should be installed
+  * If you're using open source Puppet, the vsphere and hocon library should be installed
      into the same Ruby used by Puppet. Install the gem with:
 
-      `gem install rbvmomi`
+      `gem install rbvmomi hocon`
 
   * If you're running Puppet Enterprise, install the gem with this command:
 
-      `/opt/puppet/bin/gem install rbvmomi`
+      `/opt/puppet/bin/gem install rbvmomi hocon`
 
     This allows the gem to be used by the Puppet Enterprise Ruby.
 
   * If you're running [Puppet Server](https://github.com/puppetlabs/puppet-server), you need to make the gem available to JRuby with:
 
-      `/opt/puppet/bin/puppetserver gem install rbvmomi`
+      `/opt/puppet/bin/puppetserver gem install rbvmomi hocon`
 
     Once the gems are installed, restart Puppet Server.
 
@@ -71,6 +71,40 @@ Managing vSphere machines using the Puppet DSL.
       # Sets vSphere server port to connect to. Defaults to 443(SSL) or 80(non-SSL).
       export VSPHERE_PORT='your-port'
       ~~~
+
+   Alternatively you can provide the information in a configuration
+file. This should be stored as `vsphere.conf` in the relevant
+[confdir](https://docs.puppetlabs.com/puppet/latest/reference/dirs_confdir.html). This should be:
+
+   * nix Systems: /etc/puppetlabs/puppet
+   * Windows: C:\ProgramData\PuppetLabs\puppet\etc
+   * non-root users: ~/.puppetlabs/etc/puppet
+
+   The file format is:
+
+      ~~~
+      vsphere: {
+        host: your-host
+        user: your-username
+        password: your-password
+      }
+      ~~~
+
+   Or with all the settings:
+
+      ~~~
+      vsphere: {
+        host: your-host
+        user: your-username
+        password: your-password
+        port: your-port
+        insecure: false
+        ssl: false
+      }
+      ~~~
+
+    Note that you can use either the environment variables or the config file. If both are present the environment variables will be used.
+    You cannot have some setting in environment variables and the others in the config file.
 
 3. Finally install the module with:
 
@@ -159,6 +193,8 @@ can specify which datacenter you are managing using the
 `VSPHERE_DATACENTER` environment variable like so:
 
     VSPHERE_DATACENTER=my-datacenter puppet resource vpshere_machine
+
+This can also be set in the config file as `datacenter`.
 
 
 ## Usage

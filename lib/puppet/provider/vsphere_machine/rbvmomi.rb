@@ -4,6 +4,7 @@ require 'puppet_x/puppetlabs/vsphere'
 
 Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppetlabs::Vsphere) do
   confine feature: :rbvmomi
+  confine feature: :hocon
 
   mk_resource_methods
 

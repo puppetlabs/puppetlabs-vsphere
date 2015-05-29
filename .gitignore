@@ -5,3 +5,4 @@ spec/fixtures
 .vagrant
 .bundle
 vendor
+.puppet_vsphere.conf
