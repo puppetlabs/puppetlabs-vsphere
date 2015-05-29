@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-type_class = Puppet::Type.type(:vsphere_machine)
+type_class = Puppet::Type.type(:vsphere_vm)
 
 describe type_class do
 

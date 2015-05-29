@@ -117,7 +117,7 @@ This module allows for describing a vSphere machine using the Puppet
 DSL. To create a new machine from a template or other machine:
 
 ~~~
-vsphere_machine { '/opdx1/vm/eng/sample':
+vsphere_vm { '/opdx1/vm/eng/sample':
   ensure => present,
   source => '/opdx1/vm/eng/source',
   memory => 1024,
@@ -127,13 +127,13 @@ vsphere_machine { '/opdx1/vm/eng/sample':
 
 The module also supports listing and managing machines via `puppet resource`:
 
-    puppet resource vsphere_machine
+    puppet resource vsphere_vm
 
 Note that this will output some read-only information about the machine,
 for instance:
 
 ~~~
-vsphere_machine { '/opdx1/vm/eng/sample':
+vsphere_vm { '/opdx1/vm/eng/sample':
   ensure                      => 'present',
   resource_pool               => 'general1',
   cpu_reservation             => '0',
@@ -162,7 +162,7 @@ modify an existing machine:
 **Note** Customizing a running vSphere machine will perform a reboot of the machine.
 
 ~~~
-vsphere_machine { '/opdx1/vm/eng/sample':
+vsphere_vm { '/opdx1/vm/eng/sample':
   ensure       => present,
   memory       => 1024,
   cpus         => 1,
@@ -176,7 +176,7 @@ You can also specify that a newly launched machine should be a linked
 clone. Linked clones share a disk with the source machine.
 
 ~~~
-vsphere_machine { '/opdx1/vm/eng/sample':
+vsphere_vm { '/opdx1/vm/eng/sample':
   ensure       => present,
   source       => '/opdx1/vm/eng/source',
   linked_clone => true,
@@ -186,12 +186,12 @@ vsphere_machine { '/opdx1/vm/eng/sample':
 You can also delete the machine we created above by setting the `ensure`
 property to `absent` in the manifest or using `puppet resouce` like so:
 
-    puppet resource vsphere_machine /opdx1/vm/eng/garethr-test ensure=absent
+    puppet resource vsphere_vm /opdx1/vm/eng/garethr-test ensure=absent
 
 To only remove the machine's definition, but leave the underlying configuration
 and disk files in place, you can set `ensure` to `unregistered`:
 
-    puppet resource vsphere_machine /opdx1/vm/eng/garethr-test ensure=unregistered
+    puppet resource vsphere_vm /opdx1/vm/eng/garethr-test ensure=unregistered
 
 Please note that the module currently provides no mechanism to clean up the
 files left behind by this operation.
@@ -203,7 +203,7 @@ this fails or if you have multiple virtual datacenters on vSphere you
 can specify which datacenter you are managing using the
 `VCENTER_DATACENTER` environment variable like so:
 
-    VCENTER_DATACENTER=my-datacenter puppet resource vpshere_machine
+    VCENTER_DATACENTER=my-datacenter puppet resource vpshere_vm
 
 This can also be set in the config file as `datacenter`.
 
@@ -214,11 +214,11 @@ This can also be set in the config file as `datacenter`.
 
 ### Types
 
-* `vsphere_machine`: Manages a vSphere virtual machine.
+* `vsphere_vm`: Manages a vSphere virtual machine.
 
 ### Parameters
 
-#### Type: vsphere_machine
+#### Type: vsphere_vm
 
 #####`ensure`
 Specifies the basic state of the resource. Valid values are 'present', 'running',

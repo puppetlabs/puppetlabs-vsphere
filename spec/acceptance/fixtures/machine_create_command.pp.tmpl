@@ -1,4 +1,4 @@
-vsphere_machine { '{{name}}':
+vsphere_vm { '{{name}}':
   ensure         => {{ensure}},
   {{#optional}}
   {{k}}          => '{{v}}',

@@ -37,7 +37,7 @@ shared_context 'a running vm' do
   end
 end
 
-describe 'vsphere_machine' do
+describe 'vsphere_vm' do
   describe 'should be able to unregister a machine' do
     include_context 'a running vm'
 
@@ -71,7 +71,7 @@ describe 'vsphere_machine' do
 
     context 'when looked for using puppet resource' do
       before(:all) do
-        @result = TestExecutor.puppet_resource('vsphere_machine', {:name => @path}, '--modulepath ../')
+        @result = TestExecutor.puppet_resource('vsphere_vm', {:name => @path}, '--modulepath ../')
       end
 
       it 'should not return an error' do
@@ -120,7 +120,7 @@ describe 'vsphere_machine' do
 
     context 'when looked for using puppet resource' do
       before(:all) do
-        @result = TestExecutor.puppet_resource('vsphere_machine', {:name => @path}, '--modulepath ../')
+        @result = TestExecutor.puppet_resource('vsphere_vm', {:name => @path}, '--modulepath ../')
       end
 
       it 'should not return an error' do
