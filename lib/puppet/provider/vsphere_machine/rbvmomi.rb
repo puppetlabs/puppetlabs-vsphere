@@ -104,20 +104,22 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
   end
 
   def flush
-    config_spec = RbVmomi::VIM.VirtualMachineConfigSpec
-    config_spec.numCPUs = resource[:cpus] if resource[:cpus]
-    config_spec.memoryMB = resource[:memory] if resource[:memory]
-    if resource[:extra_config]
-      config_spec.extraConfig = resource[:extra_config].map do |k,v|
-        {:key => k, :value => v}
+    if ! @property_hash.empty? and @property_hash[:ensure] != :absent 
+      config_spec = RbVmomi::VIM.VirtualMachineConfigSpec
+      config_spec.numCPUs = resource[:cpus] if resource[:cpus]
+      config_spec.memoryMB = resource[:memory] if resource[:memory]
+      if resource[:extra_config]
+        config_spec.extraConfig = resource[:extra_config].map do |k,v|
+          {:key => k, :value => v}
+        end
       end
-    end
 
-    if config_spec.props.count > 0
-      power_on = running?
-      stop if power_on
-      machine.ReconfigVM_Task(:spec => config_spec).wait_for_completion
-      start if power_on
+      if config_spec.props.count > 0
+        power_on = running?
+        stop if power_on
+        machine.ReconfigVM_Task(:spec => config_spec).wait_for_completion
+        start if power_on
+      end
     end
   end
 
