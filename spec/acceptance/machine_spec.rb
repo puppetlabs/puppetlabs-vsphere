@@ -21,6 +21,7 @@ describe 'vsphere_machine' do
           :memory  => 512,
           :cpus    => 2,
           :compute => 'general1',
+          :annotation => 'some text',
         }
       }
       PuppetManifest.new(@template, @config).apply
@@ -45,6 +46,10 @@ describe 'vsphere_machine' do
 
     it 'with the specified cpu setting' do
       expect(@machine.summary.config.numCpu).to eq(@config[:optional][:cpus])
+    end
+
+    it 'with the specified annotation' do
+      expect(@machine.config.annotation).to eq(@config[:optional][:annotation])
     end
 
     it 'and should not fail to be applied multiple times' do
@@ -282,6 +287,7 @@ describe 'vsphere_machine' do
           :compute => 'general1',
           :cpus    => 1,
           :memory  => 512,
+          :annotation => 'some test',
         }
       }
       PuppetManifest.new(@template, @config).apply
@@ -291,8 +297,9 @@ describe 'vsphere_machine' do
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :cpus    => 2,
-          :memory  => 1024,
+          :cpus       => 2,
+          :memory     => 1024,
+          :annotation => 'some other test',
         }
       }
       PuppetManifest.new(@template, @new_config).apply
@@ -321,6 +328,11 @@ describe 'vsphere_machine' do
         expect(@config_after[property]).not_to eq(@config_before[property])
         expect(@config_after[property].to_i).to eq(@config_before[property].to_i * 2)
       end
+    end
+
+    it 'should update the annotation' do
+      expect(@config_before[:annotation]).to eq(@config[:optional][:annotation])
+      expect(@config_after[:annotation]).to eq(@new_config[:optional][:annotation])
     end
 
     after(:all) do

@@ -20,6 +20,7 @@ describe type_class do
       :compute,
       :template,
       :extra_config,
+      :annotation,
     ]
   end
 
@@ -62,6 +63,7 @@ describe type_class do
   [
     'name',
     'compute',
+    'annotation',
   ].each do |property|
     it "should require #{property} to be a string" do
       expect(type_class).to require_string_for(property)

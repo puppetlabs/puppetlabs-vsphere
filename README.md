@@ -256,6 +256,9 @@ same as the template or source machine.
 The number of CPUs to allocate to the new machine. Defaults to the
 same as the template or source machine.
 
+####`annotation`
+User provided description of the machine.
+
 #####`extra_config`
 A hash containing [vSphere extraConfig](https://www.vmware.com/support/developer/converter-sdk/conv55_apireference/vim.vm.ConfigInfo.html) settings for the virtual machine. Defaults to undef.
 

@@ -92,6 +92,13 @@ Puppet::Type.newtype(:vsphere_machine) do
     end
   end
 
+  newproperty(:annotation) do
+    desc 'A user provided description of the machine.'
+    validate do |value|
+      fail 'Virtual machine annotation should be a String' unless value.is_a? String
+    end
+  end
+
   newproperty(:template) do
     desc 'Whether or not this machine is a template.'
     defaultto :false
