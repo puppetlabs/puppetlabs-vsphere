@@ -154,6 +154,8 @@ vsphere_machine { '/opdx1/vm/eng/sample':
 }
 ~~~
 
+The read-only properties are documented in the reference section below.
+
 The module also supports customizing a vSphere machine using the Puppet DSL. To
 modify an existing machine:
 
@@ -170,7 +172,16 @@ vsphere_machine { '/opdx1/vm/eng/sample':
 }
 ~~~
 
-The read-only properties are documented in the reference section below.
+You can also specify that a newly launched machine should be a linked
+clone. Linked clones share a disk with the source machine.
+
+~~~
+vsphere_machine { '/opdx1/vm/eng/sample':
+  ensure       => present,
+  source       => '/opdx1/vm/eng/source',
+  linked_clone => true,
+}
+~~~
 
 You can also delete the machine we created above by setting the `ensure`
 property to `absent` in the manifest or using `puppet resouce` like so:

@@ -8,6 +8,7 @@ describe type_class do
     [
       :name,
       :source,
+      :linked_clone,
     ]
   end
 
@@ -119,6 +120,11 @@ describe type_class do
     expect(machine[:template]).to eq(:false)
   end
 
+  it 'should default linked_clone to false' do
+    machine = type_class.new(:name => 'sample')
+    expect(machine[:linked_clone]).to eq(:false)
+  end
+
   it 'should default ensure to present' do
     machine = type_class.new(:name => 'sample')
     expect(machine[:ensure]).to eq(:present)
@@ -135,6 +141,19 @@ describe type_class do
   it 'should require template to be a boolean' do
     expect{type_class.new(:name => 'sample', :template => 'sample')}.to raise_error
   end
+
+  it 'should support true as a value to linked_clone' do
+    expect{type_class.new(:name => 'sample', :linked_clone => true)}.to_not raise_error
+  end
+
+  it 'should support false as a value to linked_clone' do
+    expect{type_class.new(:name => 'sample', :linked_clone => false)}.to_not raise_error
+  end
+
+  it 'should require linked_clone to be a boolean' do
+    expect{type_class.new(:name => 'sample', :linked_clone => 'sample')}.to raise_error
+  end
+
 
   [
     :memory_reservation,

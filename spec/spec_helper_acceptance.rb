@@ -83,6 +83,14 @@ class VsphereHelper
     @datacenter.find_vm(local_path)
   end
 
+  def destroy_machine(path)
+    machine = get_machine(path)
+    if machine
+      machine.PowerOffVM_Task.wait_for_completion if machine.runtime.powerState == 'poweredOn'
+      machine.Destroy_Task.wait_for_completion
+    end
+  end
+
 end
 
 class TestExecutor
