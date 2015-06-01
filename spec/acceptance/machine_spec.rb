@@ -408,7 +408,49 @@ describe 'vsphere_machine' do
       source_disks = @source_machine.config.hardware.device.grep(RbVmomi::VIM::VirtualDisk)
       expect(@disks.first.backing.parent.uuid).to eq(source_disks.first.backing.uuid)
     end
-
   end
 
+  describe 'should be able to suspend and then reset a vm' do
+    before(:all) do
+      @name = "CLOUD-#{SecureRandom.hex(8)}"
+
+      @path = "/opdx1/vm/eng/test/#{@name}"
+      @config = {
+        :name     => @path,
+        :ensure   => 'present',
+        :optional => {
+          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :compute => 'general1',
+          :cpus    => 1,
+          :memory  => 512,
+        }
+      }
+      PuppetManifest.new(@template, @config).apply
+      @state_before = @client.get_machine(@path).runtime.powerState.clone
+
+      suspend_config = {
+        :name     => @path,
+        :ensure   => 'suspended',
+      }
+      PuppetManifest.new(@template, suspend_config).apply
+      @state_suspend = @client.get_machine(@path).runtime.powerState.clone
+
+      reset_config = {
+        :name     => @path,
+        :ensure   => 'reset',
+      }
+      PuppetManifest.new(@template, reset_config).apply
+      @state_reset = @client.get_machine(@path).runtime.powerState.clone
+    end
+
+    it 'should change state correctly' do
+      expect(@state_before).to eq('poweredOn')
+      expect(@state_suspend).to eq('suspended')
+      expect(@state_reset).to eq('poweredOn')
+    end
+
+    after(:all) do
+      @client.destroy_machine(@path)
+    end
+  end
 end

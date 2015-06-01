@@ -30,7 +30,7 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
     name = machine.path.collect { |x| x[1] }.drop(1).join('/')
     resource_pool = machine.resourcePool
     compute = resource_pool ? resource_pool.parent.name : nil
-    state = machine.runtime.powerState  == 'poweredOn' ? :running : :stopped
+    state = machine_state(machine)
     hostname = machine.summary.guest.hostName
     extra_config = {}
     machine.config.extraConfig.map do |setting|
@@ -61,9 +61,22 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
     }
   end
 
+  def self.machine_state(vm)
+    case vm.runtime.powerState
+    when 'poweredOn'
+      :running
+    when 'poweredOff'
+      :stopped
+    when 'suspended'
+      :suspended
+    else
+      :unknown
+    end
+  end
+
   def exists?
     Puppet.info("Checking if #{type_name} #{name} exists")
-    @property_hash[:ensure] == :running || @property_hash[:ensure] == :stopped
+    @property_hash[:ensure] and @property_hash[:ensure] != :absent
   end
 
   def create(args={})
@@ -149,14 +162,12 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
 
   def unregister
     Puppet.info("Unregistering #{type_name} #{name}")
-    stop if running?
     machine.UnregisterVM
     @property_hash[:ensure] = :unregistered
   end
 
   def destroy
     Puppet.info("Deleting #{type_name} #{name}")
-    stop if running?
     machine.Destroy_Task.wait_for_completion
     @property_hash[:ensure] = :absent
   end
@@ -171,8 +182,34 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
     @property_hash[:ensure] = :running
   end
 
+  def suspend
+    machine.SuspendVM_Task.wait_for_completion
+    @property_hash[:ensure] = :suspended
+  end
+
+  def reset
+    machine.ResetVM_Task.wait_for_completion
+    @property_hash[:ensure] = :running
+  end
+
   def running?
-    machine.runtime.powerState  == 'poweredOn' ? true : false
+    current_state == :running
+  end
+
+  def stopped?
+    current_state == :stopped
+  end
+
+  def suspended?
+    current_state == :suspended
+  end
+
+  def unknown?
+    current_state == :unknown
+  end
+
+  def current_state
+    self.class.machine_state(machine)
   end
 
   private
