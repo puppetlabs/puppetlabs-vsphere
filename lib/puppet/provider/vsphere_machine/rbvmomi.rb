@@ -57,6 +57,7 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
       guest_ip: machine.guest_ip,
       hostname: hostname == '(none)' ? nil : hostname,
       extra_config: extra_config,
+      annotation: machine.config.annotation,
     }
   end
 
@@ -94,6 +95,7 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
     clone_spec.config = RbVmomi::VIM.VirtualMachineConfigSpec(deviceChange: [])
     clone_spec.config.numCPUs = resource[:cpus] if resource[:cpus]
     clone_spec.config.memoryMB = resource[:memory] if resource[:memory]
+    clone_spec.config.annotation = resource[:annotation] if resource[:annotation]
 
     vm.CloneVM_Task(
       :folder => find_or_create_folder(datacenter.vmFolder, instance.folder),
@@ -104,10 +106,11 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
   end
 
   def flush
-    if ! @property_hash.empty? and @property_hash[:ensure] != :absent 
+    if ! @property_hash.empty? and @property_hash[:ensure] != :absent
       config_spec = RbVmomi::VIM.VirtualMachineConfigSpec
       config_spec.numCPUs = resource[:cpus] if resource[:cpus]
       config_spec.memoryMB = resource[:memory] if resource[:memory]
+      config_spec.annotation = resource[:annotation] if resource[:annotation]
       if resource[:extra_config]
         config_spec.extraConfig = resource[:extra_config].map do |k,v|
           {:key => k, :value => v}
