@@ -3,7 +3,7 @@ require 'puppet-lint/tasks/puppet-lint'
 require 'puppet-syntax/tasks/puppet-syntax'
 require 'metadata-json-lint/rake_task'
 
-# These two gems aren't always present, for instance
+# This gem isn't always present, for instance
 # on Travis with --without development
 begin
   require 'puppet_blacksmith/rake_tasks'
@@ -39,3 +39,24 @@ task :test => [
   :lint,
   :spec,
 ]
+
+namespace :integration do
+  [
+    'centos6',
+    'centos7',
+    'rhel7m_ubuntua',
+    'ubuntum_rhel7a',
+  ].each do |config|
+    desc "Run integration tests for #{config}"
+    task config.to_sym do
+      begin
+        require 'master_manipulator'
+        sh("integration/test_run_scripts/vsphere/vsphere_#{config}.sh")
+      rescue LoadError
+        puts "\033[33m[Warning]\033[0m The integration tests require the" \
+          ' master_manipulatotor gem which is only available from the internal' \
+          ' gem mirror. Specify GEM_SOURCE and rerun bundle install'
+      end
+    end
+  end
+end
