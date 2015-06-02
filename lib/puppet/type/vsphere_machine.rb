@@ -16,10 +16,28 @@ Puppet::Type.newtype(:vsphere_machine) do
       provider.create unless provider.exists?
     end
     newvalue(:unregistered) do
-      provider.unregister if provider.exists?
+      if provider.exists?
+        case provider.current_state
+        when :running
+          provider.stop
+        when :suspended
+          provider.start
+          provider.stop
+        end
+        provider.unregister
+      end
     end
     newvalue(:absent) do
-      provider.destroy if provider.exists?
+      if provider.exists?
+        case provider.current_state
+        when :running
+          provider.stop
+        when :suspended
+          provider.start
+          provider.stop
+        end
+        provider.destroy
+      end
     end
     newvalue(:running) do
       if provider.exists?
@@ -28,9 +46,41 @@ Puppet::Type.newtype(:vsphere_machine) do
         provider.create
       end
     end
+    newvalue(:reset) do
+      if provider.exists?
+        case provider.current_state
+        when :running
+          provider.reset
+        when :suspended, :stopped
+          provider.start
+        else
+          fail "Cannot reset machine when in state #{provider.current_state}"
+        end
+      end
+    end
+    newvalue(:suspended) do
+      if provider.exists?
+        case provider.current_state
+        when :running
+          provider.suspend if provider.running?
+        when :stopped, :suspended, :unregistered
+          fail "Cannot suspend when machine is #{provider.current_state}."
+        else
+          fail 'Cannot suspend, machine state is unknown.'
+        end
+      end
+    end
     newvalue(:stopped) do
       if provider.exists?
-        provider.stop if provider.running?
+        case provider.current_state
+        when :running
+          provider.stop
+        when :suspended
+          provider.start
+          provider.stop
+        else
+          fail 'Cannot stop, machine state is unknown.'
+        end
       else
         provider.create({stopped: true})
       end
