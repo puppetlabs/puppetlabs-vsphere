@@ -8,8 +8,10 @@ describe type_class do
     [
       :name,
       :source,
+      :source_type,
       :linked_clone,
       :create_command,
+      :delete_from_disk,
     ]
   end
 
@@ -115,13 +117,19 @@ describe type_class do
     type_class.new(:name => 'sample', :ensure => :running)
   end
 
-  it 'should support :unregistered as a value to :ensure' do
-    type_class.new(:name => 'sample', :ensure => :unregistered)
-  end
-
   it 'should default template to false' do
     machine = type_class.new(:name => 'sample')
     expect(machine[:template]).to eq(:false)
+  end
+
+  it 'should default source_type to vm' do
+    machine = type_class.new(:name => 'sample')
+    expect(machine[:source_type]).to eq(:vm)
+  end
+
+  it 'should default delete_from_disk to true' do
+    machine = type_class.new(:name => 'sample')
+    expect(machine[:delete_from_disk]).to eq(:true)
   end
 
   it 'should default linked_clone to false' do
@@ -144,6 +152,34 @@ describe type_class do
 
   it 'should require template to be a boolean' do
     expect{type_class.new(:name => 'sample', :template => 'sample')}.to raise_error
+  end
+
+  it 'should support vm as a value to source_type' do
+    expect{type_class.new(:name => 'sample', :source_type => 'vm')}.to_not raise_error
+  end
+
+  it 'should support template as a value to source_type' do
+    expect{type_class.new(:name => 'sample', :source_type => 'template')}.to_not raise_error
+  end
+
+  it 'should support folder as a value to source_type' do
+    expect{type_class.new(:name => 'sample', :source_type => 'folder')}.to_not raise_error
+  end
+
+  it 'should require vm, template, or folder as a value to source_type' do
+    expect{type_class.new(:name => 'sample', :source_type => 'magic')}.to raise_error
+  end
+
+  it 'should support true as a value to delete_from_disk' do
+    expect{type_class.new(:name => 'sample', :delete_from_disk => true)}.to_not raise_error
+  end
+
+  it 'should support false as a value to delete_from_disk' do
+    expect{type_class.new(:name => 'sample', :delete_from_disk => false)}.to_not raise_error
+  end
+
+  it 'should require delete_from_disk to be a boolean' do
+    expect{type_class.new(:name => 'sample', :delete_from_disk => 'sample')}.to raise_error
   end
 
   it 'should support true as a value to linked_clone' do
@@ -180,11 +216,6 @@ describe type_class do
   it 'should acknowledge stopped instance to be present' do
     machine = type_class.new(:name => 'sample', :ensure => :present)
     expect(machine.property(:ensure).insync?(:stopped)).to be true
-  end
-
-  it 'should acknowledge unregistered instance to be absent' do
-    machine = type_class.new(:name => 'sample', :ensure => :unregistered)
-    expect(machine.property(:ensure).insync?(:absent)).to be true
   end
 
   context 'with a full set of properties' do
@@ -245,7 +276,7 @@ describe type_class do
     it "should prohibit specifying ensure as #{state} for templates" do
       expect {
         type_class.new({name: 'sample', ensure: state, template: true})
-      }.to raise_error(Puppet::Error, /Templates can only be absent, present or unregistered./)
+      }.to raise_error(Puppet::Error, /Templates can only be absent or present./)
     end
   end
 
@@ -273,6 +304,4 @@ describe type_class do
       end
     end
   end
-
-
 end
