@@ -123,6 +123,7 @@ vsphere_vm { '/opdx1/vm/eng/sample':
 To create the same machine without booting it, or to boot it at a later time,
 change the `ensure` parameter to `stopped`:
 
+~~~
 vsphere_vm { '/opdx1/vm/eng/sample':
   ensure => stopped,
   source => '/opdx1/vm/eng/source',
@@ -183,7 +184,7 @@ vsphere_vm { '/opdx1/vm/eng/sample':
 }
 ~~~
 
-###Create linked clones 
+###Create linked clones
 
 You can also specify that a newly launched machine should be a linked clone. Linked clones share a disk with the source machine.
 
@@ -233,13 +234,12 @@ This can also be set in the config file as `datacenter`.
 
 #####`ensure`
 Specifies the basic state of the resource. Valid values are 'present', 'running',
-stopped', 'unregistered', and 'absent'. If the machine is a template, then only 'present', 'absent', and 'unregistered' are valid states. Defaults to 'present'.
+stopped', and 'absent'. If the machine is a template, then only 'present' and 'absent' are valid states. Defaults to 'present'.
 
 Values have the following effects:
 
 * 'present', 'running': Ensures that the VM is up and running. If the VM doesn't yet exist, a new one is created as specified by the other properties.
 * 'stopped': Ensures that the VM is created, but is not running. This can be used to shut down running VMs, as well as for creating VMs without having them boot immediately.
-* 'unregistered': Ensures that the VM is not under active management in vSphere. This keeps the vmx/vhd files around.
 * 'absent': Ensures that the VM and all of its files are removed.
 
 #####`name`
@@ -253,6 +253,12 @@ The path within the specified datacenter to the virtual machine or
 template to base the new virtual machine on. Specifying a source
 is required when specifying `ensure => 'present'`.
 
+#####`source_type`
+The source type of the new virtual machine. Valid options are 'vm' if the source
+is another virtual machine, 'template' if the source is a template, or 'folder'
+if the source is an imported/uploaded virtual machine folder on the datastore.
+Defaults to 'vm'.
+
 #####`template`
 Whether or not the machine is a template. Defaults to false.
 
@@ -262,7 +268,13 @@ The amount of memory to allocate to the new machine. Defaults to the same as the
 #####`cpus`
 The number of CPUs to allocate to the new machine. Defaults to the same as the template or source machine.
 
-####`annotation`
+#####`delete_from_disk`
+Whether or not to delete the files from disk. Valid options are 'true' or 'false'.
+Providing a value of 'true' will result in the VM and all of the related files being
+deleted from the datastore. Providing 'false' will remove the VM from the inventory,
+but retain the VM files on the datastore. Defaults to 'true'.
+
+#####`annotation`
 User provided description of the machine.
 
 #####`extra_config`
