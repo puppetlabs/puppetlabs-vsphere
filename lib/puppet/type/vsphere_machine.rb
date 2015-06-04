@@ -87,7 +87,7 @@ Puppet::Type.newtype(:vsphere_machine) do
     end
     def change_to_s(current, desired)
       current = :running if current == :present
-      desired = current if desired == :present
+      desired = current if desired == :present and current != :absent
       current == desired ? current : "changed #{current} to #{desired}"
     end
     def insync?(is)
