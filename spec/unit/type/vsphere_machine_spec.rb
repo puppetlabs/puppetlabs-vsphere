@@ -17,7 +17,7 @@ describe type_class do
       :ensure,
       :memory,
       :cpus,
-      :compute,
+      :resource_pool,
       :template,
       :extra_config,
       :annotation,
@@ -62,7 +62,7 @@ describe type_class do
 
   [
     'name',
-    'compute',
+    'resource_pool',
     'annotation',
   ].each do |property|
     it "should require #{property} to be a string" do
@@ -191,7 +191,7 @@ describe type_class do
       @machine = type_class.new({
         ensure: :present,
         name: 'garethr-test',
-        compute: 'general',
+        resource_pool: 'general',
         memory: '1024',
         cpus: '1',
         source: '/dc/org/templates/template',
@@ -220,10 +220,10 @@ describe type_class do
 
   end
 
-  it 'should prohibit specifying compute for templates' do
+  it 'should prohibit specifying resource pool for templates' do
     expect {
-      type_class.new({name: 'sample', compute: 'something', template: true})
-    }.to raise_error(Puppet::Error, /Cannot provide compute for a template/)
+      type_class.new({name: 'sample', resource_pool: 'something', template: true})
+    }.to raise_error(Puppet::Error, /Cannot provide resource_pool for a template/)
   end
 
   ['running', 'stopped'].each do |state|

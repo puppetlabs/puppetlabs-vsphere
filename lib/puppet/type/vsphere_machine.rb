@@ -5,7 +5,7 @@ Puppet::Type.newtype(:vsphere_machine) do
 
   validate do
     if self[:template].to_s == 'true'
-      fail 'Cannot provide compute for a template.' if self[:compute]
+      fail 'Cannot provide resource_pool for a template.' if self[:resource_pool]
       fail 'Templates can only be absent, present or unregistered.' unless self[:ensure] =~ /^(absent|present|unregistered)$/
     end
   end
@@ -135,10 +135,10 @@ Puppet::Type.newtype(:vsphere_machine) do
     end
   end
 
-  newproperty(:compute) do
-    desc 'The name of the cluster compute resource with which to associate the virtual machine.'
+  newproperty(:resource_pool) do
+    desc 'The name of the resource pool with which to associate the virtual machine.'
     validate do |value|
-      fail 'Virtual machine compute should be a String' unless value.is_a? String
+      fail 'Virtual machine resource_pool should be a String' unless value.is_a? String
     end
   end
 

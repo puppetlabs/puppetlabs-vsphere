@@ -17,11 +17,11 @@ describe 'vsphere_machine' do
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
-          :memory  => 512,
-          :cpus    => 2,
-          :compute => 'general1',
-          :annotation => 'some text',
+          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :memory        => 512,
+          :cpus          => 2,
+          :resource_pool => 'general1',
+          :annotation    => 'some text',
         }
       }
       PuppetManifest.new(@template, @config).apply
@@ -36,8 +36,8 @@ describe 'vsphere_machine' do
       expect(@machine.name).to eq(@name)
     end
 
-    it 'attached to the specified compute resource' do
-      expect(@machine.resourcePool.parent.name).to eq(@config[:optional][:compute])
+    it 'attached to the specified resource pool' do
+      expect(@machine.resourcePool.parent.name).to eq(@config[:optional][:resource_pool])
     end
 
     it 'with the specified memory setting' do
@@ -76,8 +76,8 @@ describe 'vsphere_machine' do
         expect(@result.stdout).to match(regex)
       end
 
-      it 'should report the correct compute value' do
-        regex = /(compute)(\s*)(=>)(\s*)('#{@config[:optional][:compute]}')/
+      it 'should report the correct resource_pool value' do
+        regex = /(resource_pool)(\s*)(=>)(\s*)('#{@config[:optional][:resource_pool]}')/
         expect(@result.stdout).to match(regex)
       end
 
@@ -115,10 +115,10 @@ describe 'vsphere_machine' do
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
-          :compute => 'general1',
-          :memory  => 512,
-          :cpus    => 1,
+          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :resource_pool => 'general1',
+          :memory        => 512,
+          :cpus          => 1,
         }
       }
       PuppetManifest.new(@template, @config).apply
@@ -144,10 +144,10 @@ describe 'vsphere_machine' do
         :name     => @source_path,
         :ensure   => 'present',
         :optional => {
-          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
-          :compute => 'general1',
-          :memory  => 512,
-          :cpus    => 1,
+          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :resource_pool => 'general1',
+          :memory        => 512,
+          :cpus          => 1,
         }
       }
       PuppetManifest.new(@template, @source_config).apply
@@ -284,10 +284,10 @@ describe 'vsphere_machine' do
         :ensure   => 'present',
         :optional => {
           :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
-          :compute => 'general1',
-          :cpus    => 1,
-          :memory  => 512,
-          :annotation => 'some test',
+          :resoure_pool => 'general1',
+          :cpus         => 1,
+          :memory       => 512,
+          :annotation   => 'some test',
         }
       }
       PuppetManifest.new(@template, @config).apply
@@ -349,10 +349,10 @@ describe 'vsphere_machine' do
         :name     => @source_path,
         :ensure   => 'present',
         :optional => {
-          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
-          :compute => 'general1',
-          :memory  => 512,
-          :cpus    => 1,
+          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :resource_pool => 'general1',
+          :memory        => 512,
+          :cpus          => 1,
         }
       }
       PuppetManifest.new(@template, @source_config).apply
@@ -420,9 +420,9 @@ describe 'vsphere_machine' do
         :ensure   => 'present',
         :optional => {
           :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
-          :compute => 'general1',
-          :cpus    => 1,
-          :memory  => 512,
+          :resource_pool => 'general1',
+          :cpus          => 1,
+          :memory        => 512,
         }
       }
       PuppetManifest.new(@template, @config).apply

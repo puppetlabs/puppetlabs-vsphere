@@ -135,7 +135,7 @@ for instance:
 ~~~
 vsphere_machine { '/opdx1/vm/eng/sample':
   ensure                      => 'present',
-  compute                     => 'general1',
+  resource_pool               => 'general1',
   cpu_reservation             => '0',
   cpus                        => '1',
   guest_ip                    => '10.32.99.41',
@@ -236,8 +236,8 @@ are valid states.
 *Required* The full path for the machine, including the datacenter
 identifier.
 
-#####`compute`
-The name of the compute resource in which to launch the
+#####`resource_pool`
+The name of the resource_pool in which to launch the
 machine. Defaults to the default resource pool for the datacenter.
 
 #####`source`
