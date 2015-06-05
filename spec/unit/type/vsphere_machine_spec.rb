@@ -218,6 +218,20 @@ describe type_class do
       expect(@machine.property(:ensure).insync?(:running)).to be true
     end
 
+    context 'when out of sync' do
+      it 'should report actual state if desired state is present, as present is overloaded' do
+        expect(@machine.property(:ensure).change_to_s(:running, :present)).to eq(:running)
+      end
+
+      it 'if current and desired are the same then should report value' do
+        expect(@machine.property(:ensure).change_to_s(:stopped, :stopped)).to eq(:stopped)
+      end
+
+      it 'if current and desired are different should report change' do
+        expect(@machine.property(:ensure).change_to_s(:stopped, :running)).to eq('changed stopped to running')
+      end
+    end
+
   end
 
   it 'should prohibit specifying compute for templates' do
