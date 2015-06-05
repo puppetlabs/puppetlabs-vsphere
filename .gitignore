@@ -6,3 +6,4 @@ spec/fixtures
 .bundle
 vendor
 .puppet_vsphere.conf
+coverage

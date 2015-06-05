@@ -2,6 +2,11 @@ require 'mustache'
 require 'open3'
 require 'rbvmomi'
 
+if ENV['COVERAGE'] == 'yes'
+  require 'simplecov'
+  SimpleCov.start
+end
+
 class PuppetManifest < Mustache
 
   def initialize(file, config)
