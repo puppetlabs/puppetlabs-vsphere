@@ -29,7 +29,7 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
   def self.machine_to_hash(machine)
     name = machine.path.collect { |x| x[1] }.drop(1).join('/')
     resource_pool = machine.resourcePool
-    compute = resource_pool ? resource_pool.parent.name : nil
+    resource_pool = resource_pool ? resource_pool.parent.name : nil
     state = machine_state(machine)
     hostname = machine.summary.guest.hostName
     extra_config = {}
@@ -41,7 +41,7 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
       name: "/#{name}",
       memory: machine.summary.config.memorySizeMB,
       cpus: machine.summary.config.numCpu,
-      compute: compute,
+      resource_pool: resource_pool,
       template: machine.summary.config.template,
       ensure: state,
       memory_reservation: machine.summary.config.memoryReservation,
@@ -88,9 +88,9 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
     vm = datacenter.find_vm(base_machine.local_path)
     raise Puppet::Error, "No machine found at #{base_machine.local_path}" unless vm
 
-    if resource[:compute]
-      pool = datacenter.find_compute_resource(resource[:compute]).resourcePool
-      raise Puppet::Error, "No resource pool found for compute #{resource[:compute]}" unless pool
+    if resource[:resource_pool]
+      pool = datacenter.find_compute_resource(resource[:resource_pool]).resourcePool
+      raise Puppet::Error, "No resource pool found for #{resource[:resouce_pool]}" unless pool
     else
       hosts = datacenter.hostFolder.children
       raise Puppet::Error, "No resource pool found for default datacenter" if hosts.empty?
