@@ -284,7 +284,7 @@ describe 'vsphere_machine' do
         :ensure   => 'present',
         :optional => {
           :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
-          :resoure_pool => 'general1',
+          :resource_pool => 'general1',
           :cpus         => 1,
           :memory       => 512,
           :annotation   => 'some test',
