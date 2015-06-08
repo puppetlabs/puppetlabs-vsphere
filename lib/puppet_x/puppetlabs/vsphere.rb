@@ -31,7 +31,7 @@ module PuppetX
         dc = vim.serviceInstance.find_datacenter(config.datacenter)
         unless dc
           message = "Unable to find datacenter"
-          message = message + " named #{config.datacenter} as specified in VSPHERE_DATACENTER" if config.datacenter
+          message = message + " named #{config.datacenter} as specified in VCENTER_DATACENTER" if config.datacenter
           raise Puppet::Error, message
         end
         dc

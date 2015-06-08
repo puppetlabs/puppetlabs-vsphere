@@ -55,25 +55,25 @@ Managing vSphere machines using the Puppet DSL.
 
   * Required Settings:
       ~~~
-      export VSPHERE_SERVER='your-host'
-      export VSPHERE_USER='your-username'
-      export VSPHERE_PASSWORD='your-password'
+      export VCENTER_SERVER='your-host'
+      export VCENTER_USER='your-username'
+      export VCENTER_PASSWORD='your-password'
       ~~~
 
   * Optional Settings:
       ~~~
       # To ignore SSL certificate errors. Defaults to true.
-      export VSPHERE_INSECURE='true or false'
+      export VCENTER_INSECURE='true or false'
 
       # Whether to use SSL. Defaults to true.
-      export VSPHERE_SSL='true or false'
+      export VCENTER_SSL='true or false'
 
       # Sets vSphere server port to connect to. Defaults to 443(SSL) or 80(non-SSL).
-      export VSPHERE_PORT='your-port'
+      export VCENTER_PORT='your-port'
       ~~~
 
    Alternatively you can provide the information in a configuration
-file. This should be stored as `vsphere.conf` in the relevant
+file. This should be stored as `vcenter.conf` in the relevant
 [confdir](https://docs.puppetlabs.com/puppet/latest/reference/dirs_confdir.html). This should be:
 
    * nix Systems: /etc/puppetlabs/puppet
@@ -83,7 +83,7 @@ file. This should be stored as `vsphere.conf` in the relevant
    The file format is:
 
       ~~~
-      vsphere: {
+      vcenter: {
         host: your-host
         user: your-username
         password: your-password
@@ -93,7 +93,7 @@ file. This should be stored as `vsphere.conf` in the relevant
    Or with all the settings:
 
       ~~~
-      vsphere: {
+      vcenter: {
         host: your-host
         user: your-username
         password: your-password
@@ -201,9 +201,9 @@ files left behind by this operation.
 By default we will use the default datacenter for your installation. If
 this fails or if you have multiple virtual datacenters on vSphere you
 can specify which datacenter you are managing using the
-`VSPHERE_DATACENTER` environment variable like so:
+`VCENTER_DATACENTER` environment variable like so:
 
-    VSPHERE_DATACENTER=my-datacenter puppet resource vpshere_machine
+    VCENTER_DATACENTER=my-datacenter puppet resource vpshere_machine
 
 This can also be set in the config file as `datacenter`.
 

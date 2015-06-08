@@ -3,14 +3,14 @@ module PuppetX
     class VsphereConfig
       REQUIRED = {
         names: [:host, :user, :password],
-        envs: ['VSPHERE_SERVER', 'VSPHERE_USER', 'VSPHERE_PASSWORD'],
+        envs: ['VCENTER_SERVER', 'VCENTER_USER', 'VCENTER_PASSWORD'],
       }
 
       attr_reader :host, :user, :password, :datacenter, :insecure, :port, :ssl
 
       def default_config_file
         Puppet.initialize_settings
-        File.join(Puppet[:confdir], 'vsphere.conf')
+        File.join(Puppet[:confdir], 'vcenter.conf')
       end
 
       def initialize(config_file=nil)
@@ -48,7 +48,7 @@ module PuppetX
             raise Puppet::Error, """Your configuration file at #{file_path} is invalid. The error from the parser is
 #{e.message}"""
           end
-          vsphere_config = conf.root.unwrapped['vsphere']
+          vsphere_config = conf.root.unwrapped['vcenter']
           required = REQUIRED[:names].map { |var| var.to_s }
           missing = required - vsphere_config.keys
           if missing.size < required.size
@@ -72,13 +72,13 @@ module PuppetX
         missing = required - ENV.keys
         if missing.size < required.size
           {
-            host: ENV['VSPHERE_SERVER'],
-            user: ENV['VSPHERE_USER'],
-            password: ENV['VSPHERE_PASSWORD'],
-            datacenter_name: ENV['VSPHERE_DATACENTER'],
-            insecure: ENV['VSPHERE_INSECURE'],
-            port: ENV['VSPHERE_PORT'],
-            ssl: ENV['VSPHERE_SSL'],
+            host: ENV['VCENTER_SERVER'],
+            user: ENV['VCENTER_USER'],
+            password: ENV['VCENTER_PASSWORD'],
+            datacenter_name: ENV['VCENTER_DATACENTER'],
+            insecure: ENV['VCENTER_INSECURE'],
+            port: ENV['VCENTER_PORT'],
+            ssl: ENV['VCENTER_SSL'],
           }
         else
           nil

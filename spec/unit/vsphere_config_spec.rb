@@ -3,18 +3,18 @@ require 'puppet_x/puppetlabs/vsphere_config'
 require 'hocon/config_factory'
 
 def nil_environment_variables
-  ENV.delete('VSPHERE_SERVER')
-  ENV.delete('VSPHERE_USER')
-  ENV.delete('VSPHERE_PASSWORD')
-  ENV.delete('VSPHERE_DATACENTER')
-  ENV.delete('VSPHERE_INSECURE')
-  ENV.delete('VSPHERE_PORT')
-  ENV.delete('VSPHERE_SSL')
+  ENV.delete('VCENTER_SERVER')
+  ENV.delete('VCENTER_USER')
+  ENV.delete('VCENTER_PASSWORD')
+  ENV.delete('VCENTER_DATACENTER')
+  ENV.delete('VCENTER_INSECURE')
+  ENV.delete('VCENTER_PORT')
+  ENV.delete('VCENTER_SSL')
 end
 
 def create_config_file(path, config)
   file_contents = %{
-vsphere: {
+vcenter: {
   host: #{config[:host]}
   user: #{config[:user]}
   password: #{config[:password]}
@@ -26,7 +26,7 @@ end
 
 def create_full_config_file(path, config)
   file_contents = %{
-vsphere: {
+vcenter: {
   host: #{config[:host]}
   user: #{config[:user]}
   password: #{config[:password]}
@@ -41,7 +41,7 @@ end
 
 def create_incomplete_config_file(path, config)
   file_contents = %{
-vsphere: {
+vcenter: {
   host: #{config[:host]}
 }
   }
@@ -66,13 +66,13 @@ describe PuppetX::Puppetlabs::VsphereConfig do
         insecure: 'false',
       }
       nil_environment_variables
-      ENV['VSPHERE_SERVER'] = @config[:host]
-      ENV['VSPHERE_USER'] = @config[:user]
-      ENV['VSPHERE_PASSWORD'] = @config[:password]
-      ENV['VSPHERE_DATACENTER'] = @config[:datacenter_name]
-      ENV['VSPHERE_PORT'] = @config[:port]
-      ENV['VSPHERE_SSL'] = @config[:ssl]
-      ENV['VSPHERE_INSECURE'] = @config[:insecure]
+      ENV['VCENTER_SERVER'] = @config[:host]
+      ENV['VCENTER_USER'] = @config[:user]
+      ENV['VCENTER_PASSWORD'] = @config[:password]
+      ENV['VCENTER_DATACENTER'] = @config[:datacenter_name]
+      ENV['VCENTER_PORT'] = @config[:port]
+      ENV['VCENTER_SSL'] = @config[:ssl]
+      ENV['VCENTER_INSECURE'] = @config[:insecure]
     end
 
     it 'should return the host from an ENV variable' do
@@ -113,9 +113,9 @@ describe PuppetX::Puppetlabs::VsphereConfig do
 
     before(:all) do
       nil_environment_variables
-      ENV['VSPHERE_SERVER'] = 'vsphere.example.com'
-      ENV['VSPHERE_USER'] = 'user'
-      ENV['VSPHERE_PASSWORD'] = 'password'
+      ENV['VCENTER_SERVER'] = 'vsphere.example.com'
+      ENV['VCENTER_USER'] = 'user'
+      ENV['VCENTER_PASSWORD'] = 'password'
     end
 
     it 'should default datacenter to nil' do
@@ -248,9 +248,9 @@ describe PuppetX::Puppetlabs::VsphereConfig do
 
   context 'with incomplete configuration in environment variables' do
     before(:all) do
-      ENV['VSPHERE_SERVER'] = 'vsphere.example.com'
-      ENV['VSPHERE_USER'] = nil
-      ENV['VSPHERE_PASSWORD'] = nil
+      ENV['VCENTER_SERVER'] = 'vsphere.example.com'
+      ENV['VCENTER_USER'] = nil
+      ENV['VCENTER_PASSWORD'] = nil
     end
 
     it 'should raise an error about the missing variables' do

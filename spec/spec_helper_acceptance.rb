@@ -68,12 +68,12 @@ class VsphereHelper
 
   def initialize
     credentials = {
-      host: ENV['VSPHERE_SERVER'],
-      user: ENV['VSPHERE_USER'],
-      password: ENV['VSPHERE_PASSWORD'],
+      host: ENV['VCENTER_SERVER'],
+      user: ENV['VCENTER_USER'],
+      password: ENV['VCENTER_PASSWORD'],
       insecure: true,
     }
-    datacenter = ENV['VSPHERE_DATACENTER']
+    datacenter = ENV['VCENTER_DATACENTER']
     vim = RbVmomi::VIM.connect credentials
     @datacenter = vim.serviceInstance.find_datacenter(datacenter)
   end
