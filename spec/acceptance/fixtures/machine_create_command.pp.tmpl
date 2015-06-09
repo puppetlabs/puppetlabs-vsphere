@@ -1,0 +1,11 @@
+vsphere_machine { '{{name}}':
+  ensure         => {{ensure}},
+  {{#optional}}
+  {{k}}          => '{{v}}',
+  {{/optional}}
+  create_command => {
+  {{#create_command}}
+  {{k}} => '{{v}}',
+  {{/create_command}}
+  }
+}

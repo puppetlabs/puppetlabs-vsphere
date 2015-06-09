@@ -1,5 +1,6 @@
 require 'puppet_x/puppetlabs/prefetch_error'
 require 'puppet_x/puppetlabs/vsphere'
+require 'retries'
 
 
 Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppetlabs::Vsphere) do
@@ -125,7 +126,52 @@ Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppet
       :name => instance.name,
       :spec => clone_spec).wait_for_completion
 
+    execute_command_on_machine if resource[:create_command]
+
     @property_hash[:ensure] = :present
+  end
+
+  def execute_command_on_machine
+    new_machine = PuppetX::Puppetlabs::Vsphere::Machine.new(name)
+    machine = datacenter.find_vm(new_machine.local_path)
+    machine_credentials = {
+      interactiveSession: false,
+      username: resource[:create_command]['user'],
+      password: resource[:create_command]['password'],
+    }
+    manager = vim.serviceContent.guestOperationsManager
+    auth = RbVmomi::VIM::NamePasswordAuthentication(machine_credentials)
+    handler = Proc.new do |exception, attempt_number, total_delay|
+      Puppet.debug("#{exception.message}; retry attempt #{attempt_number}; #{total_delay} seconds have passed")
+      # All exceptions in RbVmomi are RbVmomi::Fault, rather than the actual API exception
+      # The actual exceptions come out in the message, so we parse them out
+      case exception.message.split(':').first
+      when 'GuestComponentsOutOfDate'
+        raise Puppet::Error, 'VMware Tools is out of date on the guest machine'
+      when 'InvalidGuestLogin'
+        raise Puppet::Error, 'Incorrect credentials for the guest machine'
+      when 'OperationDisabledByGuest'
+        raise Puppet::Error, 'Remote access is disabled on the guest machine'
+      when 'OperationNotSupportedByGuest'
+        raise Puppet::Error, 'Remote access is not supported by the guest operating system'
+      end
+    end
+    arguments = resource[:create_command].has_key?('arguments') ? resource[:create_command]['arguments'] : ''
+    working_directory = resource[:create_command].has_key?('working_directory') ? resource[:create_command]['working_directory'] : '/'
+    spec = RbVmomi::VIM::GuestProgramSpec(
+      programPath: resource[:create_command]['command'],
+      arguments: arguments,
+      workingDirectory: working_directory,
+    )
+    with_retries(:max_tries => 10,
+                 :handler => handler,
+                 :base_sleep_seconds => 5,
+                 :max_sleep_seconds => 15,
+                 :rescue => RbVmomi::Fault) do
+      manager.authManager.ValidateCredentialsInGuest(vm: machine, auth: auth)
+      response = manager.processManager.StartProgramInGuest(vm: machine, auth: auth, spec: spec)
+      Puppet.info("Ran #{resource[:create_command]['command']}, started with PID #{response}")
+    end
   end
 
   def flush

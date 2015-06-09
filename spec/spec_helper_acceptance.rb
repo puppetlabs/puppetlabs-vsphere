@@ -74,8 +74,8 @@ class VsphereHelper
       insecure: true,
     }
     datacenter = ENV['VCENTER_DATACENTER']
-    vim = RbVmomi::VIM.connect credentials
-    @datacenter = vim.serviceInstance.find_datacenter(datacenter)
+    @vim = RbVmomi::VIM.connect credentials
+    @datacenter = @vim.serviceInstance.find_datacenter(datacenter)
   end
 
   def get_machine(path)
@@ -91,6 +91,18 @@ class VsphereHelper
     end
   end
 
+  def list_processes(path)
+    machine = get_machine(path)
+    machine_credentials = {
+      interactiveSession: false,
+      username: ENV['VSPHERE_GUEST_USERNAME'],
+      password: ENV['VSPHERE_GUEST_PASSWORD'],
+    }
+    manager = @vim.serviceContent.guestOperationsManager
+    auth = RbVmomi::VIM::NamePasswordAuthentication(machine_credentials)
+    manager.authManager.ValidateCredentialsInGuest(vm: machine, auth: auth)
+    manager.processManager.ListProcessesInGuest(vm: machine, auth: auth)
+  end
 end
 
 class TestExecutor

@@ -199,6 +199,30 @@ Puppet::Type.newtype(:vsphere_machine) do
     end
   end
 
+  # create_command => {
+  #   command =>
+  #   arguments =>
+  #   working_directory =>
+  #   user =>
+  #   password =>
+  # }
+  newparam(:create_command) do
+    desc 'Command to run on the machine when it is first created.'
+    validate do |value|
+      fail 'create_command should be a Hash' unless value.is_a? Hash
+      required = ['command', 'user', 'password']
+      missing = required - value.keys.map(&:to_s)
+      unless missing.empty?
+        fail "for create_command you are missing the following keys: #{missing.join(',')}"
+      end
+      ['command', 'user', 'password', 'working_directory', 'arguments'].each do |key|
+        if value[key]
+          fail "#{key} for create_command should be a String" unless value[key].is_a? String
+        end
+      end
+    end
+  end
+
   autorequire(:vsphere_machine) do
     self[:source]
   end
