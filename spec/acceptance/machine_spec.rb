@@ -501,14 +501,6 @@ describe 'vsphere_machine' do
     it 'with the named process owned by the correct user' do
       expect(@processes.first.owner).to eq(ENV['VSPHERE_GUEST_USERNAME'])
     end
-
-    it 'with the process having existed' do
-      expect(@processes.first.endTime).not_to be_nil
-    end
-
-    it 'with the process successfully run' do
-      expect(@processes.first.exitCode).to eq(0)
-    end
   end
 
   describe 'should create a machine but fail to run command on the guest' do
