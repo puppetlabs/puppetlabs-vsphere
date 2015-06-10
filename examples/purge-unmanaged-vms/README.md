@@ -19,7 +19,7 @@ machines* apart from those described in the same manifest. Do not run
 the following code on it's own.
 
 ```puppet
-resources { 'vsphere_machine':
+resources { 'vsphere_vm':
   purge => true,
 }
 ```
@@ -30,7 +30,7 @@ about machines it would have deleted. This means you can add them to
 your manifest or delete them manually as needed.
 
 ```puppet
-resources { 'vsphere_machine':
+resources { 'vsphere_vm':
   purge => true,
   noop  => true,
 }
@@ -40,8 +40,8 @@ This will output something similar in the logs (this example running
 under debug):
 
 ```
-Debug: Prefetching rbvmomi resources for vsphere_machine
-Notice: /Stage[main]/Main/Vsphere_machine[/west1/vm/test]/ensure: current_value running, should be absent (noop)
+Debug: Prefetching rbvmomi resources for vsphere_vm
+Notice: /Stage[main]/Main/Vsphere_vm[/west1/vm/test]/ensure: current_value running, should be absent (noop)
 Debug: Finishing transaction 70211596554260
 Debug: Storing state
 Debug: Stored state in 0.43 seconds

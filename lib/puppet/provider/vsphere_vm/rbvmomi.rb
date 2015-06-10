@@ -3,7 +3,7 @@ require 'puppet_x/puppetlabs/vsphere'
 require 'retries'
 
 
-Puppet::Type.type(:vsphere_machine).provide(:rbvmomi, :parent => PuppetX::Puppetlabs::Vsphere) do
+Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs::Vsphere) do
   confine feature: :rbvmomi
   confine feature: :hocon
 

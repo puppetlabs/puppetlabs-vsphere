@@ -1,6 +1,6 @@
 require_relative '../../puppet_x/puppetlabs/property/read_only'
 
-Puppet::Type.newtype(:vsphere_machine) do
+Puppet::Type.newtype(:vsphere_vm) do
   @doc = 'Type representing a virtual machine in VMware vSphere.'
 
   validate do
@@ -223,7 +223,7 @@ Puppet::Type.newtype(:vsphere_machine) do
     end
   end
 
-  autorequire(:vsphere_machine) do
+  autorequire(:vsphere_vm) do
     self[:source]
   end
 

@@ -1,7 +1,7 @@
 require 'spec_helper_acceptance'
 require 'securerandom'
 
-describe 'vsphere_machine' do
+describe 'vsphere_vm' do
 
   before(:all) do
     @client = VsphereHelper.new
@@ -59,7 +59,7 @@ describe 'vsphere_machine' do
 
     context 'when looked for using puppet resource' do
       before(:all) do
-        @result = TestExecutor.puppet_resource('vsphere_machine', {:name => @path}, '--modulepath ../')
+        @result = TestExecutor.puppet_resource('vsphere_vm', {:name => @path}, '--modulepath ../')
       end
 
       it 'should not return an error' do
