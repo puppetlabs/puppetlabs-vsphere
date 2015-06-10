@@ -75,6 +75,11 @@ describe PuppetX::Puppetlabs::VsphereConfig do
       ENV['VCENTER_INSECURE'] = @config[:insecure]
     end
 
+    it 'should allow for calling default_config_file more than once' do
+      config.default_config_file
+      expect { config.default_config_file }.not_to raise_error
+    end
+
     it 'should return the host from an ENV variable' do
       expect(config.host).to eq(@config[:host])
     end
