@@ -108,11 +108,23 @@ file. Store this as `vcenter.conf` in the relevant
 ## Getting started with vSphere
 
 This module allows for describing a vSphere machine using the Puppet
-DSL. To create a new machine from a template or other machine:
+DSL. To create a new machine from a template or other machine and keep it
+powered on:
 
 ~~~
 vsphere_vm { '/opdx1/vm/eng/sample':
-  ensure => present,
+  ensure => running,
+  source => '/opdx1/vm/eng/source',
+  memory => 1024,
+  cpus   => 1,
+}
+~~~
+
+To create the same machine without booting it, or to boot it at a later time,
+change the `ensure` parameter to `stopped`:
+
+vsphere_vm { '/opdx1/vm/eng/sample':
+  ensure => stopped,
   source => '/opdx1/vm/eng/source',
   memory => 1024,
   cpus   => 1,
@@ -226,7 +238,7 @@ stopped', 'unregistered', and 'absent'. If the machine is a template, then only 
 Values have the following effects:
 
 * 'present', 'running': Ensures that the VM is up and running. If the VM doesn't yet exist, a new one is created as specified by the other properties.
-* 'stopped': Ensures that the VM is created, but is not running.
+* 'stopped': Ensures that the VM is created, but is not running. This can be used to shut down running VMs, as well as for creating VMs without having them boot immediately.
 * 'unregistered': Ensures that the VM is not under active management in vSphere. This keeps the vmx/vhd files around.
 * 'absent': Ensures that the VM and all of its files are removed.
 
