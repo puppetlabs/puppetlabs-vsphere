@@ -480,8 +480,8 @@ describe 'vsphere_vm' do
         :create_command => {
           :command => '/bin/ps',
           :arguments => 'aux',
-          :user => ENV['VSPHERE_GUEST_USERNAME'],
-          :password => ENV['VSPHERE_GUEST_PASSWORD'],
+          :user => ENV['VCENTER_GUEST_USERNAME'],
+          :password => ENV['VCENTER_GUEST_PASSWORD'],
         }
       }
       PuppetManifest.new(template, @config).apply
@@ -510,7 +510,7 @@ describe 'vsphere_vm' do
     end
 
     it 'with the named process owned by the correct user' do
-      expect(@processes.first.owner).to eq(ENV['VSPHERE_GUEST_USERNAME'])
+      expect(@processes.first.owner).to eq(ENV['VCENTER_GUEST_USERNAME'])
     end
   end
 
