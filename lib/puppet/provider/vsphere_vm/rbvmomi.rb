@@ -29,52 +29,61 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
   end
 
   def self.machine_to_hash(machine)
-    begin
-    name = machine.path.collect { |x| x[1] }.drop(1).join('/')
-    resource_pool = machine.resourcePool
-    resource_pool = resource_pool ? resource_pool.parent.name : nil
-    state = machine_state(machine)
-    summary = machine.summary
-    config = machine.config
-    hostname = summary.guest.hostName
-    extra_config = {}
-    config.extraConfig.map do |setting|
-      extra_config[setting.key] = setting.value
-    end
-
-    {
-      name: "/#{name}",
-      memory: summary.config.memorySizeMB,
-      cpus: summary.config.numCpu,
-      resource_pool: resource_pool,
-      template: summary.config.template,
-      ensure: state,
-      memory_reservation: summary.config.memoryReservation,
-      cpu_reservation: summary.config.cpuReservation,
-      number_ethernet_cards: summary.config.numEthernetCards,
-      power_state: summary.runtime.powerState,
-      tools_installer_mounted: summary.runtime.toolsInstallerMounted,
-      snapshot_disabled: config.flags.snapshotDisabled,
-      snapshot_locked: config.flags.snapshotLocked,
-      snapshot_power_off_behavior: config.flags.snapshotPowerOffBehavior,
-      uuid: summary.config.uuid,
-      instance_uuid: summary.config.instanceUuid,
-      guest_ip: machine.guest_ip,
-      hostname: hostname == '(none)' ? nil : hostname,
-      extra_config: extra_config,
-      annotation: config.annotation,
-    }
-    rescue RbVmomi::Fault => e
-      # All exceptions are RbVmomi exceptions, with the actual exception hidden in the message
-      if e.message.split(':').first == 'ManagedObjectNotFound'
+    handler = Proc.new do |exception, attempt_number, total_delay|
+      Puppet.debug("#{exception.message}; retry attempt #{attempt_number}; #{total_delay} seconds have passed")
+      # All exceptions in RbVmomi are RbVmomi::Fault, rather than the actual API exception
+      # The actual exceptions come out in the message, so we parse them out
+      case exception.message.split(':').first
+      when 'InvalidArgument', 'InvalidProperty', 'InvalidType'
+        raise Puppet::DevError, "Internal error when calling out to vCenter: #{exception.faultCause}"
+      when 'ManagedObjectNotFound'
         # It's possible to retrieve machines inbetween retrieval and query which have already
         # been deleted or that hadn't been completely created. In these cases it makes sense
         # to not return them
         nil
-      else
-        # this reraises the exception if it's a different RbVmomi::Fault type
-        raise
+      when 'DatabaseError', 'HostCommunication'
+        # RuntimeFault that should be retried
+        nil
       end
+    end
+    with_retries(:max_tries => 10,
+                 :handler => handler,
+                 :max_sleep_seconds => 2,
+                 :rescue => RbVmomi::Fault) do
+      name = machine.path.collect { |x| x[1] }.drop(1).join('/')
+      resource_pool = machine.resourcePool
+      resource_pool = resource_pool ? resource_pool.parent.name : nil
+      state = machine_state(machine)
+      summary = machine.summary
+      config = machine.config
+      hostname = summary.guest.hostName
+      extra_config = {}
+      config.extraConfig.map do |setting|
+        extra_config[setting.key] = setting.value
+      end
+
+      {
+        name: "/#{name}",
+        memory: summary.config.memorySizeMB,
+        cpus: summary.config.numCpu,
+        resource_pool: resource_pool,
+        template: summary.config.template,
+        ensure: state,
+        memory_reservation: summary.config.memoryReservation,
+        cpu_reservation: summary.config.cpuReservation,
+        number_ethernet_cards: summary.config.numEthernetCards,
+        power_state: summary.runtime.powerState,
+        tools_installer_mounted: summary.runtime.toolsInstallerMounted,
+        snapshot_disabled: config.flags.snapshotDisabled,
+        snapshot_locked: config.flags.snapshotLocked,
+        snapshot_power_off_behavior: config.flags.snapshotPowerOffBehavior,
+        uuid: summary.config.uuid,
+        instance_uuid: summary.config.instanceUuid,
+        guest_ip: machine.guest_ip,
+        hostname: hostname == '(none)' ? nil : hostname,
+        extra_config: extra_config,
+        annotation: config.annotation,
+      }
     end
   end
 
