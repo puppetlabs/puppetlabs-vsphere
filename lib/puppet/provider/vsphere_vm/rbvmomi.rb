@@ -108,8 +108,15 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
   def create(args={})
     Puppet.info("Creating #{type_name} #{name}")
 
-    raise Puppet::Error, "Must provide a source machine or template to base the new machine on" unless resource[:source]
+    raise Puppet::Error, "Must provide a source machine, template, or datastore folder to base the machine on" unless resource[:source]
+    if resource[:source_type] == :folder
+      create_from_folder
+    else
+      create_from_path(args)
+    end
+  end
 
+  def create_from_path(args)
     base_machine = PuppetX::Puppetlabs::Vsphere::Machine.new(resource[:source])
     vm = datacenter.find_vm(base_machine.local_path)
     raise Puppet::Error, "No machine found at #{base_machine.local_path}" unless vm
@@ -156,6 +163,39 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     execute_command_on_machine if resource[:create_command]
 
     @property_hash[:ensure] = :present
+  end
+
+  def create_from_folder
+    Puppet.info("Registering #{type_name} #{name}")
+
+    base_machine = PuppetX::Puppetlabs::Vsphere::Machine.new(resource[:name])
+    template = resource[:template].to_s == 'true' || false
+    vm_folder = resource[:source]
+    vm_ext = template ? "vmtx" : "vmx"
+
+    if resource[:resource_pool]
+      compute = datacenter.find_compute_resource(resource[:resource_pool])
+      raise Puppet::Error, "No resource pool found with name #{resource[:resource_pool]}" unless compute
+      host = template ? compute.host.first : nil
+      raise Puppet::Error, "No host system found for resource pool #{resource[:resource_pool]}" unless host
+      pool = template ? nil : compute.resourcePool
+      raise Puppet::Error, "No resource pool found for #{resource[:resource_pool]}" unless pool
+    else
+      datastore = datacenter.datastore.first
+      raise Puppet::Error, "No datastore found for default datacenter" unless datastore
+      hosts = datacenter.hostFolder.children
+      raise Puppet::Error, "No resource pool found for default datacenter" if hosts.empty?
+      host = template ? hosts.first.host.first : nil
+      pool = template ? nil : hosts.first.resourcePool
+    end
+
+    folder = find_or_create_folder(datacenter.vmFolder, base_machine.folder)
+    folder.RegisterVM_Task(
+      :path       => "[#{datastore.name}] #{vm_folder}/#{vm_folder}.#{vm_ext}",
+      :asTemplate => template,
+      :pool       => pool,
+      :host       => host
+    ).wait_for_completion
   end
 
   def execute_command_on_machine
@@ -239,10 +279,18 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     @property_hash[:ensure] = :unregistered
   end
 
-  def destroy
+  def delete_from_disk
     Puppet.info("Deleting #{type_name} #{name}")
     machine.Destroy_Task.wait_for_completion
     @property_hash[:ensure] = :absent
+  end
+
+  def destroy
+    if resource[:delete_from_disk].to_s == 'false'
+      unregister
+    else
+      delete_from_disk
+    end
   end
 
   def stop

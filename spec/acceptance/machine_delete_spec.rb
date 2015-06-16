@@ -8,25 +8,28 @@ shared_context 'a running vm' do
     @name = "CLOUD-#{SecureRandom.hex(8)}"
     @path = "/opdx1/vm/eng/#{@name}"
     @config = {
-      :name    => @path,
-      :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+      :name     => @path,
+      :optional => {
+        :source      => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+        :source_type => :template,
+      },
     }
     datacenter = @client.datacenter
-    path = @config[:source]
+    path = @config[:optional][:source]
     path.slice!('/opdx1/vm')
     template = datacenter.find_vm(path)
     pool = datacenter.hostFolder.children.first.resourcePool
     relocate_spec = RbVmomi::VIM.VirtualMachineRelocateSpec(:pool => pool)
     clone_spec = RbVmomi::VIM.VirtualMachineCloneSpec(
       :location => relocate_spec,
-      :powerOn => true,
+      :powerOn  => true,
       :template => false)
     clone_spec.config = RbVmomi::VIM.VirtualMachineConfigSpec(deviceChange: [])
     target_folder = datacenter.vmFolder.find('eng')
     template.CloneVM_Task(
       :folder => target_folder,
-      :name => @name,
-      :spec => clone_spec).wait_for_completion
+      :name   => @name,
+      :spec   => clone_spec).wait_for_completion
 
     @datastore = @client.datacenter.datastore.first
     @machine = @client.get_machine(@path)
@@ -42,8 +45,13 @@ describe 'vsphere_vm' do
     include_context 'a running vm'
 
     before(:all) do
-      @unregister_config = @config.dup
-      @unregister_config[:ensure] = :unregistered
+      @unregister_config = {
+        :name     => @path,
+        :ensure   => :absent,
+        :optional => {
+          :delete_from_disk => false,
+        },
+      }
       PuppetManifest.new(@template, @unregister_config).apply
     end
 
@@ -91,8 +99,13 @@ describe 'vsphere_vm' do
     include_context 'a running vm'
 
     before(:all) do
-      @absent_config = @config.dup
-      @absent_config[:ensure] = :absent
+      @absent_config = {
+        :name     => @path,
+        :ensure   => :absent,
+        :optional => {
+          :delete_from_disk => true,
+        },
+      }
       PuppetManifest.new(@template, @absent_config).apply
     end
 

@@ -6,7 +6,7 @@ Puppet::Type.newtype(:vsphere_vm) do
   validate do
     if self[:template].to_s == 'true'
       fail 'Cannot provide resource_pool for a template.' if self[:resource_pool]
-      fail 'Templates can only be absent, present or unregistered.' unless self[:ensure] =~ /^(absent|present|unregistered)$/
+      fail 'Templates can only be absent or present.' unless self[:ensure] =~ /^(absent|present)$/
     end
   end
 
@@ -14,18 +14,6 @@ Puppet::Type.newtype(:vsphere_vm) do
     defaultto :present
     newvalue(:present) do
       provider.create unless provider.exists?
-    end
-    newvalue(:unregistered) do
-      if provider.exists?
-        case provider.current_state
-        when :running
-          provider.stop
-        when :suspended
-          provider.start
-          provider.stop
-        end
-        provider.unregister
-      end
     end
     newvalue(:absent) do
       if provider.exists?
@@ -107,10 +95,22 @@ Puppet::Type.newtype(:vsphere_vm) do
   end
 
   newparam(:source) do
-    desc 'The path to an existing machine or template to use as the base for the new machine.'
+    desc 'The path to an existing machine or template to use as the base for the new machine or the name of the folder of the vm to register.'
     validate do |value|
-      fail 'Virtual machine path should be a String' unless value.is_a? String
+      fail 'Virtual machine source should be a String' unless value.is_a? String
     end
+  end
+
+  newparam(:source_type) do
+    desc 'The type of the source provided. Acceptable values are vm, template, or folder.'
+    defaultto :vm
+    newvalues(:vm, :template, :folder)
+  end
+
+  newparam(:delete_from_disk) do
+    desc 'Whether or not to delete this VM from disk or unregister it from inventory.'
+    defaultto :true
+    newvalues(:true, :false)
   end
 
   newproperty(:memory) do
