@@ -9,7 +9,7 @@ module PuppetX
       attr_reader :host, :user, :password, :datacenter, :insecure, :port, :ssl
 
       def default_config_file
-        Puppet.initialize_settings
+        Puppet.initialize_settings unless Puppet[:confdir]
         File.join(Puppet[:confdir], 'vcenter.conf')
       end
 
