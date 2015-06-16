@@ -108,7 +108,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
   def create(args={})
     Puppet.info("Creating #{type_name} #{name}")
 
-    raise Puppet::Error, "Must provide a source machine, template, or datastore folder to base the machine on" unless resource[:source]
+    raise Puppet::Error, "Must provide a source machine, template or datastore folder to base the machine on" unless resource[:source]
     if resource[:source_type] == :folder
       create_from_folder
     else

@@ -611,7 +611,7 @@ describe 'vsphere_vm' do
       end
 
       it 'should report the problem' do
-        expect(@apply[:output].map { |i| i.include? 'Must provide a source machine, template or datastore folder to base the new machine on' }.include? true).to eq(true)
+        expect(@apply[:output].map { |i| i.include? 'Must provide a source machine, template or datastore folder to base the machine on' }.include? true).to eq(true)
       end
     end
 
