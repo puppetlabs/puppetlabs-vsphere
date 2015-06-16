@@ -12,7 +12,8 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
   def self.instances
     begin
       find_vms_in_folder(datacenter.vmFolder).collect do |machine|
-        new(machine_to_hash(machine))
+        hash = machine_to_hash(machine)
+        new(hash) if hash
       end.compact
     rescue StandardError => e
       raise PuppetX::Puppetlabs::PrefetchError.new(self.resource_type.name.to_s, e.message)
@@ -28,6 +29,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
   end
 
   def self.machine_to_hash(machine)
+    begin
     name = machine.path.collect { |x| x[1] }.drop(1).join('/')
     resource_pool = machine.resourcePool
     resource_pool = resource_pool ? resource_pool.parent.name : nil
@@ -60,6 +62,18 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       extra_config: extra_config,
       annotation: machine.config.annotation,
     }
+    rescue RbVmomi::Fault => e
+      # All exceptions are RbVmomi exceptions, with the actual exception hidden in the message
+      if e.message.split(':').first == 'ManagedObjectNotFound'
+        # It's possible to retrieve machines inbetween retrieval and query which have already
+        # been deleted or that hadn't been completely created. In these cases it makes sense
+        # to not return them
+        nil
+      else
+        # this reraises the exception if it's a different RbVmomi::Fault type
+        raise
+      end
+    end
   end
 
   def self.machine_state(vm)
@@ -89,9 +103,11 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     vm = datacenter.find_vm(base_machine.local_path)
     raise Puppet::Error, "No machine found at #{base_machine.local_path}" unless vm
 
+
     if resource[:resource_pool]
-      pool = datacenter.find_compute_resource(resource[:resource_pool]).resourcePool
-      raise Puppet::Error, "No resource pool found for #{resource[:resouce_pool]}" unless pool
+      compute = datacenter.find_compute_resource(resource[:resource_pool])
+      raise Puppet::Error, "No resource pool found named #{resource[:resource_pool]}" unless compute
+      pool = compute.resourcePool
     else
       hosts = datacenter.hostFolder.children
       raise Puppet::Error, "No resource pool found for default datacenter" if hosts.empty?

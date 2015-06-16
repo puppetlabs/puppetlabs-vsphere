@@ -525,7 +525,6 @@ describe 'vsphere_vm' do
           }
         }
         @apply = PuppetManifest.new(@template, @config).apply
-        @machine = @client.get_machine(@path)
       end
 
       after(:all) do
@@ -533,7 +532,7 @@ describe 'vsphere_vm' do
       end
 
       it 'should create a machine' do
-        expect(@machine).not_to be_nil
+        expect(@client.get_machine(@path)).to be_nil
       end
 
       it 'should fail to apply successfully' do
@@ -543,6 +542,154 @@ describe 'vsphere_vm' do
 
       it 'should report the incorrect credentials' do
         expect(@apply[:output].map { |i| i.include? 'Incorrect credentials for the guest machine' }.include? true).to eq(true)
+      end
+    end
+  end
+
+  describe 'should provide useful error messages' do
+
+    context 'for a machine with an invalid source machine' do
+
+      before(:all) do
+        name = "CLOUD-#{SecureRandom.hex(8)}"
+        @path = "/opdx1/vm/eng/test/#{name}"
+        @config = {
+          :name     => @path,
+          :ensure   => 'present',
+          :optional => {
+            :source  => '/opdx1/vm/eng/templates/invalid',
+          },
+        }
+        @apply = PuppetManifest.new(@template, @config).apply
+      end
+
+      it 'should not create a machine' do
+        expect(@client.get_machine(@path)).to be_nil
+      end
+
+      it 'should fail to apply successfully' do
+        success = @apply[:exit_status].success?
+        expect(success).to eq(false)
+      end
+
+      it 'should report the problem' do
+        expect(@apply[:output].map { |i| i.include? 'No machine found at /eng/templates/invalid' }.include? true).to eq(true)
+      end
+    end
+
+    context 'for an non-existent machine with no source property' do
+
+      before(:all) do
+        name = "CLOUD-#{SecureRandom.hex(8)}"
+        @path = "/opdx1/vm/eng/test/#{name}"
+        @config = {
+          :name     => @path,
+          :ensure   => 'present',
+        }
+        @apply = PuppetManifest.new(@template, @config).apply
+      end
+
+      it 'should not create a machine' do
+        expect(@client.get_machine(@path)).to be_nil
+      end
+
+      it 'should fail to apply successfully' do
+        success = @apply[:exit_status].success?
+        expect(success).to eq(false)
+      end
+
+      it 'should report the problem' do
+        expect(@apply[:output].map { |i| i.include? 'Must provide a source machine or template to base the new machine on' }.include? true).to eq(true)
+      end
+    end
+
+    context 'for a machine with an invalid resource pool' do
+
+      before(:all) do
+        name = "CLOUD-#{SecureRandom.hex(8)}"
+        @path = "/opdx1/vm/eng/test/#{name}"
+        @config = {
+          :name     => @path,
+          :ensure   => 'present',
+          :optional => {
+            :resource_pool => 'invalid',
+            :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          },
+        }
+        @apply = PuppetManifest.new(@template, @config).apply
+      end
+
+      it 'should not create a machine' do
+        expect(@client.get_machine(@path)).to be_nil
+      end
+
+      it 'should fail to apply successfully' do
+        success = @apply[:exit_status].success?
+        expect(success).to eq(false)
+      end
+
+      it 'should report the problem' do
+        expect(@apply[:output].map { |i| i.include? "No resource pool found named #{@config[:optional][:resource_pool]}" }.include? true).to eq(true)
+      end
+    end
+
+    context 'for a machine specifying a read-only property' do
+
+      before(:all) do
+        name = "CLOUD-#{SecureRandom.hex(8)}"
+        @path = "/opdx1/vm/eng/test/#{name}"
+        @config = {
+          :name     => @path,
+          :ensure   => 'present',
+          :optional => {
+            :uuid   => 'invalid',
+            :source => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          },
+        }
+        @apply = PuppetManifest.new(@template, @config).apply
+      end
+
+      it 'should not create a machine' do
+        expect(@client.get_machine(@path)).to be_nil
+      end
+
+      it 'should fail to apply successfully' do
+        success = @apply[:exit_status].success?
+        expect(success).to eq(false)
+      end
+
+      it 'should report the problem' do
+        expect(@apply[:output].map { |i| i.include? "uuid is read-only and is only available via puppet resource." }.include? true).to eq(true)
+      end
+    end
+
+    context 'for a template with an invalid source machine' do
+
+      before(:all) do
+        name = "CLOUD-#{SecureRandom.hex(8)}"
+        @path = "/opdx1/vm/eng/test/#{name}"
+        @config = {
+          :name     => @path,
+          :ensure   => 'present',
+          :optional => {
+            :source   => '/opdx1/vm/eng/templates/invalid',
+            :template => true,
+          },
+        }
+        @apply = PuppetManifest.new(@template, @config).apply
+      end
+
+      it 'should not create a template' do
+        expect(@client.get_machine(@path)).to be_nil
+      end
+
+      it 'should fail to apply successfully' do
+        success = @apply[:exit_status].success?
+        expect(success).to eq(false)
+      end
+
+      it 'should report the problem' do
+        expect(@apply[:output].map { |i| i.include? 'No machine found at /eng/templates/invalid' }.include? true).to eq(true)
       end
     end
   end
