@@ -18,6 +18,7 @@ describe 'vsphere_vm' do
         :ensure   => 'present',
         :optional => {
           :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source_type   => :template,
           :memory        => 512,
           :cpus          => 2,
           :resource_pool => 'general1',
@@ -116,6 +117,7 @@ describe 'vsphere_vm' do
         :ensure   => 'present',
         :optional => {
           :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source_type   => :template,
           :resource_pool => 'general1',
           :memory        => 512,
           :cpus          => 1,
@@ -145,6 +147,7 @@ describe 'vsphere_vm' do
         :ensure   => 'present',
         :optional => {
           :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source_type   => :template,
           :resource_pool => 'general1',
           :memory        => 512,
           :cpus          => 1,
@@ -159,7 +162,8 @@ describe 'vsphere_vm' do
         :name     => @target_path,
         :ensure   => 'present',
         :optional => {
-          :source => source_vm_path,
+          :source      => source_vm_path,
+          :source_type => :vm,
         }
       }
       PuppetManifest.new(@template, @target_config).apply
@@ -198,8 +202,9 @@ describe 'vsphere_vm' do
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :source   => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
-          :template => true,
+          :source      => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source_type => :template,
+          :template    => true,
         }
       }
       PuppetManifest.new(@template, @config).apply
@@ -228,7 +233,8 @@ describe 'vsphere_vm' do
         :name     => @source_path,
         :ensure   => 'present',
         :optional => {
-          :source => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source      => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source_type => :template,
         }
       }
       PuppetManifest.new(@template, @source_config).apply
@@ -283,11 +289,12 @@ describe 'vsphere_vm' do
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source_type   => :template,
           :resource_pool => 'general1',
-          :cpus         => 1,
-          :memory       => 512,
-          :annotation   => 'some test',
+          :cpus          => 1,
+          :memory        => 512,
+          :annotation    => 'some test',
         }
       }
       PuppetManifest.new(@template, @config).apply
@@ -350,6 +357,7 @@ describe 'vsphere_vm' do
         :ensure   => 'present',
         :optional => {
           :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source_type   => :template,
           :resource_pool => 'general1',
           :memory        => 512,
           :cpus          => 1,
@@ -364,7 +372,8 @@ describe 'vsphere_vm' do
         :name     => @target_path,
         :ensure   => 'present',
         :optional => {
-          :source => source_vm_path,
+          :source       => source_vm_path,
+          :source_type  => :vm,
           :linked_clone => true,
         }
       }
@@ -419,7 +428,8 @@ describe 'vsphere_vm' do
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source_type   => :template,
           :resource_pool => 'general1',
           :cpus          => 1,
           :memory        => 512,
@@ -464,7 +474,8 @@ describe 'vsphere_vm' do
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source      => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source_type => :template,
         },
         :create_command => {
           :command => '/bin/ps',
@@ -515,7 +526,8 @@ describe 'vsphere_vm' do
           :name     => @path,
           :ensure   => 'present',
           :optional => {
-            :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+            :source      => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+            :source_type => :template,
           },
           :create_command => {
             :command => '/bin/ps',
@@ -694,4 +706,74 @@ describe 'vsphere_vm' do
     end
   end
 
+  describe 'should be able to register a vm on disk' do
+    before(:all) do
+      @name = "CLOUD-#{SecureRandom.hex(8)}"
+
+      @path = "/opdx1/vm/eng/test/#{@name}"
+      @config = {
+        :name     => @path,
+        :ensure   => 'present',
+        :optional => {
+          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source_type   => :template,
+          :resource_pool => 'general1',
+          :cpus          => 1,
+          :memory        => 512,
+        }
+      }
+      PuppetManifest.new(@template, @config).apply
+      machine = @client.get_machine(@path)
+      @original_config = machine.summary.config
+
+      unregister_config = {
+        :name     => @path,
+        :ensure   => 'absent',
+        :optional => {
+          :delete_from_disk => false,
+        },
+      }
+      PuppetManifest.new(@template, unregister_config).apply
+      @unregistered_machine = @client.get_machine(@path)
+
+      register_config = {
+        :name     => @path,
+        :ensure   => 'present',
+        :optional => {
+          :source      => @name,
+          :source_type => 'folder',
+        },
+      }
+      PuppetManifest.new(@template, register_config).apply
+      @newly_register_machine = @client.get_machine(@path)
+    end
+
+    it 'should successfully unregister the original vm' do
+      expect(@unregistered_machine).to be_nil
+    end
+
+    it 'should successfully register the vm from disk' do
+      expect(@newly_register_machine).not_to be_nil
+    end
+
+    it 'should have same config as original vm' do
+      [
+        :cpuReservation,
+        :guestFullName,
+        :guestId,
+        :installBootRequired,
+        :memoryReservation,
+        :memorySizeMB,
+        :numCpu,
+        :numEthernetCards,
+        :numVirtualDisks,
+      ].each do |property|
+        expect(@newly_register_machine.summary.config[property]).to eq(@original_config[property])
+      end
+    end
+
+    after(:all) do
+      @client.destroy_machine(@path)
+    end
+  end
 end
