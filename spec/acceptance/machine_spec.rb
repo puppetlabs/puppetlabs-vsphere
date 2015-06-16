@@ -532,7 +532,7 @@ describe 'vsphere_vm' do
       end
 
       it 'should create a machine' do
-        expect(@client.get_machine(@path)).to be_nil
+        expect(@client.get_machine(@path)).not_to be_nil
       end
 
       it 'should fail to apply successfully' do
