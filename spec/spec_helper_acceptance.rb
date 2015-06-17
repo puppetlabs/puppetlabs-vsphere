@@ -95,8 +95,8 @@ class VsphereHelper
     machine = get_machine(path)
     machine_credentials = {
       interactiveSession: false,
-      username: ENV['VSPHERE_GUEST_USERNAME'],
-      password: ENV['VSPHERE_GUEST_PASSWORD'],
+      username: ENV['VCENTER_GUEST_USERNAME'],
+      password: ENV['VCENTER_GUEST_PASSWORD'],
     }
     manager = @vim.serviceContent.guestOperationsManager
     auth = RbVmomi::VIM::NamePasswordAuthentication(machine_credentials)
