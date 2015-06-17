@@ -39,3 +39,10 @@ task :test => [
   :lint,
   :spec,
 ]
+
+task(:coverage).clear
+desc "Run specs with coverage report"
+task :coverage do
+  ENV['COVERAGE'] = 'yes'
+  Rake::Task[:spec].invoke
+end

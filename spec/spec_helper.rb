@@ -1,6 +1,11 @@
 require 'rbvmomi'
 require 'puppetlabs_spec_helper/module_spec_helper'
 
+if ENV['COVERAGE'] == 'yes'
+  require 'simplecov'
+  SimpleCov.start
+end
+
 if ENV['FUTURE_PARSER'] == 'yes'
   RSpec.configure do |c|
     c.parser = 'future'
