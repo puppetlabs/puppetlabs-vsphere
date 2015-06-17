@@ -1,4 +1,4 @@
-source "https://rubygems.org"
+source ENV['GEM_SOURCE'] || "https://rubygems.org"
 
 gem 'rbvmomi'
 gem 'hocon'
@@ -15,10 +15,15 @@ group :development do
   gem 'pry'
   gem 'puppet-blacksmith'
   gem 'guard-rake'
-  gem 'pry-rescue'
-  gem 'pry-stack_explorer'
+  #gem 'pry-rescue'
+  #gem 'pry-stack_explorer'
 end
 
 group :acceptance do
   gem 'mustache'
+end
+
+group :integration do
+  gem 'beaker', '~> 2.7'
+  gem 'master_manipulator', '~> 1.0'
 end

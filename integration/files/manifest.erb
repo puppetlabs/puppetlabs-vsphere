@@ -1,0 +1,8 @@
+vsphere_vm { '<%= name_path %>':
+  ensure          => <%= status %>,
+  source          => '<%= source_path %>',
+  resource_pool   => 'general1',
+  memory          => 512,
+  cpus            => 1,
+  template        => '<%= is_template %>',
+}
