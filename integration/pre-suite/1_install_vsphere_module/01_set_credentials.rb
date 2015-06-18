@@ -9,9 +9,12 @@ server    = ENV['VCENTER_SERVER']
 user      = ENV['VCENTER_USER']
 password  = ENV['VCENTER_PASSWORD']
 
-step 'Add env var to hosts'
+local_files_root_path     = ENV['FILES'] || 'files'
+vcenter_conf_template     = File.join(local_files_root_path, 'vcenter_conf.erb')
+vcenter_conf_erb          = ERB.new(File.read(vcenter_conf_template)).result(binding)
+
+step 'Create vcenter.conf file on the agent node'
 agents.each do |agent|
-  agent.add_env_var("VCENTER_SERVER", "#{server}")
-  agent.add_env_var("VCENTER_USER", "#{user}")
-  agent.add_env_var("VCENTER_PASSWORD", "#{password}")
+  confdir_path = on(agent, puppet('config', 'print', 'confdir')).stdout.rstrip
+  create_remote_file(agent, "#{confdir_path}/vcenter.conf", vcenter_conf_erb)
 end
