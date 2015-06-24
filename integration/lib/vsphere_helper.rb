@@ -16,9 +16,9 @@ def machine_exists?(datacenter, name, path)
 end
 
 def vm_exists?(datacenter, name)
-  machine_exists(datacenter, name, '/eng/integration/vm')
+  machine_exists?(datacenter, name, '/eng/integration/vm')
 end
 
 def template_exists?(datacenter, name)
-  machine_exists(datacenter, name, '/eng/integration/template')
+  machine_exists?(datacenter, name, '/eng/integration/template')
 end
