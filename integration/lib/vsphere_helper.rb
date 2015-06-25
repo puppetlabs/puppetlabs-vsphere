@@ -32,5 +32,5 @@ def machine_powerstate?(datacenter, name, desired_state)
   dc    = vim.serviceInstance.find_datacenter(datacenter) or fail "datacenter not found"
   vm    = dc.find_vm("/eng/integration/vm/#{name}")
   powerState = vm.runtime.powerState
-  fail_test "The VM power state is not '#{desired_state}'" unless powerState == desired_state
+  fail_test "The current VM power state is '#{powerState}'" unless (powerState == desired_state)
 end
