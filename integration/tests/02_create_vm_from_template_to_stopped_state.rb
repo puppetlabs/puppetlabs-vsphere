@@ -1,5 +1,5 @@
 require 'vsphere_helper'
-require 'SecureRandom'
+require 'securerandom'
 require 'erb'
 require 'rbvmomi'
 require 'master_manipulator'

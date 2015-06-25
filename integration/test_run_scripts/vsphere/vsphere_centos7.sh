@@ -6,7 +6,8 @@ SCRIPT_BASE_PATH=`eval ${BASENAME_CMD}`
 if [ $SCRIPT_BASE_PATH = "vsphere" ]; then
   cd ../../
 fi
-export pe_dist_dir=http://pe-releases.puppetlabs.lan/3.8.0/
+
+export pe_dist_dir=http://pe-releases.puppetlabs.lan/3.8.1/
 export GEM_SOURCE=http://rubygems.delivery.puppetlabs.net
 
 bundle install --without acceptance development test --path .bundle/gems

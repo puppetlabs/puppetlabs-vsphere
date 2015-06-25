@@ -23,7 +23,7 @@ def template_exists?(datacenter, name)
   machine_exists?(datacenter, name, '/eng/integration/template')
 end
 
-def machine_powerstate(datacenter, name)
+def machine_powerstate?(datacenter, name, desired_state)
   server  = ENV['VCENTER_SERVER']
   userid  = ENV['VCENTER_USER']
   passwd  = ENV['VCENTER_PASSWORD']
@@ -32,5 +32,5 @@ def machine_powerstate(datacenter, name)
   dc    = vim.serviceInstance.find_datacenter(datacenter) or fail "datacenter not found"
   vm    = dc.find_vm("/eng/integration/vm/#{name}")
   powerState = vm.runtime.powerState
-  powerState
+  fail_test "The VM power state is not '#{desired_state}'" unless powerState == desired_state
 end
