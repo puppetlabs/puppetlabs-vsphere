@@ -43,6 +43,8 @@ confine_block :except, :roles => %w{master dashboard database} do
     end
   end
 end
+step "Verify the VM is in stopped  state in vCenter"
+fail_test "The VM '#{name}' is not in Stopped state" unless machine_powerstate(datacenter, name) == 'poweredOff'
 
 step "Manipulate the site.pp file on the master node the second time"
 # Modify manifest_erb file
@@ -56,15 +58,17 @@ manifest_erb      = ERB.new(File.read(manifest_template)).result(binding)
 site_pp = create_site_pp(master, :manifest => manifest_erb)
 inject_site_pp(master, prod_env_site_pp_path, site_pp)
 
-# Not running on Master
 confine_block :except, :roles => %w{master dashboard database} do
   step "Creating VM from VM and to running state"
   agents.each do |agent|
     on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
-      assert_match(/vm_from_vm_#{name}\]\/ensure: changed absent to running/, result.output, 'Failed to create VM from template')
+      assert_match(/vm_from_vm_#{name}\]\/ensure: changed absent to running/, result.output, 'Failed to create VM from VM')
     end
   end
 end
 
 step "Verify the VM has been successfully created in vCenter:"
 vm_exists?(datacenter, "vm_from_vm_#{name}")
+
+step "Verify the VM is in running state in vCenter"
+fail_test "The VM 'vm_from_vm_#{name}' is not running" unless machine_powerstate(datacenter, "vm_from_vm_#{name}") == 'poweredOn'

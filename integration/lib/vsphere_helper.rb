@@ -22,3 +22,15 @@ end
 def template_exists?(datacenter, name)
   machine_exists?(datacenter, name, '/eng/integration/template')
 end
+
+def machine_powerstate(datacenter, name)
+  server  = ENV['VCENTER_SERVER']
+  userid  = ENV['VCENTER_USER']
+  passwd  = ENV['VCENTER_PASSWORD']
+
+  vim   = RbVmomi::VIM.connect insecure: 'true', host: server, user: userid, password: passwd
+  dc    = vim.serviceInstance.find_datacenter(datacenter) or fail "datacenter not found"
+  vm    = dc.find_vm("/eng/integration/vm/#{name}")
+  powerState = vm.runtime.powerState
+  powerState
+end
