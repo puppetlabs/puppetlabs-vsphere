@@ -46,7 +46,7 @@ def machine_exists?(datacenter, name, path)
   vim = RbVmomi::VIM.connect insecure: 'true', host: server, user: userid, password: passwd
   dc = vim.serviceInstance.find_datacenter(datacenter) or fail "datacenter not found"
   vm = dc.find_vm("#{path}/#{name}")
-  fail_test "Cannot find the #{type}: #{name}" unless vm
+  fail_test "Cannot find the machine: #{name}" unless vm
 end
 
 # Method vm_exists?(datacenter, name)
