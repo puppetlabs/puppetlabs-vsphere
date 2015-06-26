@@ -79,9 +79,9 @@ file. Store this as `vcenter.conf` in the relevant
 
       ~~~
       vcenter: {
-        host: your-host
-        user: your-username
-        password: your-password
+        host: 'your-host'
+        user: 'your-username'
+        password: 'your-password'
       }
       ~~~
 
@@ -89,9 +89,9 @@ file. Store this as `vcenter.conf` in the relevant
 
       ~~~
       vcenter: {
-        host: your-host
-        user: your-username
-        password: your-password
+        host: 'your-host'
+        user: 'your-username'
+        password: 'your-password'
         port: your-port
         insecure: false
         ssl: false
