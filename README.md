@@ -35,11 +35,20 @@ Managing vSphere machines using the Puppet DSL.
 
   `/opt/puppet/bin/gem install rbvmomi hocon`
 
+  If you are running Puppet Enterprise 2015.2.0 you need to use the
+  updated path:
+
+  `/opt/puppetlabs/puppet/bin/gem install rbvmomi hocon`
+
   This allows the gem to be used by the Puppet Enterprise Ruby.
 
   * If you're running [Puppet Server](https://github.com/puppetlabs/puppet-server), you need to make the gem available to JRuby with:
 
     `/opt/puppet/bin/puppetserver gem install rbvmomi hocon`
+
+    And if you are running Puppet Enterprise 2015.2.0:
+
+    `/opt/puppetlabs/puppet/bin/puppetserver gem install rbvmomi hocon`
 
     Once the gem is installed, restart Puppet Server.
 
