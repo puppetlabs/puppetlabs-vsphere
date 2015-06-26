@@ -269,7 +269,25 @@ describe type_class do
   it 'should prohibit specifying resource pool for templates' do
     expect {
       type_class.new({name: 'sample', resource_pool: 'something', template: true})
-    }.to raise_error(Puppet::Error, /Cannot provide resource_pool for a template/)
+    }.to raise_error(Puppet::Error, /Cannot provide the following properties for a template: resource_pool/)
+  end
+
+  it 'should prohibit specifying cpu for templates' do
+    expect {
+      type_class.new({name: 'sample', cpus: 2, template: true})
+    }.to raise_error(Puppet::Error, /Cannot provide the following properties for a template: cpus/)
+  end
+
+  it 'should prohibit specifying memory for templates' do
+    expect {
+      type_class.new({name: 'sample', memory: 512, template: true})
+    }.to raise_error(Puppet::Error, /Cannot provide the following properties for a template: memory/)
+  end
+
+  it 'should report mutiple invalid properties for templates' do
+    expect {
+      type_class.new({name: 'sample', memory: 512, cpus: 2, template: true})
+    }.to raise_error(Puppet::Error, /Cannot provide the following properties for a template: cpus, memory/)
   end
 
   ['running', 'stopped'].each do |state|
