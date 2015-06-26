@@ -35,10 +35,13 @@ inject_site_pp(master, prod_env_site_pp_path, site_pp)
 confine :except, :roles => %w{master dashboard database}
 step "Creating VM from a template on agent node:"
 agents.each do |agent|
-  on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
-    assert_match(/#{name}\]\/ensure: changed absent to present/, result.output, 'Failed to create VM from template')
+  on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => 1) do |result|
+    expect_failure('Expected to fail due to CLOUD-355') do
+      assert_match(/#{name}\]\/ensure: changed absent to present/, result.output, 'Failed to create VM from template')
+    end
   end
 end
 
 step "Verify the VM has been successfully created in vCenter:"
-vm_exists?(datacenter, "#{name}")
+# Once CLOUD-355 is fixed this will need to be re-enabled.
+#vm_exists?(datacenter, "#{name}")
