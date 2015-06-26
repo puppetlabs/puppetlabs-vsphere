@@ -44,7 +44,7 @@ confine_block :except, :roles => %w{master dashboard database} do
   end
 end
 step "Verify the VM is in stopped  state in vCenter"
-machine_powerstate?(datacenter, name, "poweredOff")
+vm_powerstate?(datacenter, name, "poweredOff")
 
 step "Manipulate the site.pp file on the master node the second time"
 # Modify manifest_erb file
@@ -71,4 +71,4 @@ step "Verify the VM has been successfully created in vCenter:"
 vm_exists?(datacenter, "vm_from_vm_#{name}")
 
 step "Verify the VM is in running state in vCenter"
-machine_powerstate?(datacenter, name, "poweredOn")
+vm_powerstate?(datacenter, "vm_from_vm_#{name}", "poweredOn")
