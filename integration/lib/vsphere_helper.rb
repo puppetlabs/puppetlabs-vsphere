@@ -16,7 +16,6 @@ require 'rbvmomi'
 # ==== Examples
 # Execute the below command to delete/absent the virtual machine named virtualmachine001
 # puppet apply -e "vsphere_vm { 'virtualmachine001': ensure =< 'absent'}"
-
 def ensure_vm_is_absent(host, name)
   on(host, "puppet apply -e \"vsphere_vm { '#{name}': ensure => 'absent'}\"")
 end
@@ -28,9 +27,6 @@ end
 #
 # ==== Attributes
 #
-# * +server+ - The link to vCenter server, i.e 'vmware-vc1.ops.puppetlabs.net'
-# * +userid+ - The login user for the above server
-# * +passwd+ - The login password
 # * +datacenter+ - The datacenter that this method is looking for the machine
 # * +name+ - The name of the machine being looked for
 # * +path+ - The path where the machine might reside. Notice: this function
@@ -42,7 +38,6 @@ end
 # ==== Returns
 # +1+ - if the machine cannot be found, test fails immediately
 # +0+ - if the machine is found
-
 def machine_exists?(datacenter, name, path)
   server  = ENV['VCENTER_SERVER']
   userid  = ENV['VCENTER_USER']
@@ -101,9 +96,6 @@ end
 #
 # ==== Attributes
 #
-# * +server+ - The link to vCenter server, i.e 'vmware-vc1.ops.puppetlabs.net'
-# * +userid+ - The login user for the above server
-# * +passwd+ - The login password
 # * +datacenter+ - The datacenter that this method is looking for the machine
 # * +path+ - The path where the machine might reside. Notice: this function
 # finds a datacenter before finding the machine, therefore the path should not be
