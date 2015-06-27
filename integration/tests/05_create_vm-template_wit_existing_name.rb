@@ -68,10 +68,8 @@ inject_site_pp(master, prod_env_site_pp_path, site_pp)
 confine_block :except, :roles => %w{master dashboard database} do
   step "Creating template from VM and name it: 'template_from_vm_#{name}'"
   agents.each do |agent|
-    on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => 6) do |result|
-      expect_failure('Expected to fail due to CLOUD-361') do
-       assert_match(/template_from_vm_#{name}\]\/ensure: changed absent to present/, result.output, 'Failed to create template from VM')
-      end
+    on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
+      assert_match(/template_from_vm_#{name}\]\/ensure: changed absent to present/, result.output, 'Failed to create template from VM')
     end
   end
 
@@ -80,10 +78,8 @@ confine_block :except, :roles => %w{master dashboard database} do
 
   step "Creating template with same name again: 'template_from_vm_#{name}'"
   agents.each do |agent|
-    on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => 6) do |result|
-      expect_failure('Expected to fail due to CLOUD-361') do
-        assert_no_match(/Error/, result.output, 'Failed to create template from VM')
-      end
+    on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
+      assert_no_match(/Error/, result.output, 'Failed to create template from VM')
     end
   end
 end
