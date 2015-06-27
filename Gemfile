@@ -28,7 +28,7 @@ end
 # install we guard that
 unless ENV['GEM_SOURCE'].nil?
   group :integration do
-    gem 'beaker', '~> 2.7'
+    gem 'beaker', '~> 2.14'
     gem 'master_manipulator', '~> 1.0'
   end
 end
