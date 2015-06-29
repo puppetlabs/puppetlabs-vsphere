@@ -5,7 +5,11 @@ Puppet::Type.newtype(:vsphere_vm) do
 
   validate do
     if self[:template].to_s == 'true'
-      fail 'Cannot provide resource_pool for a template.' if self[:resource_pool]
+      required = []
+      required << 'resource_pool' if self[:resource_pool]
+      required << 'cpus' if self[:cpus]
+      required << 'memory' if self[:memory]
+      fail "Cannot provide the following properties for a template: #{required.join(', ')}" unless required.empty?
       fail 'Templates can only be absent or present.' unless self[:ensure] =~ /^(absent|present)$/
     end
   end
