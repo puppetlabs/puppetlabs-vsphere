@@ -12,7 +12,10 @@ name         = SecureRandom.hex(8)
 path         = "#{folder}/#{name}"
 status       = 'stopped'
 source_path  = '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349'
+memory       = '512'
+cpus         = '1'
 is_template  = 'false'
+annotation   = 'Create VM from template'
 
 environment_base_path = on(master, puppet('config', 'print', 'environmentpath')).stdout.rstrip
 prod_env_site_pp_path = File.join(environment_base_path, 'production', 'manifests', 'site.pp')
@@ -51,7 +54,11 @@ step "Manipulate the site.pp file on the master node the second time"
 path              = "#{folder}/vm_from_vm_#{name}"
 status            = 'running'
 source_path       = "#{folder}/#{name}"
+memory            = '512'
+cpus              = '1'
 is_template       = 'false'
+annotation        = 'Create VM from VM and to running state'
+
 manifest_template = File.join(local_files_root_path, 'manifest.erb')
 manifest_erb      = ERB.new(File.read(manifest_template)).result(binding)
 
