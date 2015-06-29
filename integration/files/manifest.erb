@@ -1,7 +1,7 @@
 vsphere_vm { '<%= path %>':
   ensure          => <%= status %>,
   source          => '<%= source_path %>',
-  memory          => 512,
-  cpus            => 1,
+  memory          => '<%= memory %>',
+  cpus            =>  '<%= cpus %>',
   template        => '<%= is_template %>',
 }
