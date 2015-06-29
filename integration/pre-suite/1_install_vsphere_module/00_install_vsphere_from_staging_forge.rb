@@ -9,7 +9,10 @@ on(master, puppet('module install puppetlabs-vsphere'))
 agents.each do |agent|
   pe_version = on(agent, puppet('-V')).stdout.rstrip.to_f
   (pe_version < 4.0)? (path= '/opt/puppet/bin/gem') : (path = '/opt/puppetlabs/puppet/bin/gem')
-  step 'install rbvmomi and hocon gems'
+
+  # Work-around for CLOUD-366 (install nokogiri before installing rbvmomi)
   on(agent, "#{path} install nokogiri -- --use-system-libraries")
+
+  step 'install rbvmomi and hocon gems'
   on(agent, "#{path} install rbvmomi hocon")
 end
