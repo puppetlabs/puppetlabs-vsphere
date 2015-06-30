@@ -40,7 +40,7 @@ step "Manipulate the site.pp file on the master node the first time"
 site_pp = create_site_pp(master, :manifest => manifest_erb)
 inject_site_pp(master, prod_env_site_pp_path, site_pp)
 
-#Create a VM and customize it
+#Create a VM and view it using 'puppet resource vsphere_vm vm-name'
 confine_block :except, :roles => %w{master dashboard database} do
   step "Creating VM from a template with name: '/eng/integration/vm/#{name}'"
   agents.each do |agent|
@@ -50,7 +50,7 @@ confine_block :except, :roles => %w{master dashboard database} do
     step "Verify the VM has been successfully created in vCenter:"
     vm_exists?(datacenter, "#{name}")
 
-    step "puppet source vsphere_vm: #{folder}/#{name} BEFORE being customized"
+    step "puppet resource vsphere_vm: #{folder}/#{name} BEFORE being customized"
     on(agent, puppet('resource', 'vsphere_vm', "#{folder}/#{name}")) do |result|
       assert_match(/cpu.*#{cpus}/, result.output, 'Failed to create specified CPU')
       assert_match(/memory.*#{memory}/, result.output, 'Failed to create specified memory')
@@ -85,7 +85,7 @@ confine_block :except, :roles => %w{master dashboard database} do
   step "Verify the VM still exist in vCenter:"
   vm_exists?(datacenter, "#{name}")
 
-  step "puppet source vsphere_vm: #{folder}/#{name} AFTER being customized"
+  step "puppet resource vsphere_vm: #{folder}/#{name} AFTER being customized"
   on(agent, puppet('resource', 'vsphere_vm', name)) do |result|
     assert_match(/cpu.*#{cpus}/, result.output, 'Failed to create specified CPU')
     assert_match(/memory.*#{memory}/, result.output, 'Failed to create specified memory')
