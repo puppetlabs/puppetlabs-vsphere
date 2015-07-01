@@ -97,11 +97,7 @@ end
 # ==== Attributes
 #
 # * +datacenter+ - The datacenter that this method is looking for the machine
-# * +path+ - The path where the machine might reside. Notice: this function
-# finds a datacenter before finding the machine, therefore the path should not be
-# an absolute path to the machine, but it start from inside of the datacenter
-# i.e: the absolute path to the machine is /opdx/eng/integration/vm
-# then the +path+ here should only be /eng/integration/vm
+# * +name+ - The name of the VM being looked for
 # * +desired_state+ - The desired state of the VM
 # ==== Returns
 # +1+ - if the 'desired state' is NOT matching with real state, test fails immediately
@@ -116,4 +112,38 @@ def vm_powerstate?(datacenter, name, desired_state)
   vm    = dc.find_vm("/eng/integration/vm/#{name}")
   powerState = vm.runtime.powerState
   fail_test "The current VM power state is '#{powerState}'" unless (powerState == desired_state)
+end
+
+# Method vm_config?(datacenter, name, fact, desired_config)
+# The method validates if the provided VM desired config is matching with the
+# real real config size of the VM in the provided datacenter using rbvmomi, it does not
+# rely on vsphere module to verify the machine config facts
+#
+# ==== Attributes
+#
+# * +datacenter+ - The datacenter that this method is looking for the machine
+# * +name+ - The name of the VM being looked for
+# * +fact+ - The config facts of the VM, such as MemorySize, Number of CPU, etc.
+# * +desired_config+ - The desired config of the VM
+# ==== Returns
+# +1+ - if the 'desired config' is NOT matching with real VM memory size, test fails immediately
+# +0+ - if the 'desired config' IS matching with real VM memory size
+def vm_config?(datacenter, name, fact, desired_config)
+  server  = ENV['VCENTER_SERVER']
+  userid  = ENV['VCENTER_USER']
+  passwd  = ENV['VCENTER_PASSWORD']
+
+  vim     = RbVmomi::VIM.connect insecure: 'true', host: server, user: userid, password: passwd
+  dc      = vim.serviceInstance.find_datacenter(datacenter) or fail "datacenter not found"
+  vm      = dc.find_vm("/eng/integration/vm/#{name}")
+  case fact
+    when 'memory_fact'
+      config = vm.summary.config.memorySizeMB
+      fail_test "The current VM memmory is #{config}" unless (config == desired_config)
+    when 'cpu_fact'
+      config = vm.summary.config.numCpu
+      fail_test "The current VM number of CPUs:  #{config}" unless (config == desired_config)
+    else
+      fail_test "Unrecorgnized Config"
+  end
 end

@@ -1,7 +1,6 @@
 require 'vsphere_helper'
 require 'securerandom'
 require 'erb'
-require 'rbvmomi'
 require 'master_manipulator'
 
 test_name 'CLOUD-283 - C64688 - Create a VM and then customize it in vSphere module'
@@ -14,8 +13,8 @@ name         = SecureRandom.hex(8)
 path         = "#{folder}/#{name}"
 status       = 'running'
 source_path  = '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349'
-memory       = '512'
-cpus         = '1'
+memory       = 512
+cpus         = 1
 is_template  = 'false'
 annotation   = 'VM with 1 CPU and 512MB RAM'
 
@@ -48,23 +47,24 @@ confine_block :except, :roles => %w{master dashboard database} do
       assert_match(/#{name}\]\/ensure: changed absent to running/, result.output, 'Failed to create VM from template')
     end
 
-    step "Verify the VM has been successfully created in vCenter:"
-    vm_exists?(datacenter, "#{name}")
-
     step "puppet source vsphere_vm: #{folder}/#{name} BEFORE being customized"
     on(agent, puppet('resource', 'vsphere_vm', "#{folder}/#{name}")) do |result|
       assert_match(/cpu.*#{cpus}/, result.output, 'Failed to create specified CPU')
       assert_match(/memory.*#{memory}/, result.output, 'Failed to create specified memory')
-      puts result
     end
+
+    step "Verify the VM Memory Size in vCenter:"
+    vm_config?(datacenter, name, "memory_fact", memory)
+    step "Verify the VM Number of CPUs of in vCenter:"
+    vm_config?(datacenter, name, "cpu_fact", cpus)
   end
 end
 
 # Customize the VM
 step "Manipulate the site.pp file on the master node the second time"
 # Modify manifest_erb file
-memory       = '2048'
-cpus          = '2'
+memory       = 2048
+cpus         = 2
 annotation   = 'VM with 2 CPUs and 2GB RAM'
 
 manifest_template = File.join(local_files_root_path, 'manifest.erb')
@@ -81,15 +81,16 @@ confine_block :except, :roles => %w{master dashboard database} do
       assert_match(/cpus: cpus changed '1' to '2'/, result.output, "Failed to customize the VM: '#{name}'")
       assert_match(/annotation: annotation changed.*VM with 2 CPUs and 2GB RAM/, result.output, "Failed to customize the VM: '#{name}'")
     end
-  end
 
-  step "Verify the VM still exist in vCenter:"
-  vm_exists?(datacenter, "#{name}")
+    step "Verify the VM Memory Size in vCenter:"
+    vm_config?(datacenter, name, "memory_fact", memory)
+    step "Verify the VM Number of CPUs of in vCenter:"
+    vm_config?(datacenter, name, "cpu_fact", cpus)
 
-  step "puppet source vsphere_vm: #{folder}/#{name} AFTER being customized"
-  on(agent, puppet('resource', 'vsphere_vm', "#{folder}/#{name}")) do |result|
-    assert_match(/cpu.*#{cpus}/, result.output, 'Failed to create specified CPU')
-    assert_match(/memory.*#{memory}/, result.output, 'Failed to create specified memory')
-    puts result
+    step "puppet source vsphere_vm: #{folder}/#{name} AFTER being customized"
+    on(agent, puppet('resource', 'vsphere_vm', "#{folder}/#{name}")) do |result|
+      assert_match(/cpu.*#{cpus}/, result.output, 'Failed to create specified CPU')
+      assert_match(/memory.*#{memory}/, result.output, 'Failed to create specified memory')
+    end
   end
 end
