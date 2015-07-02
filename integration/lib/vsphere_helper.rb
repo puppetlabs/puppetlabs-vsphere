@@ -100,8 +100,7 @@ end
 # * +name+ - The name of the VM being looked for
 # * +desired_state+ - The desired state of the VM
 # ==== Returns
-# +1+ - if the 'desired state' is NOT matching with real state, test fails immediately
-# +0+ - if the 'desired state' IS matching with real state
+# Returns nothing, it fails the test if powerstate does not match
 def vm_powerstate?(datacenter, name, desired_state)
   server  = ENV['VCENTER_SERVER']
   userid  = ENV['VCENTER_USER']
@@ -116,7 +115,7 @@ end
 
 # Method vm_config?(datacenter, name, fact, desired_config)
 # The method validates if the provided VM desired config is matching with the
-# real real config size of the VM in the provided datacenter using rbvmomi, it does not
+# real config size of the VM in the provided datacenter using rbvmomi, it does not
 # rely on vsphere module to verify the machine config facts
 #
 # ==== Attributes
@@ -126,8 +125,7 @@ end
 # * +fact+ - The config facts of the VM, such as MemorySize, Number of CPU, etc.
 # * +desired_config+ - The desired config of the VM
 # ==== Returns
-# +1+ - if the 'desired config' is NOT matching with real VM memory size, test fails immediately
-# +0+ - if the 'desired config' IS matching with real VM memory size
+# The method returns nothing, it fails the test if the config does not match desired config
 def vm_config?(datacenter, name, fact, desired_config)
   server  = ENV['VCENTER_SERVER']
   userid  = ENV['VCENTER_USER']

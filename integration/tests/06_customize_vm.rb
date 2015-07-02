@@ -55,6 +55,7 @@ confine_block :except, :roles => %w{master dashboard database} do
 
     step "Verify the VM Memory Size in vCenter:"
     vm_config?(datacenter, name, "memory_fact", memory)
+
     step "Verify the VM Number of CPUs of in vCenter:"
     vm_config?(datacenter, name, "cpu_fact", cpus)
   end
@@ -84,6 +85,7 @@ confine_block :except, :roles => %w{master dashboard database} do
 
     step "Verify the VM Memory Size in vCenter:"
     vm_config?(datacenter, name, "memory_fact", memory)
+
     step "Verify the VM Number of CPUs of in vCenter:"
     vm_config?(datacenter, name, "cpu_fact", cpus)
 
