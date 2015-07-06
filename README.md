@@ -10,6 +10,11 @@ Status](https://magnum.travis-ci.com/puppetlabs/puppetlabs-vsphere.svg?token=Rqt
   * [Installing the vsphere module](#installing-the-vsphere-module)
 4. [Getting Started with vSphere](#getting-started-with-vsphere)
 5. [Usage - Configuration options and additional functionality](#usage)
+  * [List and manage vSphere machines](#list-and-manage-vsphere-machines)
+  * [Customize vSphere machines](#customize-vsphere-machines)
+  * [Create linked clones](#create-linked-clones)
+  * [Delete vSphere machines](#delete-vsphere-machines)
+  * [More usage examples](#more-usage-examples)
 6. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
   * [Types](#types)
   * [Parameters](#parameters)
@@ -217,15 +222,17 @@ and disk files in place, you can set `ensure` to `unregistered`:
 
     puppet resource vsphere_vm /opdx1/vm/eng/garethr-test ensure=unregistered
 
-Please note that the module currently provides no mechanism to clean up the
-files left behind by this operation.
+Please note that the module currently provides no mechanism to clean up the files left behind by this operation.
 
-### A note on datacenters
+###More usage examples
 
-By default, this module uses the default datacenter for your installation. If
-this fails or if you have multiple virtual datacenters on vSphere, you
-can specify which datacenter you are managing using the
-`VCENTER_DATACENTER` environment variable like so:
+The module examples folder contains additional usage examples:
+
+* [Purge unmanaged virtual machines](https://github.com/puppetlabs/puppetlabs-vsphere/tree/master/examples/purge-unmanaged-vms): Purge any machine not specified in your manifest.
+
+###A note on datacenters
+
+By default, this module uses the default datacenter for your installation. If this fails or if you have multiple virtual datacenters on vSphere, you can specify which datacenter you are managing using the `VCENTER_DATACENTER` environment variable like so:
 
 `VCENTER_DATACENTER=my-datacenter puppet resource vpshere_vm`
 
