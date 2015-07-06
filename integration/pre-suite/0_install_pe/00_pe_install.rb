@@ -9,6 +9,10 @@ test_name 'Install Puppet Enterprise'
   host[:custom_answers][:q_puppet_cloud_install] = 'n'
 end
 
+# Init
+options[:version] = ENV['PUPPET_AGENT_VERSION'] || '1.2.0'
+options[:sha] = ENV['PUPPET_AGENT_VERSION'] || '1.2.0'
+
 step 'Install PE'
 install_pe
 
