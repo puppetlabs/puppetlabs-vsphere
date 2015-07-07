@@ -17,7 +17,7 @@ require 'rbvmomi'
 # Execute the below command to delete/absent the virtual machine named virtualmachine001
 # puppet apply -e "vsphere_vm { 'virtualmachine001': ensure =< 'absent'}"
 def ensure_vm_is_absent(host, name)
-  on(host, "puppet apply -e \"vsphere_vm { '#{name}': ensure => 'absent'}\"")
+  on(host, "puppet apply -e \"vsphere_vm { '#{name}': ensure => 'absent'}\" --debug")
 end
 
 # Method machine_exists?(datacenter, name, path)
