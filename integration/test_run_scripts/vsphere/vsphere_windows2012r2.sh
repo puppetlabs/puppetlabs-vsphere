@@ -14,13 +14,13 @@ export SSL_CERT_FILE=/usr/local/etc/openssl/cert.pem
 bundle install --without acceptance development test --path .bundle/gems
 
 bundle exec beaker \
-  --config test_run_scripts/configs/ubuntum-rhel7a-x86_64.cfg \
+  --config test_run_scripts/configs/centos-7-x86_64m-win2012r2a.cfg \
   --debug \
   --pre-suite pre-suite \
   --test tests \
   --keyfile ~/.ssh/id_rsa-acceptance \
   --load-path lib \
-  --preserve-host \
+  --preserve-host on-fail \
   --timeout 360
 
 rm -rf .bundle

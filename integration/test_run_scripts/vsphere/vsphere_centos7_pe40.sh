@@ -9,6 +9,7 @@ fi
 
 export pe_dist_dir=http://neptune.puppetlabs.lan/4.0/ci-ready/
 export GEM_SOURCE=http://rubygems.delivery.puppetlabs.net
+export SSL_CERT_FILE=/usr/local/etc/openssl/cert.pem
 
 bundle install --without acceptance development test --path .bundle/gems
 
