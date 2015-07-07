@@ -49,7 +49,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     with_retries(:max_tries => 10,
                  :handler => handler,
                  :max_sleep_seconds => 2,
-                 :rescue => RbVmomi::Fault) do
+                 :rescue => [RbVmomi::Fault, NoMethodError]) do
       name = machine.path.collect { |x| x[1] }.drop(1).join('/')
       resource_pool = machine.resourcePool
       resource_pool = resource_pool ? resource_pool.parent.name : nil
@@ -58,6 +58,8 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       config = machine.config
       hostname = summary.guest.hostName
       extra_config = {}
+      # we catch NoMethodError and retry as it's possible during
+      # creation and deletion for config to return nil
       config.extraConfig.map do |setting|
         extra_config[setting.key] = setting.value
       end
