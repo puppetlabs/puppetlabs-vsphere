@@ -3,8 +3,8 @@ require 'securerandom'
 require 'erb'
 require 'master_manipulator'
 
-test_name 'CLOUD-372 - C68528 - vcenter.conf file has wrong VSPHERE_SERVER'
-test_name 'CLOUD-372 - C68530 - vcenter.conf file missing VSPHERE_SERVER'
+test_name 'CLOUD-372 - C68522 - vcenter.conf file has wrong VSPHERE_PASSWORD'
+test_name 'CLOUD-372 - C68531 - vcenter.conf file missing VSPHERE_PASSWORD'
 
 folder       = '/opdx1/vm/eng/integration/vm'
 name         = SecureRandom.hex(8)
@@ -17,11 +17,11 @@ teardown do
   end
 end
 
-#test 1: creating a VM with wrong VCENTER_SERVER
+#test 1: creating a VM with wrong VCENTER_PASSWORD
 step 'Exporting credentials with wrong VCENTER_SERVER value'
-server    = 'wrong-vcenter-server'
+server    = ENV['VCENTER_SERVER']
 user      = ENV['VCENTER_USER']
-password  = ENV['VCENTER_PASSWORD']
+password  = 'wrong-vcenter-password'
 
 local_files_root_path     = ENV['FILES'] || 'files'
 vcenter_conf_template     = File.join(local_files_root_path, 'vcenter_conf.erb')
@@ -66,9 +66,9 @@ confine_block :except, :roles => %w{master dashboard database} do
   end
 end
 
-#test 2: creating a VM with missing VCENTER_SERVER
-step "Delete host param in vcenter.conf "
-vcenter_conf_erb = vcenter_conf_erb.sub(/host.*/,"")
+#test 2: creating a VM with missing VCENTER_PASSWORD
+step "Delete password param in vcenter.conf "
+vcenter_conf_erb = vcenter_conf_erb.sub(/password.*/,"")
 
 confine_block :except, :roles => %w{master dashboard database} do
   agents.each do |agent|
@@ -76,7 +76,7 @@ confine_block :except, :roles => %w{master dashboard database} do
     create_remote_file(agent, "#{confdir_path}/vcenter.conf", vcenter_conf_erb)
     on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => 1) do |result|
       assert_match(/Error: Could not run: Puppet detected a problem with the information returned from vSphere when accessing vsphere_vm/, result.output, 'Test Failed')
-      assert_match(/To use this module you must provide the following settings: host/, result.output, 'Test Failed')
+      assert_match(/To use this module you must provide the following settings: password/, result.output, 'Test Failed')
     end
   end
 end
