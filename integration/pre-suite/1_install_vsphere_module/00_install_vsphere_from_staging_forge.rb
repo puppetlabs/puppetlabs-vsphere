@@ -18,9 +18,6 @@ restart_puppet_server(master)
 
 # Install rbvmomi and hocon on master and agent nodes:
 agents.each do |agent|
-  pe_version = on(agent, puppet('-V')).stdout.rstrip.to_f
-  (pe_version < 4.0)? (path= '/opt/puppet/bin/gem') : (path = '/opt/puppetlabs/puppet/bin/gem')
-
-  step 'install rbvmomi and hocon gems'
-  on(agent, "NOKOGIRI_USE_SYSTEM_LIBRARIES=1 #{path} install rbvmomi hocon")
+  path = agent.file_exist?("#{agent['privatebindir']}/gem") ? agent['privatebindir'] : agent['puppetbindir']
+  on(agent, "NOKOGIRI_USE_SYSTEM_LIBRARIES=1 #{path}/gem install rbvmomi hocon")
 end
