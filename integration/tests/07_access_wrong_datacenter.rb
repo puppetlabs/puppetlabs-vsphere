@@ -29,9 +29,7 @@ manifest_erb          = ERB.new(File.read(manifest_template)).result(binding)
 
 teardown do
   confine_block :except, :roles => %w{master dashboard database} do
-    agents.each do |agent|
-      ensure_vm_is_absent(agent, "#{folder}/#{name}")
-    end
+    ensure_vm_is_absent(agent, "#{folder}/#{name}")
   end
 end
 
@@ -41,21 +39,19 @@ inject_site_pp(master, prod_env_site_pp_path, site_pp)
 
 confine_block :except, :roles => %w{master dashboard database} do
   step "Creating VM from a template with name: '#{name}'"
-  agents.each do |agent|
-    on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
-      assert_match(/#{name}\]\/ensure: changed absent to running/, result.output, 'Failed to create VM from template')
-    end
+  on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
+    assert_match(/#{name}\]\/ensure: changed absent to running/, result.output, 'Failed to create VM from template')
+  end
 
-    step "puppet source vsphere_vm: #{folder}/#{name} with correct VCENTER_DATACENTER  "
-    on(agent, puppet('resource', 'vsphere_vm', "#{folder}/#{name}")) do |result|
-      assert_match(/cpu.*#{cpus}/, result.output, 'Failed to create specified CPU')
-      assert_match(/memory.*#{memory}/, result.output, 'Failed to create specified memory')
-    end
+  step "puppet source vsphere_vm: #{folder}/#{name} with correct VCENTER_DATACENTER  "
+  on(agent, puppet('resource', 'vsphere_vm', "#{folder}/#{name}")) do |result|
+    assert_match(/cpu.*#{cpus}/, result.output, 'Failed to create specified CPU')
+    assert_match(/memory.*#{memory}/, result.output, 'Failed to create specified memory')
+  end
 
-    step "puppet source vsphere_vm: #{folder}/#{name} with wrong VCENTER_DATACENTER  "
-    on(agent, puppet('resource', 'vsphere_vm', "non-exist-datacenter/vm/eng/integration/vm/#{name}")) do |result|
-      assert_match(/ensure.*absent/, result.output, 'Failed to look for machine info with wrong datacenter')
-      assert_no_match(/Error/, result.output, 'Failed to look for machine info with wrong datacenter')
-    end
+  step "puppet source vsphere_vm: #{folder}/#{name} with wrong VCENTER_DATACENTER  "
+  on(agent, puppet('resource', 'vsphere_vm', "non-exist-datacenter/vm/eng/integration/vm/#{name}")) do |result|
+    assert_match(/ensure.*absent/, result.output, 'Failed to look for machine info with wrong datacenter')
+    assert_no_match(/Error/, result.output, 'Failed to look for machine info with wrong datacenter')
   end
 end

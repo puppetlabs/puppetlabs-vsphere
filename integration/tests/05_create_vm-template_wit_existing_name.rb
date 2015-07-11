@@ -27,10 +27,8 @@ manifest_erb          = ERB.new(File.read(manifest_template)).result(binding)
 
 teardown do
   confine_block :except, :roles => %w{master dashboard database} do
-    agents.each do |agent|
-      ensure_vm_is_absent(agent, "#{folder}/vm/#{name}")
-      ensure_vm_is_absent(agent, "#{folder}/template/template_from_vm_#{name}")
-    end
+    ensure_vm_is_absent(agent, "#{folder}/vm/#{name}")
+    ensure_vm_is_absent(agent, "#{folder}/template/template_from_vm_#{name}")
   end
 end
 
@@ -39,19 +37,20 @@ site_pp = create_site_pp(master, :manifest => manifest_erb)
 inject_site_pp(master, prod_env_site_pp_path, site_pp)
 
 #Create a VM with a name and then create a VM with the same name again
+step "Creating VM from a template with name: '#{name}'"
 confine_block :except, :roles => %w{master dashboard database} do
-  step "Creating VM from a template with name: '#{name}'"
-  agents.each do |agent|
-    on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
-      assert_match(/#{name}\]\/ensure: changed absent to running/, result.output, 'Failed to create VM from template')
-    end
-    step "Verify the VM has been successfully created in vCenter:"
-    vm_exists?(datacenter, "#{name}")
+  on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
+    assert_match(/#{name}\]\/ensure: changed absent to running/, result.output, 'Failed to create VM from template')
+  end
+end
 
-    step "Creating VM with the same name: '#{name}'"
-    on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
-      assert_no_match(/Error/, result.output, 'Failed to create VM with same name')
-    end
+step "Verify the VM has been successfully created in vCenter:"
+vm_exists?(datacenter, "#{name}")
+
+step "Creating VM with the same name: '#{name}'"
+confine_block :except, :roles => %w{master dashboard database} do
+  on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
+    assert_no_match(/Error/, result.output, 'Failed to create VM with same name')
   end
 end
 
@@ -73,21 +72,19 @@ manifest_erb = manifest_erb.sub(/cpus.*/, "")
 site_pp = create_site_pp(master, :manifest => manifest_erb)
 inject_site_pp(master, prod_env_site_pp_path, site_pp)
 
+step "Creating template from VM and name it: 'template_from_vm_#{name}'"
 confine_block :except, :roles => %w{master dashboard database} do
-  step "Creating template from VM and name it: 'template_from_vm_#{name}'"
-  agents.each do |agent|
-    on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
-      assert_match(/template_from_vm_#{name}\]\/ensure: changed absent to present/, result.output, 'Failed to create template from VM')
-    end
+  on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
+    assert_match(/template_from_vm_#{name}\]\/ensure: changed absent to present/, result.output, 'Failed to create template from VM')
   end
+end
 
-  step "Verify the template has been successfully created in vCenter:"
-  template_exists?(datacenter, "template_from_vm_#{name}")
+step "Verify the template has been successfully created in vCenter:"
+template_exists?(datacenter, "template_from_vm_#{name}")
 
-  step "Creating template with same name again: 'template_from_vm_#{name}'"
-  agents.each do |agent|
-    on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
-      assert_no_match(/Error/, result.output, 'Failed to create template from VM')
-    end
+step "Creating template with same name again: 'template_from_vm_#{name}'"
+confine_block :except, :roles => %w{master dashboard database} do
+  on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
+    assert_no_match(/Error/, result.output, 'Failed to create template from VM')
   end
 end
