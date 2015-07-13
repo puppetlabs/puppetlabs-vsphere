@@ -29,9 +29,7 @@ manifest_erb          = ERB.new(File.read(manifest_template)).result(binding)
 
 teardown do
   confine_block :except, :roles => %w{master dashboard database} do
-    agents.each do |agent|
-      ensure_vm_is_absent(agent, "#{folder}/#{name}")
-    end
+    ensure_vm_is_absent(agent, "#{folder}/#{name}")
   end
 end
 
@@ -39,27 +37,24 @@ step "Manipulate the site.pp file on the master node the first time"
 site_pp = create_site_pp(master, :manifest => manifest_erb)
 inject_site_pp(master, prod_env_site_pp_path, site_pp)
 
-#Create a VM and view its info using 'puppet resource vsphere_vm VM-name'
 confine_block :except, :roles => %w{master dashboard database} do
   step "Creating VM from a template with name: '/eng/integration/vm/#{name}'"
-  agents.each do |agent|
-    on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
-      assert_match(/#{name}\]\/ensure: changed absent to running/, result.output, 'Failed to create VM from template')
-    end
+  on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
+    assert_match(/#{name}\]\/ensure: changed absent to running/, result.output, 'Failed to create VM from template')
+  end
 
-    step "puppet source vsphere_vm: #{folder}/#{name} BEFORE being customized"
-    on(agent, puppet('resource', 'vsphere_vm', "#{folder}/#{name}")) do |result|
-      assert_match(/cpu.*#{cpus}/, result.output, 'Failed to create specified CPU')
-      assert_match(/memory.*#{memory}/, result.output, 'Failed to create specified memory')
-    end
-
-    step "Verify the VM Memory Size in vCenter:"
-    vm_config?(datacenter, name, "memory_fact", memory)
-
-    step "Verify the VM Number of CPUs of in vCenter:"
-    vm_config?(datacenter, name, "cpu_fact", cpus)
+  step "puppet source vsphere_vm: #{folder}/#{name} BEFORE being customized"
+  on(agent, puppet('resource', 'vsphere_vm', "#{folder}/#{name}")) do |result|
+    assert_match(/cpu.*#{cpus}/, result.output, 'Failed to create specified CPU')
+    assert_match(/memory.*#{memory}/, result.output, 'Failed to create specified memory')
   end
 end
+
+step "Verify the VM Memory Size in vCenter:"
+vm_config?(datacenter, name, "memory_fact", memory)
+
+step "Verify the VM Number of CPUs of in vCenter:"
+vm_config?(datacenter, name, "cpu_fact", cpus)
 
 # Customize the VM
 step "Manipulate the site.pp file on the master node the second time"
@@ -74,25 +69,25 @@ manifest_erb      = ERB.new(File.read(manifest_template)).result(binding)
 site_pp = create_site_pp(master, :manifest => manifest_erb)
 inject_site_pp(master, prod_env_site_pp_path, site_pp)
 
+step "Customize the VM: '#{name}'"
 confine_block :except, :roles => %w{master dashboard database} do
-  step "Customize the VM: '#{name}'"
-  agents.each do |agent|
-    on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
-      assert_match(/memory: memory changed '512' to '2048'/, result.output, "Failed to customize the VM: '#{name}'")
-      assert_match(/cpus: cpus changed '1' to '2'/, result.output, "Failed to customize the VM: '#{name}'")
-      assert_match(/annotation: annotation changed.*VM with 2 CPUs and 2GB RAM/, result.output, "Failed to customize the VM: '#{name}'")
-    end
+  on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
+    assert_match(/memory: memory changed '512' to '2048'/, result.output, "Failed to customize the VM: '#{name}'")
+    assert_match(/cpus: cpus changed '1' to '2'/, result.output, "Failed to customize the VM: '#{name}'")
+    assert_match(/annotation: annotation changed.*VM with 2 CPUs and 2GB RAM/, result.output, "Failed to customize the VM: '#{name}'")
+  end
+end
 
-    step "Verify the VM Memory Size in vCenter:"
-    vm_config?(datacenter, name, "memory_fact", memory)
+step "Verify the VM Memory Size in vCenter:"
+vm_config?(datacenter, name, "memory_fact", memory)
 
-    step "Verify the VM Number of CPUs of in vCenter:"
-    vm_config?(datacenter, name, "cpu_fact", cpus)
+step "Verify the VM Number of CPUs of in vCenter:"
+vm_config?(datacenter, name, "cpu_fact", cpus)
 
-    step "puppet source vsphere_vm: #{folder}/#{name} AFTER being customized"
-    on(agent, puppet('resource', 'vsphere_vm', "#{folder}/#{name}")) do |result|
-      assert_match(/cpu.*#{cpus}/, result.output, 'Failed to create specified CPU')
-      assert_match(/memory.*#{memory}/, result.output, 'Failed to create specified memory')
-    end
+step "puppet source vsphere_vm: #{folder}/#{name} AFTER being customized"
+confine_block :except, :roles => %w{master dashboard database} do
+  on(agent, puppet('resource', 'vsphere_vm', "#{folder}/#{name}")) do |result|
+    assert_match(/cpu.*#{cpus}/, result.output, 'Failed to create specified CPU')
+    assert_match(/memory.*#{memory}/, result.output, 'Failed to create specified memory')
   end
 end

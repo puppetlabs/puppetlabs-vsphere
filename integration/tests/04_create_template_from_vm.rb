@@ -27,10 +27,8 @@ manifest_erb          = ERB.new(File.read(manifest_template)).result(binding)
 
 teardown do
   confine_block :except, :roles => %w{master dashboard database} do
-    agents.each do |agent|
-      ensure_vm_is_absent(agent, "#{folder}/vm/#{name}")
-      ensure_vm_is_absent(agent, "#{folder}/template/template_from_vm_#{name}")
-    end
+    ensure_vm_is_absent(agent, "#{folder}/vm/#{name}")
+    ensure_vm_is_absent(agent, "#{folder}/template/template_from_vm_#{name}")
   end
 end
 
@@ -40,15 +38,12 @@ inject_site_pp(master, prod_env_site_pp_path, site_pp)
 
 step "Creating VM from a template first:"
 confine_block :except, :roles => %w{master dashboard database} do
-  agents.each do |agent|
-    on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
-      assert_match(/#{name}\]\/ensure: changed absent to stopped/, result.output, 'Failed to create VM from template')
-    end
+  on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
+    assert_match(/#{name}\]\/ensure: changed absent to stopped/, result.output, 'Failed to create VM from template')
   end
 end
 
 step "Manipulate the site.pp file on the master node the second time"
-# Modify manifest_erb file
 path              = "#{folder}/template/template_from_vm_#{name}"
 status            = 'present'
 source_path       = "#{folder}/vm/#{name}"
@@ -66,10 +61,8 @@ inject_site_pp(master, prod_env_site_pp_path, site_pp)
 
 step "Creating template from VM"
 confine_block :except, :roles => %w{master dashboard database} do
-  agents.each do |agent|
-    on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
-      assert_match(/template_from_vm_#{name}\]\/ensure: changed absent to present/, result.output, 'Failed to create template from VM')
-    end
+  on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
+    assert_match(/template_from_vm_#{name}\]\/ensure: changed absent to present/, result.output, 'Failed to create template from VM')
   end
 end
 

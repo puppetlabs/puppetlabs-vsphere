@@ -41,21 +41,34 @@ task :test => [
 ]
 
 namespace :integration do
-  [
+  { :vagrant => [
+    'ubuntu',
+    'ubuntu_pe4',
+    'centos7',
+  ],
+    :pooler => [
     'centos6',
     'centos7',
     'rhel7m_ubuntua',
     'ubuntum_rhel7a',
-  ].each do |config|
-    desc "Run integration tests for #{config}"
-    task config.to_sym do
-      begin
-        require 'master_manipulator'
-        sh("integration/test_run_scripts/vsphere/vsphere_#{config}.sh")
-      rescue LoadError
-        puts "\033[33m[Warning]\033[0m The integration tests require the" \
-          ' master_manipulatotor gem which is only available from the internal' \
-          ' gem mirror. Specify GEM_SOURCE and rerun bundle install'
+    'ubuntum_debian7a',
+    'rhel7m_scientific7a',
+  ]}.each do |ns, configs|
+    namespace ns.to_sym do
+      configs.each do |config|
+        desc "Run integration tests for #{config} on #{ns}"
+        task config.to_sym do
+          begin
+            require 'master_manipulator'
+            Dir.chdir "integration" do
+              sh("test_run_scripts/#{ns}/vsphere/vsphere_#{config}.sh")
+            end
+          rescue LoadError
+            puts "\033[33m[Warning]\033[0m The integration tests require the" \
+              ' master_manipulator gem which is only available from the internal' \
+              ' gem mirror. Specify GEM_SOURCE and rerun bundle install'
+          end
+        end
       end
     end
   end

@@ -7,3 +7,7 @@ spec/fixtures
 .bundle
 vendor
 .puppet_vsphere.conf
+integration/.vagrant
+integration/log
+integration/junit
+integration/tmp

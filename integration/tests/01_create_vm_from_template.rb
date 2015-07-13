@@ -26,25 +26,32 @@ manifest_template     = File.join(local_files_root_path, 'manifest.erb')
 manifest_erb          = ERB.new(File.read(manifest_template)).result(binding)
 
 teardown do
-  agents.each do |agent|
+  confine_block :except, :roles => %w{master dashboard database} do
     ensure_vm_is_absent(agent, path)
   end
 end
+
+# For PE 3.8.1 this is an alternative to the failed first run below
+#on(master, puppet('agent', '-t', '--environment production'))
 
 step "Manipulate the site.pp file on the master node"
 site_pp = create_site_pp(master, :manifest => manifest_erb)
 inject_site_pp(master, prod_env_site_pp_path, site_pp)
 
-confine :except, :roles => %w{master dashboard database}
-step "Creating VM from a template on agent node:"
-agents.each do |agent|
+confine_block :except, :roles => %w{master dashboard database} do
+  step 'Trigger agent/server sync on master to work around PE-10757'
   on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => 1) do |result|
-    expect_failure('Expected to fail due to CLOUD-355') do
+    expect_failure('Expected to fail due to PE-10757') do
       assert_match(/#{name}\]\/ensure: changed absent to present/, result.output, 'Failed to create VM from template')
     end
   end
+
+
+  step "Creating VM from a template on agent node"
+  on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
+    assert_match(/#{name}\]\/ensure: changed absent to present/, result.output, 'Failed to create VM from template')
+  end
 end
 
-step "Verify the VM has been successfully created in vCenter:"
-# Once CLOUD-355 is fixed this will need to be re-enabled.
-#vm_exists?(datacenter, "#{name}")
+step "Verify the VM has been successfully created in vCenter"
+vm_exists?(datacenter, name)
