@@ -30,25 +30,35 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
 
   def self.machine_to_hash(machine)
     handler = Proc.new do |exception, attempt_number, total_delay|
-      Puppet.debug("#{exception.message}; retry attempt #{attempt_number}; #{total_delay} seconds have passed")
-      # All exceptions in RbVmomi are RbVmomi::Fault, rather than the actual API exception
-      # The actual exceptions come out in the message, so we parse them out
-      case exception.message.split(':').first
-      when 'InvalidArgument', 'InvalidProperty', 'InvalidType'
-        raise Puppet::DevError, "Internal error when calling out to vCenter: #{exception.faultCause}"
-      when 'ManagedObjectNotFound'
-        # It's possible to retrieve machines inbetween retrieval and query which have already
-        # been deleted or that hadn't been completely created. In these cases it makes sense
-        # to not return them
-        nil
-      when 'DatabaseError', 'HostCommunication'
-        # RuntimeFault that should be retried
-        nil
+      Puppet.debug("#{exception.class}: #{exception.message}; retry attempt #{attempt_number}; #{total_delay} seconds have passed")
+      case exception
+      when NoMethodError
+        # We raise a more specific exception to improve the error message for the end user
+        if attempt_number == 9
+          name = machine.path.collect { |x| x[1] }.drop(1).join('/')
+          raise Puppet::Error, "Problem loading extra configuration for /#{name}. Could be due to network connection problems."
+        end
+      when RbVmomi::Fault
+        # Many exceptions in RbVmomi are RbVmomi::Fault, rather than the actual API exception
+        # The actual exceptions come out in the message, so we parse them out
+        case exception.message.split(':').first
+        when 'InvalidArgument', 'InvalidProperty', 'InvalidType'
+          raise Puppet::DevError, "Internal error when calling out to vCenter: #{exception.faultCause}"
+        when 'ManagedObjectNotFound'
+          # It's possible to retrieve machines inbetween retrieval and query which have already
+          # been deleted or that hadn't been completely created. In these cases it makes sense
+          # to not return them
+          nil
+        when 'DatabaseError', 'HostCommunication'
+          # RuntimeFault that should be retried
+          nil
+        end
       end
     end
     with_retries(:max_tries => 10,
                  :handler => handler,
-                 :max_sleep_seconds => 2,
+                 :base_sleep_seconds => 2,
+                 :max_sleep_seconds => 10,
                  :rescue => [RbVmomi::Fault, NoMethodError]) do
       name = machine.path.collect { |x| x[1] }.drop(1).join('/')
       resource_pool = machine.resourcePool
