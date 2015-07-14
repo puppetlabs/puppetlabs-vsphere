@@ -12,8 +12,22 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
   def self.instances
     begin
       find_vms_in_folder(datacenter.vmFolder).collect do |machine|
-        hash = machine_to_hash(machine)
-        new(hash) if hash
+        begin
+          hash = machine_to_hash(machine)
+          new(hash) if hash
+        rescue RbVmomi::Fault => e
+          case e.message.split(':').first
+          when 'ManagedObjectNotFound'
+            # We query for all vms in find_vms_in_folder above and then process them one-by-one in
+            # machine_to_hash. This means that, between the initial query and the processing, a vm could
+            # have been deleted. This results in a ManagedObjectNotFound exception.
+            # We ignore this exception as we don't want to list vm's that are in the process of
+            # being deleted. If we could craft a query to exclude them from the search we would.
+            nil
+          else
+            raise e
+          end
+        end
       end.compact
     rescue StandardError => e
       raise PuppetX::Puppetlabs::PrefetchError.new(self.resource_type.name.to_s, e.message)
@@ -45,9 +59,17 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
         when 'InvalidArgument', 'InvalidProperty', 'InvalidType'
           raise Puppet::DevError, "Internal error when calling out to vCenter: #{exception.faultCause}"
         when 'ManagedObjectNotFound'
-          # It's possible to retrieve machines inbetween retrieval and query which have already
-          # been deleted or that hadn't been completely created. In these cases it makes sense
-          # to not return them
+          # We query for all vms in find_vms_in_folder and then process them one-by-one. This means
+          # that, between the initial query and the processing in this method, a vm could have been deleted.
+          # The initial query could also return vm's that aren't quite ready yet. In both of these
+          # cases a ManagedObjectNotFound exception can be raised.
+          #
+          # This case clause is intended to retry the failing query when this happens. This is
+          # specifically to handle the latter of the two issues, when the vm has been created but
+          # it's quite all there.
+          #
+          # Note that this also means we retry in the case of machines that are in the process of being
+          # deleted, because we can't identify which is which. This is wasteful but not harmful.
           nil
         when 'DatabaseError', 'HostCommunication'
           # RuntimeFault that should be retried
