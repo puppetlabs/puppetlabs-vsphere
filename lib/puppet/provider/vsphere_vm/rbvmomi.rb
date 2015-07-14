@@ -42,6 +42,19 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     end
   end
 
+  def self.query_vm_properties(machine, mappings)
+    list_of_values = machine.collect(*mappings.values)
+    hash_of_values = {}
+    list_of_values.each_with_index do |value, i|
+      hash_of_values[mappings.values[i]] = value
+    end
+    response = {}
+    mappings.each do |key, value|
+      response[key] = hash_of_values[value]
+    end
+    response
+  end
+
   def self.machine_to_hash(machine)
     handler = Proc.new do |exception, attempt_number, total_delay|
       Puppet.debug("#{exception.class}: #{exception.message}; retry attempt #{attempt_number}; #{total_delay} seconds have passed")
@@ -86,38 +99,44 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       resource_pool = machine.resourcePool
       resource_pool = resource_pool ? resource_pool.parent.name : nil
       state = machine_state(machine)
-      summary = machine.summary
-      config = machine.config
-      hostname = summary.guest.hostName
       extra_config = {}
-      # we catch NoMethodError and retry as it's possible during
-      # creation and deletion for config to return nil
-      config.extraConfig.map do |setting|
+
+      property_mappings = {
+        cpus: 'summary.config.numCpu',
+        config: 'config.extraConfig',
+        snapshot_disabled: 'config.flags.snapshotDisabled',
+        snapshot_locked: 'config.flags.snapshotLocked',
+        annotation: 'config.annotation',
+        snapshot_power_off_behavior: 'config.flags.snapshotPowerOffBehavior',
+        memory: 'summary.config.memorySizeMB',
+        template: 'summary.config.template',
+        memory_reservation: 'summary.config.memoryReservation',
+        cpu_reservation: 'summary.config.cpuReservation',
+        number_ethernet_cards: 'summary.config.numEthernetCards',
+        power_state: 'summary.runtime.powerState',
+        tools_installer_mounted: 'summary.runtime.toolsInstallerMounted',
+        uuid: 'summary.config.uuid',
+        instance_uuid: 'summary.config.instanceUuid',
+        hostname: 'summary.guest.hostName',
+      }
+
+      api_properties = query_vm_properties(machine, property_mappings)
+
+      api_properties[:config].each do |setting|
         extra_config[setting.key] = setting.value
       end
+      api_properties.delete(:config)
 
-      {
+      curated_properties = {
         name: "/#{name}",
-        memory: summary.config.memorySizeMB,
-        cpus: summary.config.numCpu,
         resource_pool: resource_pool,
-        template: summary.config.template,
         ensure: state,
-        memory_reservation: summary.config.memoryReservation,
-        cpu_reservation: summary.config.cpuReservation,
-        number_ethernet_cards: summary.config.numEthernetCards,
-        power_state: summary.runtime.powerState,
-        tools_installer_mounted: summary.runtime.toolsInstallerMounted,
-        snapshot_disabled: config.flags.snapshotDisabled,
-        snapshot_locked: config.flags.snapshotLocked,
-        snapshot_power_off_behavior: config.flags.snapshotPowerOffBehavior,
-        uuid: summary.config.uuid,
-        instance_uuid: summary.config.instanceUuid,
         guest_ip: machine.guest_ip,
-        hostname: hostname == '(none)' ? nil : hostname,
+        hostname: api_properties['hostname'] == '(none)' ? nil : api_properties['hostname'],
         extra_config: extra_config,
-        annotation: config.annotation,
       }
+
+      api_properties.merge(curated_properties)
     end
   end
 
