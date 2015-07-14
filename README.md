@@ -36,32 +36,39 @@ Managing vSphere machines using the Puppet DSL.
 
 ### Installing the vSphere module
 
-1. First install the required dependencies. Install the gem with this command:
+#### On Debian 7 and 8, Ubuntu 14.04 LTS and similar
 
-  `/opt/puppet/bin/gem install rbvmomi hocon`
+1. Install the required dependencies:
 
-  If you are running Puppet Enterprise 2015.2.0 you need to use the
-  updated path:
+  On Debian 7 and 8, Ubuntu 14.04 LTS and similar
+  ~~~
+  apt-get install zlib1g-dev libxslt1-dev build-essential
+  ~~~
 
-  `/opt/puppetlabs/puppet/bin/gem install rbvmomi hocon`
+  On RHEL 6 and 7, CentOS, and similar
+  ~~~
+  yum install zlib-devel libxslt-devel patch gcc
+  ~~~
 
-  This allows the gem to be used by the Puppet Enterprise Ruby.
+2. Install the required gems with this command:
 
-  * If you're running [Puppet Server](https://github.com/puppetlabs/puppet-server), you need to make the gem available to JRuby with:
+  ~~~
+  /opt/puppet/bin/gem install rbvmomi hocon --no-ri --no-rdoc
+  ~~~
 
-    `NOKOGIRI_USE_SYSTEM_LIBRARIES=1 /opt/puppet/bin/puppetserver gem install rbvmomi hocon`
+  If you are running Puppet Enterprise 2015.2.0 you need to use the updated path:
 
-    And if you are running Puppet Enterprise 2015.2.0:
+  ~~~
+  /opt/puppetlabs/puppet/bin/gem install rbvmomi hocon --no-ri --no-rdoc
+  ~~~
 
-    `NOKOGIRI_USE_SYSTEM_LIBRARIES=1 /opt/puppetlabs/puppet/bin/puppetserver gem install rbvmomi hocon`
+#### Configuring credentials
 
-    Once the gem is installed, restart Puppet Server.
-
-2. Set the following environment variables specific to your vSphere
+1. Set the following environment variables specific to your vSphere
    installation:
 
   * Required Settings:
-      
+
       ~~~
       export VCENTER_SERVER='your-host'
       export VCENTER_USER='your-username'
@@ -69,7 +76,7 @@ Managing vSphere machines using the Puppet DSL.
       ~~~
 
   * Optional Settings:
-      
+
       ~~~
       # Whether to ignore SSL certificate errors. Defaults to true.
       export VCENTER_INSECURE='true or false'
@@ -114,7 +121,7 @@ file. Store this as `vcenter.conf` in the relevant
 
     Note that you can use either the environment variables or the config file. If both are present the environment variables will be used. You **cannot** have some settings in environment variables and others in the config file.
 
-3. Finally install the module with:
+2. Finally install the module with:
 
   `puppet module install puppetlabs-vsphere`
 
@@ -363,4 +370,3 @@ This module was built by Puppet Labs specifically for use with Puppet Enterprise
 If you run into an issue with this module, or if you would like to request a feature, please [file a ticket](https://tickets.puppetlabs.com/browse/MODULES/).
 
 If you have problems getting this module up and running, please [contact Support](http://puppetlabs.com/services/customer-support).
-
