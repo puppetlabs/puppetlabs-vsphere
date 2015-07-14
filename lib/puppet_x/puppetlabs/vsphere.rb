@@ -24,7 +24,11 @@ module PuppetX
           ssl: config.ssl,
         }
         credentials[:port] = config.port if config.port
-        RbVmomi::VIM.connect credentials
+        begin
+          RbVmomi::VIM.connect credentials
+        rescue SocketError => e
+          raise Puppet::Error, "Unable to access vSphere. Check you have the correct value in VCENTER_SERVER. The error message from the API client was: #{e.message}"
+        end
       end
 
       def self.datacenter
