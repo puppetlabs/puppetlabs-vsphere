@@ -2,6 +2,8 @@ require 'puppet_x/puppetlabs/prefetch_error'
 require 'puppet_x/puppetlabs/vsphere'
 require 'retries'
 
+class UnableToLoadConfigurationError < StandardError
+end
 
 Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs::Vsphere) do
   confine feature: :rbvmomi
@@ -60,10 +62,12 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       Puppet.debug("#{exception.class}: #{exception.message}; retry attempt #{attempt_number}; #{total_delay} seconds have passed")
       case exception
       when NoMethodError
-        # We raise a more specific exception to improve the error message for the end user
+        # This exception is raised when accessing config.extraConfig before config is loaded. This happens
+        # when the machine is first booted. When the machine is terminated we see ManagedObjectNotFound instead.
+        # We allow this to be retried bu if that doesn't work (because the machine can take a long time to configure)
+        # we raise a more useful exception so we can deal with that higher up the stack.
         if attempt_number == 9
-          name = machine.path.collect { |x| x[1] }.drop(1).join('/')
-          raise Puppet::Error, "Problem loading extra configuration for /#{name}. Could be due to network connection problems."
+          raise UnableToLoadConfigurationError
         end
       when RbVmomi::Fault
         # Many exceptions in RbVmomi are RbVmomi::Fault, rather than the actual API exception
@@ -90,53 +94,58 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
         end
       end
     end
-    with_retries(:max_tries => 10,
-                 :handler => handler,
-                 :base_sleep_seconds => 2,
-                 :max_sleep_seconds => 10,
-                 :rescue => [RbVmomi::Fault, NoMethodError]) do
-      name = machine.path.collect { |x| x[1] }.drop(1).join('/')
-      resource_pool = machine.resourcePool
-      resource_pool = resource_pool ? resource_pool.parent.name : nil
-      state = machine_state(machine)
-      extra_config = {}
+    name = machine.path.collect { |x| x[1] }.drop(1).join('/')
+    begin
+      with_retries(:max_tries => 10,
+                   :handler => handler,
+                   :base_sleep_seconds => 2,
+                   :max_sleep_seconds => 10,
+                   :rescue => [RbVmomi::Fault, NoMethodError]) do
+        resource_pool = machine.resourcePool
+        resource_pool = resource_pool ? resource_pool.parent.name : nil
+        state = machine_state(machine)
+        extra_config = {}
 
-      property_mappings = {
-        cpus: 'summary.config.numCpu',
-        config: 'config.extraConfig',
-        snapshot_disabled: 'config.flags.snapshotDisabled',
-        snapshot_locked: 'config.flags.snapshotLocked',
-        annotation: 'config.annotation',
-        snapshot_power_off_behavior: 'config.flags.snapshotPowerOffBehavior',
-        memory: 'summary.config.memorySizeMB',
-        template: 'summary.config.template',
-        memory_reservation: 'summary.config.memoryReservation',
-        cpu_reservation: 'summary.config.cpuReservation',
-        number_ethernet_cards: 'summary.config.numEthernetCards',
-        power_state: 'summary.runtime.powerState',
-        tools_installer_mounted: 'summary.runtime.toolsInstallerMounted',
-        uuid: 'summary.config.uuid',
-        instance_uuid: 'summary.config.instanceUuid',
-        hostname: 'summary.guest.hostName',
-      }
+        property_mappings = {
+          cpus: 'summary.config.numCpu',
+          config: 'config.extraConfig',
+          snapshot_disabled: 'config.flags.snapshotDisabled',
+          snapshot_locked: 'config.flags.snapshotLocked',
+          annotation: 'config.annotation',
+          snapshot_power_off_behavior: 'config.flags.snapshotPowerOffBehavior',
+          memory: 'summary.config.memorySizeMB',
+          template: 'summary.config.template',
+          memory_reservation: 'summary.config.memoryReservation',
+          cpu_reservation: 'summary.config.cpuReservation',
+          number_ethernet_cards: 'summary.config.numEthernetCards',
+          power_state: 'summary.runtime.powerState',
+          tools_installer_mounted: 'summary.runtime.toolsInstallerMounted',
+          uuid: 'summary.config.uuid',
+          instance_uuid: 'summary.config.instanceUuid',
+          hostname: 'summary.guest.hostName',
+        }
 
-      api_properties = query_vm_properties(machine, property_mappings)
+        api_properties = query_vm_properties(machine, property_mappings)
 
-      api_properties[:config].each do |setting|
-        extra_config[setting.key] = setting.value
+        api_properties[:config].each do |setting|
+          extra_config[setting.key] = setting.value
+        end
+        api_properties.delete(:config)
+
+        curated_properties = {
+          name: "/#{name}",
+          resource_pool: resource_pool,
+          ensure: state,
+          guest_ip: machine.guest_ip,
+          hostname: api_properties['hostname'] == '(none)' ? nil : api_properties['hostname'],
+          extra_config: extra_config,
+        }
+
+        api_properties.merge(curated_properties)
       end
-      api_properties.delete(:config)
-
-      curated_properties = {
-        name: "/#{name}",
-        resource_pool: resource_pool,
-        ensure: state,
-        guest_ip: machine.guest_ip,
-        hostname: api_properties['hostname'] == '(none)' ? nil : api_properties['hostname'],
-        extra_config: extra_config,
-      }
-
-      api_properties.merge(curated_properties)
+    rescue UnableToLoadConfigurationError
+      Puppet.debug("#{name} is currently in the process of booting and not available in this run")
+      nil
     end
   end
 
