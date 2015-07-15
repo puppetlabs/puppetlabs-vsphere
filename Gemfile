@@ -23,12 +23,7 @@ group :acceptance do
   gem 'mustache'
 end
 
-# master_manipulator is only available from an internal
-# gem mirror so rather than break the default bundle
-# install we guard that
-unless ENV['GEM_SOURCE'].nil?
-  group :integration do
-    gem 'beaker', '~> 2.17'
-    gem 'master_manipulator', '~> 1.0'
-  end
+group :integration do
+  gem 'beaker', '~> 2.17'
+  gem 'master_manipulator', '~> 1.0'
 end
