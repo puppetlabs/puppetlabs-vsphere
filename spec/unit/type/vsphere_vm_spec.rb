@@ -212,6 +212,7 @@ describe type_class do
     :uuid,
     :instance_uuid,
     :guest_ip,
+    :guest_os,
     :hostname,
   ].each do |property|
     it "should require #{property} to be read only" do
