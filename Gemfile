@@ -24,6 +24,6 @@ group :acceptance do
 end
 
 group :integration do
-  gem 'beaker', '~> 2.17'
+  gem 'beaker', '~> 2.0'
   gem 'master_manipulator', '~> 1.0'
 end
