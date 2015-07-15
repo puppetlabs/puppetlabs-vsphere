@@ -176,6 +176,7 @@ Puppet::Type.newtype(:vsphere_vm) do
     uuid: 'uuid',
     instance_uuid: 'instanceUuid',
     hostname: 'hostName',
+    guest_os: 'guestFullName',
   }
 
   read_only_properties.each do |property, value|

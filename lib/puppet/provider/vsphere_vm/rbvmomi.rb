@@ -112,6 +112,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
           snapshot_disabled: 'config.flags.snapshotDisabled',
           snapshot_locked: 'config.flags.snapshotLocked',
           annotation: 'config.annotation',
+          guest_os: 'config.guestFullName',
           snapshot_power_off_behavior: 'config.flags.snapshotPowerOffBehavior',
           memory: 'summary.config.memorySizeMB',
           template: 'summary.config.template',
