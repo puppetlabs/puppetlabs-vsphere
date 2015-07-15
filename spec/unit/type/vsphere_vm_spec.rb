@@ -63,6 +63,12 @@ describe type_class do
     }.to raise_error(Puppet::Error, 'Title or name must be provided')
   end
 
+  it 'should require the last part of the name to be no more than 40 characters' do
+    expect {
+      type_class.new({name: '/dc/vm/a-far-too-long-name-with-lots-of-words-in-it'})
+    }.to raise_error(Puppet::Error, /should be no more than 40 characters/)
+  end
+
   [
     'name',
     'resource_pool',

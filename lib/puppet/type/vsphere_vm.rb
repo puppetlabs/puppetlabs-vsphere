@@ -95,6 +95,7 @@ Puppet::Type.newtype(:vsphere_vm) do
     validate do |value|
       fail 'Virtual machine name should be a String' unless value.is_a? String
       fail 'Virtual machines must have a name' if value == ''
+      fail 'The last part of the path should be no more than 40 characters long' if value.split('/')[-1].size > 40
     end
   end
 
