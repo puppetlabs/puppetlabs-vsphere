@@ -464,6 +464,50 @@ describe 'vsphere_vm' do
     end
   end
 
+  describe 'should be able to stop a running vm and restart it' do
+    before(:all) do
+      @name = "CLOUD-#{SecureRandom.hex(8)}"
+
+      @path = "/opdx1/vm/eng/test/#{@name}"
+      @config = {
+        :name     => @path,
+        :ensure   => 'present',
+        :optional => {
+          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source_type   => :template,
+          :resource_pool => 'general1',
+        }
+      }
+      PuppetManifest.new(@template, @config).apply
+      @state_before = @client.get_machine(@path).runtime.powerState.clone
+
+      stop_config = {
+        :name     => @path,
+        :ensure   => 'stopped',
+      }
+      PuppetManifest.new(@template, stop_config).apply
+      @state_stopped = @client.get_machine(@path).runtime.powerState.clone
+
+      start_config = {
+        :name     => @path,
+        :ensure   => 'running',
+      }
+      PuppetManifest.new(@template, start_config).apply
+      @state_started = @client.get_machine(@path).runtime.powerState.clone
+    end
+
+    it 'should change state correctly' do
+      expect(@state_before).to eq('poweredOn')
+      expect(@state_stopped).to eq('poweredOff')
+      expect(@state_started).to eq('poweredOn')
+    end
+
+    after(:all) do
+      @client.destroy_machine(@path)
+    end
+  end
+
+
   describe 'should be able to create a machine and run a command on the guest' do
 
     before(:all) do
