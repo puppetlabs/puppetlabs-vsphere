@@ -31,22 +31,14 @@ teardown do
   end
 end
 
-# For PE 3.8.1 this is an alternative to the failed first run below
-#on(master, puppet('agent', '-t', '--environment production'))
+# Work-around for CLOUD-355, this is an alternative to the failed first run below
+on(master, puppet('agent', '-t', '--environment production'))
 
 step "Manipulate the site.pp file on the master node"
 site_pp = create_site_pp(master, :manifest => manifest_erb)
 inject_site_pp(master, prod_env_site_pp_path, site_pp)
 
 confine_block :except, :roles => %w{master dashboard database} do
-  step 'Trigger agent/server sync on master to work around PE-10757'
-  on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => 1) do |result|
-    expect_failure('Expected to fail due to PE-10757') do
-      assert_match(/#{name}\]\/ensure: changed absent to present/, result.output, 'Failed to create VM from template')
-    end
-  end
-
-
   step "Creating VM from a template on agent node"
   on(agent, puppet('agent', '-t', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
     assert_match(/#{name}\]\/ensure: changed absent to present/, result.output, 'Failed to create VM from template')
