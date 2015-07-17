@@ -12,27 +12,32 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
   mk_resource_methods
 
   def self.instances
-    begin
-      find_vms_in_folder(datacenter.vmFolder).collect do |machine|
-        begin
-          hash = machine_to_hash(machine)
-          new(hash) if hash
-        rescue RbVmomi::Fault => e
-          case e.message.split(':').first
-          when 'ManagedObjectNotFound'
-            # We query for all vms in find_vms_in_folder above and then process them one-by-one in
-            # machine_to_hash. This means that, between the initial query and the processing, a vm could
-            # have been deleted. This results in a ManagedObjectNotFound exception.
-            # We ignore this exception as we don't want to list vm's that are in the process of
-            # being deleted. If we could craft a query to exclude them from the search we would.
-            nil
-          else
-            raise e
+    unless ENV['PUPPET_VSPHERE_DISABLE_PREFETCH'] and ENV['PUPPET_VSPHERE_DISABLE_PREFETCH'] == 'yes'
+      begin
+        find_vms_in_folder(datacenter.vmFolder).collect do |machine|
+          begin
+            hash = machine_to_hash(machine)
+            new(hash) if hash
+          rescue RbVmomi::Fault => e
+            case e.message.split(':').first
+            when 'ManagedObjectNotFound'
+              # We query for all vms in find_vms_in_folder above and then process them one-by-one in
+              # machine_to_hash. This means that, between the initial query and the processing, a vm could
+              # have been deleted. This results in a ManagedObjectNotFound exception.
+              # We ignore this exception as we don't want to list vm's that are in the process of
+              # being deleted. If we could craft a query to exclude them from the search we would.
+              nil
+            else
+              raise e
+            end
           end
-        end
-      end.compact
-    rescue StandardError => e
-      raise PuppetX::Puppetlabs::PrefetchError.new(self.resource_type.name.to_s, e.message)
+        end.compact
+      rescue StandardError => e
+        raise PuppetX::Puppetlabs::PrefetchError.new(self.resource_type.name.to_s, e.message)
+      end
+    else
+      Puppet.info('Prefetch is disabled by PUPPET_VSPHERE_DISABLE_PREFETCH')
+      []
     end
   end
 
@@ -165,7 +170,20 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
 
   def exists?
     Puppet.info("Checking if #{type_name} #{name} exists")
-    @property_hash[:ensure] and @property_hash[:ensure] != :absent
+    # Because we ignore machines until they are configured it is possible
+    # to trigger race conditions where-in puppet tries to create a machine
+    # that already exists. In these cases we double check that the machine
+    # really doesn't exist. The only downside of this should be one extra
+    # API query for vms defined as ensure => absent that don't exist
+    if @property_hash.empty?
+      vm = datacenter.find_vm(instance.local_path)
+      Puppet.debug("The #{type_name} #{name} already exists but was not found during prefetch") if vm
+      found = !vm.nil?
+    else
+      found = @property_hash[:ensure] and @property_hash[:ensure] != :absent
+    end
+    Puppet.info("The #{type_name} #{name} already exists") if found
+    found
   end
 
   def create(args={})
