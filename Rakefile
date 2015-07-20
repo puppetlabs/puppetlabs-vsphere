@@ -56,6 +56,7 @@ namespace :integration do
     :pooler => [
     'centos6',
     'centos7',
+    'centos7_pe40',
     'rhel7m_ubuntua',
     'ubuntum_rhel7a',
     'ubuntum_debian7a',

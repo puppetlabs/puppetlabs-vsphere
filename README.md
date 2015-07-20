@@ -18,7 +18,8 @@ Status](https://magnum.travis-ci.com/puppetlabs/puppetlabs-vsphere.svg?token=Rqt
 6. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
   * [Types](#types)
   * [Parameters](#parameters)
-7. [Limitations - OS compatibility, etc.](#limitations)
+7. [Known Issues](#known-issues)
+8. [Limitations - OS compatibility, etc.](#limitations)
 
 ## Overview
 
@@ -32,7 +33,7 @@ Managing vSphere machines using the Puppet DSL.
 
 * Puppet Enterprise 3.7 or greater
 * Ruby 1.9 or greater
-* RBVMOMI Ruby gem
+* Rbvmomi Ruby gem 1.8 or greater
 
 ### Installing the vSphere module
 
@@ -362,6 +363,21 @@ off.
 ##Limitations
 
 This module is available only for Puppet Enterprise 3.7 and later.
+
+## Known Issues
+
+When using the vSphere module with the Puppet Server you first need to
+ensure the module is successfully loaded. This can be done by running
+the Puppet agent on the master node, for instance with `puppet agent
+-t`. Not doing this will result in the first, and only the first, run of
+the `vsphere_vm` resource failing on the agent with the following error:
+
+~~~
+Error: Could not retrieve catalog from remote server: Error 400 on
+SERVER: Could not autoload puppet/type/vsphere_vm: Could not autoload
+puppet/provider/vsphere_vm/rbvmomi: no such file to load --
+puppet_x/puppetlabs/prefetch_error on node
+~~~
 
 ## Development
 
