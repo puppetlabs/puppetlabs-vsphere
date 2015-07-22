@@ -91,17 +91,36 @@ class VsphereHelper
     end
   end
 
-  def list_processes(path)
-    machine = get_machine(path)
-    machine_credentials = {
+  def machine_credentials
+    {
       interactiveSession: false,
       username: ENV['VCENTER_GUEST_USERNAME'],
       password: ENV['VCENTER_GUEST_PASSWORD'],
     }
+  end
+
+  def list_processes(path)
+    machine = get_machine(path)
     manager = @vim.serviceContent.guestOperationsManager
     auth = RbVmomi::VIM::NamePasswordAuthentication(machine_credentials)
     manager.authManager.ValidateCredentialsInGuest(vm: machine, auth: auth)
     manager.processManager.ListProcessesInGuest(vm: machine, auth: auth)
+  end
+
+  def execute_command(path, program_path, arguments)
+    machine = get_machine(path)
+    manager = @vim.serviceContent.guestOperationsManager
+    auth = RbVmomi::VIM::NamePasswordAuthentication(machine_credentials)
+    manager.authManager.ValidateCredentialsInGuest(vm: machine, auth: auth)
+    pid = manager.processManager.StartProgramInGuest(vm: machine, auth: auth, spec: { programPath: programPath, arguments: arguments })
+    with_retries(max_tries: 10,
+                 max_sleep_seconds: 10,
+                 rescue: :not_finished,
+                ) do
+      info = manager.processManager.ListProcessesInGuest(vm: machine, auth: auth, pids: [pid]).first
+      raise :not_finished unless info.exitCode
+      info
+    end
   end
 end
 
