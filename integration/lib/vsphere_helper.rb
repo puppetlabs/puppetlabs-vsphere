@@ -1,4 +1,5 @@
 require 'rbvmomi'
+require 'erb'
 
 # Method ensure_vm_is_absent
 # The method will delete/absent a machine, either VM or template
@@ -144,4 +145,9 @@ def vm_config?(datacenter, name, fact, desired_config)
     else
       fail_test "Unrecorgnized Config"
   end
+end
+
+def render_manifest(binding)
+  manifest_template = File.join(File.dirname(__FILE__), '..', 'files', 'manifest.erb')
+  ERB.new(File.read(manifest_template)).result(binding)
 end

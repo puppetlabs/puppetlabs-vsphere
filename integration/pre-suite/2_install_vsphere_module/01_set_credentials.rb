@@ -9,8 +9,7 @@ server    = ENV['VCENTER_SERVER']
 user      = ENV['VCENTER_USER']
 password  = ENV['VCENTER_PASSWORD']
 
-local_files_root_path     = ENV['FILES'] || 'files'
-vcenter_conf_template     = File.join(local_files_root_path, 'vcenter_conf.erb')
+vcenter_conf_template     = File.join(File.dirname(__FILE__), '..', '..', 'files', 'vcenter_conf.erb')
 vcenter_conf_erb          = ERB.new(File.read(vcenter_conf_template)).result(binding)
 
 step 'Create vcenter.conf file on the agent node'
