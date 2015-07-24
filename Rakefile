@@ -9,6 +9,13 @@ begin
 rescue LoadError
 end
 
+# This gem isn't always present, for instance
+# on Travis with --without integration
+begin
+require 'master_manipulator'
+rescue LoadError
+end
+
 exclude_paths = [
   "pkg/**/*",
   "vendor/**/*",
@@ -46,38 +53,3 @@ task :test => [
   :lint,
   :spec,
 ]
-
-namespace :integration do
-  { :vagrant => [
-    'ubuntu',
-    'ubuntu_pe4',
-    'centos7',
-  ],
-    :pooler => [
-    'centos6',
-    'centos7',
-    'centos7_pe40',
-    'rhel7m_ubuntua',
-    'ubuntum_rhel7a',
-    'ubuntum_debian7a',
-    'rhel7m_scientific7a',
-  ]}.each do |ns, configs|
-    namespace ns.to_sym do
-      configs.each do |config|
-        desc "Run integration tests for #{config} on #{ns}"
-        task config.to_sym do
-          begin
-            require 'master_manipulator'
-            Dir.chdir "integration" do
-              sh("test_run_scripts/#{ns}/vsphere/vsphere_#{config}.sh")
-            end
-          rescue LoadError
-            puts "\033[33m[Warning]\033[0m The integration tests require the" \
-              ' master_manipulator gem which is only available from the internal' \
-              ' gem mirror. Specify GEM_SOURCE and rerun bundle install'
-          end
-        end
-      end
-    end
-  end
-end

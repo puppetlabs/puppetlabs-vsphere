@@ -11,3 +11,6 @@ integration/.vagrant
 integration/log
 integration/junit
 integration/tmp
+log
+junit
+tmp

@@ -1,6 +1,5 @@
 require 'vsphere_helper'
 require 'securerandom'
-require 'erb'
 require 'rbvmomi'
 require 'master_manipulator'
 
@@ -20,11 +19,6 @@ annotation   = 'Create VM from template'
 environment_base_path = on(master, puppet('config', 'print', 'environmentpath')).stdout.rstrip
 prod_env_site_pp_path = File.join(environment_base_path, 'production', 'manifests', 'site.pp')
 
-#ERB Template
-local_files_root_path = ENV['FILES'] || 'files'
-manifest_template     = File.join(local_files_root_path, 'manifest.erb')
-manifest_erb          = ERB.new(File.read(manifest_template)).result(binding)
-
 teardown do
   confine_block :except, :roles => %w{master dashboard database} do
     ensure_vm_is_absent(agent, "#{folder}/vm/#{name}")
@@ -33,7 +27,7 @@ teardown do
 end
 
 step "Manipulate the site.pp file on the master node the first time"
-site_pp = create_site_pp(master, :manifest => manifest_erb)
+site_pp = create_site_pp(master, :manifest => render_manifest(binding))
 inject_site_pp(master, prod_env_site_pp_path, site_pp)
 
 step "Creating VM from a template first:"
@@ -44,15 +38,13 @@ confine_block :except, :roles => %w{master dashboard database} do
 end
 
 step "Manipulate the site.pp file on the master node the second time"
-path              = "#{folder}/template/template_from_vm_#{name}"
-status            = 'present'
-source_path       = "#{folder}/vm/#{name}"
-is_template       = 'true'
-annotation   = 'Create template from VM'
-manifest_template = File.join(local_files_root_path, 'manifest.erb')
-manifest_erb      = ERB.new(File.read(manifest_template)).result(binding)
+path        = "#{folder}/template/template_from_vm_#{name}"
+status      = 'present'
+source_path = "#{folder}/vm/#{name}"
+is_template = 'true'
+annotation  = 'Create template from VM'
 
-# Delete Memory and CPUs from the manifest ERB file:
+manifest_erb = render_manifest(binding)
 manifest_erb = manifest_erb.sub(/memory.*/, "")
 manifest_erb = manifest_erb.sub(/cpus.*/, "")
 
