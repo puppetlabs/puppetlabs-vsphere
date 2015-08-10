@@ -20,7 +20,7 @@ group :development do
 end
 
 group :acceptance do
-  gem 'mustache'
+  gem 'mustache', '0.99.8'
 end
 
 group :integration do
