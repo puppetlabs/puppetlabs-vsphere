@@ -5,6 +5,15 @@ require 'retries'
 class UnableToLoadConfigurationError < StandardError
 end
 
+def with_timing(name)
+  started = Time.now
+  response = yield
+  finished = Time.now
+  delta = finished - started
+  Puppet.debug("Time spent querying for #{name}: #{delta}")
+  response
+end
+
 Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs::Vsphere) do
   confine feature: :rbvmomi
   confine feature: :hocon
@@ -13,9 +22,16 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
 
   def self.instances
     begin
-      find_vms_in_folder(datacenter.vmFolder).collect do |machine|
+      vms = with_timing('list of VMs') do
+        find_vms_in_folder(datacenter.vmFolder)
+      end
+      vms.collect do |machine|
         begin
-          hash = machine_to_hash(machine)
+          name = machine.propSet.find { |p| p.name == 'name'}.val
+          hash = with_timing(name) do
+            machine_to_hash(machine)
+          end
+          Puppet.debug("Ignoring #{name} due to invalid or incomplete response from vSphere") unless hash
           new(hash) if hash
         rescue RbVmomi::Fault => e
           case e.message.split(':').first
@@ -42,19 +58,6 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
         resource.provider = prov
       end
     end
-  end
-
-  def self.query_vm_properties(machine, mappings)
-    list_of_values = machine.collect(*mappings.values)
-    hash_of_values = {}
-    list_of_values.each_with_index do |value, i|
-      hash_of_values[mappings.values[i]] = value
-    end
-    response = {}
-    mappings.each do |key, value|
-      response[key] = hash_of_values[value]
-    end
-    response
   end
 
   def self.machine_to_hash(machine)
@@ -94,17 +97,14 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
         end
       end
     end
-    name = machine.path.collect { |x| x[1] }.drop(1).join('/')
+    # This still makes an API query per machine
+    name = machine.obj.path.collect { |x| x[1] }.drop(1).join('/')
     begin
       with_retries(:max_tries => 10,
                    :handler => handler,
                    :base_sleep_seconds => 2,
                    :max_sleep_seconds => 10,
                    :rescue => [RbVmomi::Fault, NoMethodError]) do
-        resource_pool = machine.resourcePool
-        resource_pool = resource_pool ? resource_pool.parent.name : nil
-        state = machine_state(machine)
-        extra_config = {}
 
         property_mappings = {
           cpus: 'summary.config.numCpu',
@@ -124,10 +124,22 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
           uuid: 'summary.config.uuid',
           instance_uuid: 'summary.config.instanceUuid',
           hostname: 'summary.guest.hostName',
+          guest_ip: 'summary.ipAddress',
         }
 
-        api_properties = query_vm_properties(machine, property_mappings)
+        api_properties = {}
+        machine.propSet.each do |property|
+          api_properties[property_mappings.invert[property.name]] = property.val
+        end
 
+        # This also still makes an API query per machine
+        resource_pool = machine.propSet.find { |p| p.name == 'resourcePool'}
+        resource_pool = resource_pool ? resource_pool.val.parent.name : nil
+
+        power_state = machine.propSet.find { |p| p.name == 'runtime.powerState'}.val
+        state = machine_state(power_state)
+
+        extra_config = {}
         api_properties[:config].each do |setting|
           extra_config[setting.key] = setting.value
         end
@@ -137,9 +149,9 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
           name: "/#{name}",
           resource_pool: resource_pool,
           ensure: state,
-          guest_ip: machine.guest_ip,
           hostname: api_properties['hostname'] == '(none)' ? nil : api_properties['hostname'],
           extra_config: extra_config,
+          object: machine.obj,
         }
 
         api_properties.merge(curated_properties)
@@ -150,8 +162,8 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     end
   end
 
-  def self.machine_state(vm)
-    case vm.runtime.powerState
+  def self.machine_state(power_state)
+    case power_state
     when 'poweredOn'
       :running
     when 'poweredOff'
@@ -394,12 +406,17 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
   end
 
   def current_state
-    self.class.machine_state(machine)
+    self.class.machine_state(machine.runtime.powerState)
   end
 
   private
     def machine
-      vm = datacenter.find_vm(instance.local_path)
+      vm = if @property_hash[:object]
+        @property_hash[:object]
+      else
+        Puppet.debug("Looking up #{instance.local_path} again")
+        datacenter.find_vm(instance.local_path)
+      end
       raise Puppet::Error, "No virtual machine found at #{instance.local_path}" unless vm
       vm
     end

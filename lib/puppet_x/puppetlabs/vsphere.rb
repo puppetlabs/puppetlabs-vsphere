@@ -42,11 +42,51 @@ module PuppetX
       end
 
       def self.find_vms_in_folder(folder)
-        vim.serviceContent.viewManager.CreateContainerView({
-          container: folder,
-          type: ['VirtualMachine'],
-          recursive: true,
-        }).view
+        filter_spec = RbVmomi::VIM.PropertyFilterSpec(
+          :objectSet => [
+            :obj => folder,
+            :skip => true,
+            :selectSet => [
+              RbVmomi::VIM.TraversalSpec(
+                :name => 'VisitFolders',
+                :type => 'Folder',
+                :path => 'childEntity',
+                :skip => false,
+                :selectSet => [
+                  RbVmomi::VIM.SelectionSpec(:name => 'VisitFolders')
+                ]
+              )
+            ]
+          ],
+          :propSet => [{
+            :type => 'VirtualMachine',
+            :pathSet => [
+              'name',
+              'resourcePool',
+              'guest.ipAddress',
+              'summary.config.instanceUuid',
+              'summary.config.numCpu',
+              'config.extraConfig',
+              'config.flags.snapshotDisabled',
+              'config.flags.snapshotLocked',
+              'config.annotation',
+              'config.guestFullName',
+              'config.flags.snapshotPowerOffBehavior',
+              'summary.config.memorySizeMB',
+              'summary.config.template',
+              'summary.config.memoryReservation',
+              'summary.config.cpuReservation',
+              'summary.config.numEthernetCards',
+              'summary.runtime.powerState',
+              'summary.runtime.toolsInstallerMounted',
+              'summary.config.uuid',
+              'summary.config.instanceUuid',
+              'summary.guest.hostName',
+              'runtime.powerState',
+            ]
+          }]
+        )
+        vim.propertyCollector.RetrieveProperties(:specSet => [filter_spec])
       end
 
       private
