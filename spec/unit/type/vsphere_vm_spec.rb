@@ -9,6 +9,7 @@ describe type_class do
       :name,
       :source,
       :source_type,
+      :customization_spec,
       :linked_clone,
       :create_command,
       :delete_from_disk,

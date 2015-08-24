@@ -196,6 +196,13 @@ Puppet::Type.newtype(:vsphere_vm) do
     end
   end
 
+  newparam(:customization_spec) do
+    desc 'Applies this pre-existing customization specification at clone time to the newly built VM.'
+    validate do |value|
+      fail 'Virtual machine customization_spec should be a String' unless value.is_a? String
+    end
+  end
+
   newparam(:linked_clone) do
     desc 'When creating the machine whether it should be a linked clone or not.'
     defaultto :false

@@ -1,6 +1,11 @@
 require 'mustache'
 require 'open3'
 require 'rbvmomi'
+require 'retries'
+
+# This exception is used to signal expected continuations when waiting for events on the vCenterß
+class NotFinished < Exception
+end
 
 class PuppetManifest < Mustache
 
@@ -91,17 +96,36 @@ class VsphereHelper
     end
   end
 
-  def list_processes(path)
-    machine = get_machine(path)
-    machine_credentials = {
+  def machine_credentials
+    {
       interactiveSession: false,
       username: ENV['VCENTER_GUEST_USERNAME'],
       password: ENV['VCENTER_GUEST_PASSWORD'],
     }
+  end
+
+  def list_processes(path)
+    machine = get_machine(path)
     manager = @vim.serviceContent.guestOperationsManager
     auth = RbVmomi::VIM::NamePasswordAuthentication(machine_credentials)
     manager.authManager.ValidateCredentialsInGuest(vm: machine, auth: auth)
     manager.processManager.ListProcessesInGuest(vm: machine, auth: auth)
+  end
+
+  def execute_command(path, program_path, arguments)
+    machine = get_machine(path)
+    manager = @vim.serviceContent.guestOperationsManager
+    auth = RbVmomi::VIM::NamePasswordAuthentication(machine_credentials)
+    manager.authManager.ValidateCredentialsInGuest(vm: machine, auth: auth)
+    pid = manager.processManager.StartProgramInGuest(vm: machine, auth: auth, spec: { programPath: program_path, arguments: arguments })
+    with_retries(max_tries: 10,
+                 max_sleep_seconds: 10,
+                 rescue: NotFinished,
+                ) do
+      info = manager.processManager.ListProcessesInGuest(vm: machine, auth: auth, pids: [pid]).first
+      raise NotFinished.new unless info.exitCode
+      info
+    end
   end
 end
 
