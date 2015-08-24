@@ -196,7 +196,6 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     vm = datacenter.find_vm(base_machine.local_path)
     raise Puppet::Error, "No machine found at #{base_machine.local_path}" unless vm
 
-
     if resource[:resource_pool]
       compute = datacenter.find_compute_resource(resource[:resource_pool])
       raise Puppet::Error, "No resource pool found named #{resource[:resource_pool]}" unless compute
@@ -224,6 +223,18 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       :location => relocate_spec,
       :template => is_template?,
       :powerOn => power_on)
+
+    if resource[:customization_spec]
+      begin
+        clone_spec.customization = vim.serviceContent.customizationSpecManager.GetCustomizationSpec({name: resource[:customization_spec]}).spec
+      rescue RbVmomi::Fault => exception
+        if exception.message.split(':').first == 'NotFound'
+          raise Puppet::Error, "Customization specification #{resource[:customization_spec]} not found"
+        else
+          raise
+        end
+      end
+    end
 
     clone_spec.config = RbVmomi::VIM.VirtualMachineConfigSpec(deviceChange: [])
     clone_spec.config.numCPUs = resource[:cpus] if resource[:cpus]

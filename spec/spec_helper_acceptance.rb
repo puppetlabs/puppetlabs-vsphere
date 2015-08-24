@@ -3,6 +3,10 @@ require 'open3'
 require 'rbvmomi'
 require 'retries'
 
+# This exception is used to signal expected continuations when waiting for events on the vCenterß
+class NotFinished < Exception
+end
+
 class PuppetManifest < Mustache
 
   def initialize(file, config)
@@ -106,9 +110,6 @@ class VsphereHelper
     auth = RbVmomi::VIM::NamePasswordAuthentication(machine_credentials)
     manager.authManager.ValidateCredentialsInGuest(vm: machine, auth: auth)
     manager.processManager.ListProcessesInGuest(vm: machine, auth: auth)
-  end
-
-  class NotFinished < Exception
   end
 
   def execute_command(path, program_path, arguments)
