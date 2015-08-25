@@ -320,6 +320,10 @@ create_command => {
 Both `working_directory` (defaults to `/`) and `arguments` (defaults to
 `nil`) are optional.
 
+#####`customization_spec`
+The name of an existing customization spec in vCenter which is applied
+to the VM when it is cloned.
+
 #####`cpu_reservation`
 *Read Only*. How many of the CPUs allocated are reserved just for this
 machine.
