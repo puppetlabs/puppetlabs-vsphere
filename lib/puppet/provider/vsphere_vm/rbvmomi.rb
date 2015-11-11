@@ -124,7 +124,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
           uuid: 'summary.config.uuid',
           instance_uuid: 'summary.config.instanceUuid',
           hostname: 'summary.guest.hostName',
-          guest_ip: 'summary.ipAddress',
+          guest_ip: 'guest.ipAddress',
         }
 
         api_properties = {}
