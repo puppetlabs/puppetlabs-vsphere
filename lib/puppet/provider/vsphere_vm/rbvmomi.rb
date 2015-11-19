@@ -5,15 +5,6 @@ require 'retries'
 class UnableToLoadConfigurationError < StandardError
 end
 
-def with_timing(name)
-  started = Time.now
-  response = yield
-  finished = Time.now
-  delta = finished - started
-  Puppet.debug("Time spent querying for #{name}: #{delta}")
-  response
-end
-
 Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs::Vsphere) do
   confine feature: :rbvmomi
   confine feature: :hocon
@@ -22,14 +13,16 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
 
   def self.instances
     begin
-      vms = with_timing('list of VMs') do
-        find_vms_in_folder(datacenter.vmFolder)
+      vms = []
+      benchmark(:debug, 'loaded list of VMs') do
+        vms = find_vms_in_folder(datacenter.vmFolder)
       end
       vms.collect do |machine|
         begin
           name = machine.propSet.find { |p| p.name == 'name'}.val
-          hash = with_timing(name) do
-            machine_to_hash(machine)
+          hash = nil
+          benchmark(:debug, "loaded machine information for #{name}") do
+            hash = machine_to_hash(machine)
           end
           Puppet.debug("Ignoring #{name} due to invalid or incomplete response from vSphere") unless hash
           new(hash) if hash
