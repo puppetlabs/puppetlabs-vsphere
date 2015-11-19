@@ -25,5 +25,5 @@ end
 
 group :integration do
   gem 'beaker', '2.22.0'
-  gem 'master_manipulator', '~> 1.0'
+  gem 'master_manipulator', '1.1.2'
 end
