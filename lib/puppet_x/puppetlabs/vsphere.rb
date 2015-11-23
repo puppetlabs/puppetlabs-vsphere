@@ -25,7 +25,7 @@ module PuppetX
         }
         credentials[:port] = config.port if config.port
         begin
-          RbVmomi::VIM.connect credentials
+          @@vim ||= RbVmomi::VIM.connect credentials
         rescue SocketError => e
           raise Puppet::Error, "Unable to access vSphere. Check you have the correct value in VCENTER_SERVER. The error message from the API client was: #{e.message}"
         end
