@@ -34,6 +34,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
             # have been deleted. This results in a ManagedObjectNotFound exception.
             # We ignore this exception as we don't want to list vm's that are in the process of
             # being deleted. If we could craft a query to exclude them from the search we would.
+            Puppet.debug("Skipping #{name}: stale metadata")
             nil
           else
             raise e
