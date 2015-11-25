@@ -21,7 +21,7 @@ describe 'vsphere_vm' do
           :source_type   => :template,
           :memory        => 512,
           :cpus          => 2,
-          :resource_pool => 'general1',
+          :resource_pool => '/general1/CLOUD-Test1',
           :annotation    => 'some text',
         }
       }
@@ -38,7 +38,15 @@ describe 'vsphere_vm' do
     end
 
     it 'attached to the specified resource pool' do
-      expect(@machine.resourcePool.parent.name).to eq(@config[:optional][:resource_pool])
+      expect(@machine.resourcePool.name).to eq('CLOUD-Test1')
+    end
+
+    it 'in the correct resource allocation location' do
+      expect(@machine.resourcePool.parent.name).to eq('Resources')
+    end
+
+    it 'in the correct cluster' do
+      expect(@machine.resourcePool.parent.parent.name).to eq('general1')
     end
 
     it 'with the specified memory setting' do
@@ -659,7 +667,7 @@ describe 'vsphere_vm' do
       end
     end
 
-    context 'for a machine with an invalid resource pool' do
+    context 'for a machine with an invalid compute resource' do
 
       before(:all) do
         name = "CLOUD-#{SecureRandom.hex(8)}"
@@ -669,6 +677,36 @@ describe 'vsphere_vm' do
           :ensure   => 'present',
           :optional => {
             :resource_pool => 'invalid',
+            :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          },
+        }
+        @apply = PuppetManifest.new(@template, @config).apply
+      end
+
+      it 'should not create a machine' do
+        expect(@client.get_machine(@path)).to be_nil
+      end
+
+      it 'should fail to apply successfully' do
+        success = @apply[:exit_status].success?
+        expect(success).to eq(false)
+      end
+
+      it 'should report the problem' do
+        expect(@apply[:output].map { |i| i.include? "No compute resource found named #{@config[:optional][:resource_pool]}" }.include? true).to eq(true)
+      end
+    end
+
+    context 'for a machine with an invalid resource pool' do
+
+      before(:all) do
+        name = "CLOUD-#{SecureRandom.hex(8)}"
+        @path = "/opdx1/vm/eng/test/#{name}"
+        @config = {
+          :name     => @path,
+          :ensure   => 'present',
+          :optional => {
+            :resource_pool => '/general1/invalid',
             :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
           },
         }

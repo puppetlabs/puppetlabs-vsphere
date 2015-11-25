@@ -3,7 +3,7 @@ require 'open3'
 require 'rbvmomi'
 require 'retries'
 
-# This exception is used to signal expected continuations when waiting for events on the vCenterß
+# This exception is used to signal expected continuations when waiting for events on the vCenter
 class NotFinished < Exception
 end
 

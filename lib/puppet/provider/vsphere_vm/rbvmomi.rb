@@ -5,15 +5,6 @@ require 'retries'
 class UnableToLoadConfigurationError < StandardError
 end
 
-def with_timing(name)
-  started = Time.now
-  response = yield
-  finished = Time.now
-  delta = finished - started
-  Puppet.debug("Time spent querying for #{name}: #{delta}")
-  response
-end
-
 Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs::Vsphere) do
   confine feature: :rbvmomi
   confine feature: :hocon
@@ -22,32 +13,23 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
 
   def self.instances
     begin
-      vms = with_timing('list of VMs') do
-        find_vms_in_folder(datacenter.vmFolder)
-      end
-      vms.collect do |machine|
-        begin
-          name = machine.propSet.find { |p| p.name == 'name'}.val
-          hash = with_timing(name) do
-            machine_to_hash(machine)
+      result = nil
+      benchmark(:debug, 'loaded list of VMs') do
+        data = load_machine_info(datacenter)
+        result = data[RbVmomi::VIM::VirtualMachine].collect do |obj, machine|
+          hash = nil
+          benchmark(:debug, "loaded machine information for #{machine['name']}") do
+            hash = hash_from_machine_data(obj, machine, data)
           end
-          Puppet.debug("Ignoring #{name} due to invalid or incomplete response from vSphere") unless hash
-          new(hash) if hash
-        rescue RbVmomi::Fault => e
-          case e.message.split(':').first
-          when 'ManagedObjectNotFound'
-            # We query for all vms in find_vms_in_folder above and then process them one-by-one in
-            # machine_to_hash. This means that, between the initial query and the processing, a vm could
-            # have been deleted. This results in a ManagedObjectNotFound exception.
-            # We ignore this exception as we don't want to list vm's that are in the process of
-            # being deleted. If we could craft a query to exclude them from the search we would.
-            nil
-          else
-            raise e
-          end
+          new(hash)
         end
-      end.compact
-    rescue StandardError => e
+      end
+      result
+    rescue Timeout::Error, StandardError => e
+      # put error in the debug log, as re-raising it below swallows the correct stack trace
+      Puppet.debug(e.inspect)
+      Puppet.debug(e.backtrace)
+
       raise PuppetX::Puppetlabs::PrefetchError.new(self.resource_type.name.to_s, e.message)
     end
   end
@@ -60,106 +42,86 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     end
   end
 
-  def self.machine_to_hash(machine)
-    handler = Proc.new do |exception, attempt_number, total_delay|
-      Puppet.debug("#{exception.class}: #{exception.message}; retry attempt #{attempt_number}; #{total_delay} seconds have passed")
-      case exception
-      when NoMethodError
-        # This exception is raised when accessing config.extraConfig before config is loaded. This happens
-        # when the machine is first booted. When the machine is terminated we see ManagedObjectNotFound instead.
-        # We allow this to be retried bu if that doesn't work (because the machine can take a long time to configure)
-        # we raise a more useful exception so we can deal with that higher up the stack.
-        if attempt_number == 9
-          raise UnableToLoadConfigurationError
+  def self.resource_pool_from_machine_data(machine, data)
+    path_components = []
+    i = data[RbVmomi::VIM::ResourcePool][machine['resourcePool']]
+    while i
+      path_components << i['name']
+      if i.has_key? 'parent'
+        if data[RbVmomi::VIM::ResourcePool].has_key? i['parent']
+          i = data[RbVmomi::VIM::ResourcePool][i['parent']]
+        elsif data[RbVmomi::VIM::ClusterComputeResource].has_key? i['parent']
+          # There's always a top-level "Resources" pool that we do not want to show
+          path_components.pop
+          i = data[RbVmomi::VIM::ClusterComputeResource][i['parent']]
+        else
+          i = nil
         end
-      when RbVmomi::Fault
-        # Many exceptions in RbVmomi are RbVmomi::Fault, rather than the actual API exception
-        # The actual exceptions come out in the message, so we parse them out
-        case exception.message.split(':').first
-        when 'InvalidArgument', 'InvalidProperty', 'InvalidType'
-          raise Puppet::DevError, "Internal error when calling out to vCenter: #{exception.faultCause}"
-        when 'ManagedObjectNotFound'
-          # We query for all vms in find_vms_in_folder and then process them one-by-one. This means
-          # that, between the initial query and the processing in this method, a vm could have been deleted.
-          # The initial query could also return vm's that aren't quite ready yet. In both of these
-          # cases a ManagedObjectNotFound exception can be raised.
-          #
-          # This case clause is intended to retry the failing query when this happens. This is
-          # specifically to handle the latter of the two issues, when the vm has been created but
-          # it's quite all there.
-          #
-          # Note that this also means we retry in the case of machines that are in the process of being
-          # deleted, because we can't identify which is which. This is wasteful but not harmful.
-          nil
-        when 'DatabaseError', 'HostCommunication'
-          # RuntimeFault that should be retried
-          nil
-        end
+      else
+        i = nil
       end
     end
-    # This still makes an API query per machine
-    name = machine.obj.path.collect { |x| x[1] }.drop(1).join('/')
-    begin
-      with_retries(:max_tries => 10,
-                   :handler => handler,
-                   :base_sleep_seconds => 2,
-                   :max_sleep_seconds => 10,
-                   :rescue => [RbVmomi::Fault, NoMethodError]) do
+    '/' + path_components.reverse.join('/')
+  end
 
-        property_mappings = {
-          cpus: 'summary.config.numCpu',
-          config: 'config.extraConfig',
-          snapshot_disabled: 'config.flags.snapshotDisabled',
-          snapshot_locked: 'config.flags.snapshotLocked',
-          annotation: 'config.annotation',
-          guest_os: 'config.guestFullName',
-          snapshot_power_off_behavior: 'config.flags.snapshotPowerOffBehavior',
-          memory: 'summary.config.memorySizeMB',
-          template: 'summary.config.template',
-          memory_reservation: 'summary.config.memoryReservation',
-          cpu_reservation: 'summary.config.cpuReservation',
-          number_ethernet_cards: 'summary.config.numEthernetCards',
-          power_state: 'summary.runtime.powerState',
-          tools_installer_mounted: 'summary.runtime.toolsInstallerMounted',
-          uuid: 'summary.config.uuid',
-          instance_uuid: 'summary.config.instanceUuid',
-          hostname: 'summary.guest.hostName',
-          guest_ip: 'guest.ipAddress',
-        }
-
-        api_properties = {}
-        machine.propSet.each do |property|
-          api_properties[property_mappings.invert[property.name]] = property.val
+  def self.hash_from_machine_data(obj, machine, data)
+    path_components = []
+    i = machine
+    while i
+      path_components << i['name']
+      if i.has_key? 'parent'
+        if data[RbVmomi::VIM::Folder].has_key? i['parent']
+          i = data[RbVmomi::VIM::Folder][i['parent']]
+        elsif data[RbVmomi::VIM::Datacenter].has_key? i['parent']
+          i = data[RbVmomi::VIM::Datacenter][i['parent']]
+        else
+          i = nil
         end
-
-        # This also still makes an API query per machine
-        resource_pool = machine.propSet.find { |p| p.name == 'resourcePool'}
-        resource_pool = resource_pool ? resource_pool.val.parent.name : nil
-
-        power_state = machine.propSet.find { |p| p.name == 'runtime.powerState'}.val
-        state = machine_state(power_state)
-
-        extra_config = {}
-        api_properties[:config].each do |setting|
-          extra_config[setting.key] = setting.value
-        end
-        api_properties.delete(:config)
-
-        curated_properties = {
-          name: "/#{name}",
-          resource_pool: resource_pool,
-          ensure: state,
-          hostname: api_properties['hostname'] == '(none)' ? nil : api_properties['hostname'],
-          extra_config: extra_config,
-          object: machine.obj,
-        }
-
-        api_properties.merge(curated_properties)
+      else
+        i = nil
       end
-    rescue UnableToLoadConfigurationError
-      Puppet.debug("#{name} is currently in the process of booting and not available in this run")
-      nil
     end
+    name = '/' + path_components.reverse.join('/')
+
+    property_mappings = {
+      cpus: 'summary.config.numCpu',
+      snapshot_disabled: 'config.flags.snapshotDisabled',
+      snapshot_locked: 'config.flags.snapshotLocked',
+      annotation: 'config.annotation',
+      guest_os: 'config.guestFullName',
+      snapshot_power_off_behavior: 'config.flags.snapshotPowerOffBehavior',
+      memory: 'summary.config.memorySizeMB',
+      template: 'summary.config.template',
+      memory_reservation: 'summary.config.memoryReservation',
+      cpu_reservation: 'summary.config.cpuReservation',
+      number_ethernet_cards: 'summary.config.numEthernetCards',
+      power_state: 'summary.runtime.powerState',
+      tools_installer_mounted: 'summary.runtime.toolsInstallerMounted',
+      uuid: 'summary.config.uuid',
+      instance_uuid: 'summary.config.instanceUuid',
+      hostname: 'summary.guest.hostName',
+      guest_ip: 'guest.ipAddress',
+    }
+
+    api_properties = Hash[property_mappings
+      .select { |_, v| machine.has_key? v }
+      .collect { |key, property_name|
+        [key, machine[property_name]]
+      }
+    ]
+
+    extra_config = Hash[machine['config.extraConfig'].collect { |setting| [setting.key, setting.value] }]
+
+    curated_properties = {
+      name: name,
+      resource_pool: resource_pool_from_machine_data(machine, data),
+      ensure: machine_state(machine['runtime.powerState']),
+      hostname: api_properties['hostname'] == '(none)' ? nil : api_properties['hostname'],
+      extra_config: extra_config,
+      object: obj,
+    }
+
+    api_properties.merge(curated_properties)
   end
 
   def self.machine_state(power_state)
@@ -197,9 +159,16 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     raise Puppet::Error, "No machine found at #{base_machine.local_path}" unless vm
 
     if resource[:resource_pool]
-      compute = datacenter.find_compute_resource(resource[:resource_pool])
-      raise Puppet::Error, "No resource pool found named #{resource[:resource_pool]}" unless compute
-      pool = compute.resourcePool
+      path_components = resource[:resource_pool].split('/').select { |s| !s.empty? }
+      compute_resource_name = path_components.shift
+      compute_resource = datacenter.find_compute_resource(compute_resource_name)
+      raise Puppet::Error, "No compute resource found named #{compute_resource_name}" unless compute_resource
+      if path_components.empty?
+        pool = compute_resource.resourcePool
+      else
+        pool = compute_resource.resourcePool.traverse path_components.join('/')
+      end
+      raise Puppet::Error, "No resource pool found named #{resource[:resource_pool]}" unless pool
     else
       hosts = datacenter.hostFolder.children
       raise Puppet::Error, "No resource pool found for default datacenter" if hosts.empty?
@@ -417,23 +386,26 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
   end
 
   def current_state
-    self.class.machine_state(machine.runtime.powerState)
+    self.class.machine_state(machine['runtime.powerState'])
   end
 
   private
     def machine
-      vm = if @property_hash[:object]
-        @property_hash[:object]
-      else
-        Puppet.debug("Looking up #{instance.local_path} again")
-        datacenter.find_vm(instance.local_path)
+      unless @property_hash[:object]
+        benchmark(:debug, "fetched #{instance.local_path} info from vSphere") do
+          vim_machine = datacenter.find_vm(instance.local_path)
+          data = self.class.load_machine_info(vim_machine)
+          machine = data[RbVmomi::VIM::VirtualMachine][vim_machine]
+          hash = self.class.hash_from_machine_data(vim_machine, machine, data)
+          @property_hash[:object] = hash[:object]
+        end
       end
-      raise Puppet::Error, "No virtual machine found at #{instance.local_path}" unless vm
-      vm
+      raise Puppet::Error, "No virtual machine found at #{instance.local_path}" unless @property_hash[:object]
+      @property_hash[:object]
     end
 
     def instance
-      PuppetX::Puppetlabs::Vsphere::Machine.new(name)
+      @instance ||= PuppetX::Puppetlabs::Vsphere::Machine.new(name)
     end
 
     def is_template?

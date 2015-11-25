@@ -270,7 +270,9 @@ Values have the following effects:
 *Required* The full path for the machine, including the datacenter identifier.
 
 #####`resource_pool`
-The name of the resource_pool in which to launch the machine. Defaults to the default resource pool for the datacenter.
+The name of the resource_pool in which to launch the machine. If you have nested resource pools, you can specify them using a slash-separated value. For example, with a cluster named "general1" that contains a resource pool called "QA", specify `/general1/QA` to put a VM into this resource pool. Defaults to the first cluster in the datacenter.
+
+For compatibility with version 1.1.0 and earlier, you can also specify just the name of a host cluster without any slashes. This usage will generate a warning and be removed at a later time.
 
 #####`source`
 The path within the specified datacenter to the virtual machine or
