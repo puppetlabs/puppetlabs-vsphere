@@ -110,17 +110,17 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       }
     ]
 
-    extra_config = Hash[machine['config.extraConfig'].collect { |setting| [setting.key, setting.value] }]
-
     curated_properties = {
       name: name,
       resource_pool: resource_pool_from_machine_data(machine, data),
       ensure: machine_state(machine['runtime.powerState']),
       hostname: api_properties['hostname'] == '(none)' ? nil : api_properties['hostname'],
       datacenter: data[RbVmomi::VIM::Datacenter].first.last['name'],
-      extra_config: extra_config,
       object: obj,
     }
+
+    # While the machine is booting, no extra config is available.
+    curated_properties[:extra_config] = Hash[machine['config.extraConfig'].collect { |setting| [setting.key, setting.value] }] if machine.has_key? 'config.extraConfig'
 
     api_properties.merge(about_info).merge(curated_properties)
   end
