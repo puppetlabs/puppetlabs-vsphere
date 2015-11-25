@@ -41,6 +41,19 @@ module PuppetX
         dc
       end
 
+      def self.about_info
+        unless @about_info
+          info = vim.serviceInstance.content.about
+          @about_info = {
+            vcenter_full_version: "#{info.version} build-#{info.build}",
+            vcenter_name: info.licenseProductName,
+            vcenter_uuid: info.instanceUuid,
+            vcenter_version: info.licenseProductVersion,
+          }
+        end
+        @about_info
+      end
+
       # fetch all data connected to a VirtualMachine, Folder, Datacenter, or ResourcePool
       # returns all connected object as a hash of hashes with the Class and the ManagedEntityReference as keys.
       def self.load_machine_info(start_obj)

@@ -369,6 +369,18 @@ off.
 #####`datacenter`
 *Read Only*. The datacenter this machine is running on.
 
+#####`vcenter_full_version`
+*Read Only*. The full version of the vCenter managing this machine.
+
+#####`vcenter_name`
+*Read Only*. The name of the vCenter managing this machine.
+
+#####`vcenter_uuid`
+*Read Only*. The UUID of the vCenter managing this machine.
+
+#####`vcenter_version`
+*Read Only*. The product version of the vCenter managing this machine.
+
 
 ##Limitations
 

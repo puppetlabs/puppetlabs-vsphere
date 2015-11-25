@@ -122,7 +122,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       object: obj,
     }
 
-    api_properties.merge(curated_properties)
+    api_properties.merge(about_info).merge(curated_properties)
   end
 
   def self.machine_state(power_state)

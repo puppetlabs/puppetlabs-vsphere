@@ -107,6 +107,10 @@ describe 'vsphere_vm' do
         'snapshot_power_off_behavior',
         'tools_installer_mounted',
         'uuid',
+        'vcenter_full_version',
+        'vcenter_name',
+        'vcenter_uuid',
+        'vcenter_version',
       ].each do |read_only_property|
         it "#{read_only_property} is reported" do
           regex = /(#{read_only_property})(\s*)(=>)(\s*)/

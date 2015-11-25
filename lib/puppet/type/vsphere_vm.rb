@@ -187,6 +187,10 @@ Puppet::Type.newtype(:vsphere_vm) do
     snapshot_power_off_behavior: 'snapshotPowerOffBehavior',
     tools_installer_mounted: 'toolsInstallerMounted',
     uuid: 'uuid',
+    vcenter_full_version: 'AboutInfo.version and AboutInfo.build',
+    vcenter_name: 'AboutInfo.licenseProductName',
+    vcenter_uuid: 'AboutInfo.instanceUuid',
+    vcenter_version: 'AboutInfo.licenseProductVersion',
   }
 
   read_only_properties.each do |property, value|
