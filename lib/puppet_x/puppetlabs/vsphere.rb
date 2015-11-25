@@ -41,50 +41,163 @@ module PuppetX
         dc
       end
 
-      def self.find_vms_in_folder(folder)
+      # fetch all data connected to a VirtualMachine, Folder, Datacenter, or ResourcePool
+      # returns all connected object as a hash of hashes with the Class and the ManagedEntityReference as keys.
+      def self.load_machine_info(start_obj)
+        data = {}
+        load_machine_info_native(start_obj).each do |d|
+          data[d.obj.class] ||= []
+          data[d.obj.class] << [d.obj, Hash[d.propSet.map { |prop| [prop.name, prop.val] }]]
+        end
+        data.each do |klass, objlist|
+          data[klass] = Hash[objlist]
+        end
+        data
+      end
+
+      # runs the underlying native query to RbVmomi API for load_machine_info
+      def self.load_machine_info_native(start_obj)
         filter_spec = RbVmomi::VIM.PropertyFilterSpec(
           :objectSet => [
-            :obj => folder,
-            :skip => true,
-            :selectSet => [
-              RbVmomi::VIM.TraversalSpec(
-                :name => 'VisitFolders',
-                :type => 'Folder',
-                :path => 'childEntity',
-                :skip => false,
-                :selectSet => [
-                  RbVmomi::VIM.SelectionSpec(:name => 'VisitFolders')
-                ]
-              )
-            ]
+            {
+              :obj => start_obj,
+              :skip => false,
+              :selectSet => [
+                RbVmomi::VIM.TraversalSpec(
+                  :name => 'VisitVMsFolder',
+                  :type => 'VirtualMachine',
+                  :path => 'parent',
+                  :skip => false,
+                  :selectSet => [
+                    RbVmomi::VIM.SelectionSpec(:name => 'VisitFolderParents'),
+                  ]
+                ),
+                RbVmomi::VIM.TraversalSpec(
+                  :name => 'VisitFolderParents',
+                  :type => 'Folder',
+                  :path => 'parent',
+                  :skip => false,
+                  :selectSet => [
+                    RbVmomi::VIM.SelectionSpec(:name => 'VisitFolderParents'),
+                  ]
+                ),
+              ],
+            },
+            {
+              :obj => start_obj,
+              :skip => false,
+              :selectSet => [
+                RbVmomi::VIM.TraversalSpec(
+                  :name => 'VisitVMs',
+                  :type => 'Datacenter',
+                  :path => 'vmFolder',
+                  :skip => false,
+                  :selectSet => [
+                    RbVmomi::VIM.SelectionSpec(:name => 'VisitFolders'),
+                  ]
+                ),
+                RbVmomi::VIM.TraversalSpec(
+                  :name => 'VisitFolders',
+                  :type => 'Folder',
+                  :path => 'childEntity',
+                  :skip => false,
+                  :selectSet => [
+                    RbVmomi::VIM.SelectionSpec(:name => 'VisitFolders'),
+                    RbVmomi::VIM.SelectionSpec(:name => 'VisitVMsResourcePools'),
+                    RbVmomi::VIM.SelectionSpec(:name => 'VisitResourcePoolParents'),
+                    RbVmomi::VIM.SelectionSpec(:name => 'VisitResourcePoolCCRs'),
+                  ]
+                ),
+                RbVmomi::VIM.TraversalSpec(
+                  :name => 'VisitVMsResourcePools',
+                  :type => 'VirtualMachine',
+                  :path => 'resourcePool',
+                  :skip => false,
+                  :selectSet => [
+                    RbVmomi::VIM.SelectionSpec(:name => 'VisitVMsResourcePools'),
+                    RbVmomi::VIM.SelectionSpec(:name => 'VisitResourcePoolParents'),
+                    RbVmomi::VIM.SelectionSpec(:name => 'VisitResourcePoolCCRs'),
+                  ]
+                ),
+                RbVmomi::VIM.TraversalSpec(
+                  :name => 'VisitResourcePoolParents',
+                  :type => 'ResourcePool',
+                  :path => 'parent',
+                  :skip => false,
+                  :selectSet => [
+                    RbVmomi::VIM.SelectionSpec(:name => 'VisitResourcePoolParents'),
+                    RbVmomi::VIM.SelectionSpec(:name => 'VisitResourcePoolCCRs'),
+                  ]
+                ),
+                RbVmomi::VIM.TraversalSpec(
+                  :name => 'VisitResourcePoolCCRs',
+                  :type => 'ClusterComputeResource',
+                  :path => 'parent',
+                  :skip => false,
+                  :selectSet => [
+                    RbVmomi::VIM.SelectionSpec(:name => 'VisitResourcePoolParents'),
+                    RbVmomi::VIM.SelectionSpec(:name => 'VisitResourcePoolCCRs'),
+                  ]
+                ),
+              ]
+            }
           ],
           :propSet => [{
-            :type => 'VirtualMachine',
-            :pathSet => [
-              'name',
-              'resourcePool',
-              'guest.ipAddress',
-              'summary.config.instanceUuid',
-              'summary.config.numCpu',
-              'config.extraConfig',
-              'config.flags.snapshotDisabled',
-              'config.flags.snapshotLocked',
-              'config.annotation',
-              'config.guestFullName',
-              'config.flags.snapshotPowerOffBehavior',
-              'summary.config.memorySizeMB',
-              'summary.config.template',
-              'summary.config.memoryReservation',
-              'summary.config.cpuReservation',
-              'summary.config.numEthernetCards',
-              'summary.runtime.powerState',
-              'summary.runtime.toolsInstallerMounted',
-              'summary.config.uuid',
-              'summary.config.instanceUuid',
-              'summary.guest.hostName',
-              'runtime.powerState',
-            ]
-          }]
+              :type => 'Datacenter',
+              :pathSet => [
+                'name',
+              ]
+            },
+            {
+              :type => 'Folder',
+              :pathSet => [
+                'name',
+                'parent',
+              ]
+            },
+            {
+              :type => 'VirtualMachine',
+              :pathSet => [
+                'name',
+                'parent',
+                'resourcePool',
+                'guest.ipAddress',
+                'summary.config.instanceUuid',
+                'summary.config.numCpu',
+                'config.extraConfig',
+                'config.flags.snapshotDisabled',
+                'config.flags.snapshotLocked',
+                'config.annotation',
+                'config.guestFullName',
+                'config.flags.snapshotPowerOffBehavior',
+                'summary.config.memorySizeMB',
+                'summary.config.template',
+                'summary.config.memoryReservation',
+                'summary.config.cpuReservation',
+                'summary.config.numEthernetCards',
+                'summary.runtime.powerState',
+                'summary.runtime.toolsInstallerMounted',
+                'summary.config.uuid',
+                'summary.config.instanceUuid',
+                'summary.guest.hostName',
+                'runtime.powerState',
+              ]
+            },
+            {
+              :type => 'ResourcePool',
+              :pathSet => [
+                'name',
+                'parent',
+              ]
+            },
+            {
+              :type => 'ClusterComputeResource',
+              :pathSet => [
+                'name',
+                'parent',
+              ]
+            }
+          ]
         )
         vim.propertyCollector.RetrieveProperties(:specSet => [filter_spec])
       end

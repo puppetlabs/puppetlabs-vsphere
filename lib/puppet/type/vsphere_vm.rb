@@ -144,6 +144,15 @@ Puppet::Type.newtype(:vsphere_vm) do
     desc 'The name of the resource pool with which to associate the virtual machine.'
     validate do |value|
       fail 'Virtual machine resource_pool should be a String' unless value.is_a? String
+      fail 'Virtual machine resource_pool may not contain slashes if it doesn\'t start with one' if value =~ %r{^[^/]+/}
+      warning 'Virtual machine resource_pool should be a fully qualified resource pool path' unless value[0] == '/'
+    end
+
+    munge do |value|
+      unless value[0] == '/'
+        value = "/#{value}"
+      end
+      value
     end
   end
 
