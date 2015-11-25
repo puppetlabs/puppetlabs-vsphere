@@ -31,7 +31,7 @@ module PuppetX
         end
       end
 
-      def self.datacenter
+      def self.datacenter_instance
         dc = vim.serviceInstance.find_datacenter(config.datacenter)
         unless dc
           message = "Unable to find datacenter"
@@ -39,6 +39,19 @@ module PuppetX
           raise Puppet::Error, message
         end
         dc
+      end
+
+      def self.about_info
+        unless @about_info
+          info = vim.serviceInstance.content.about
+          @about_info = {
+            vcenter_full_version: "#{info.version} build-#{info.build}",
+            vcenter_name: info.licenseProductName,
+            vcenter_uuid: info.instanceUuid,
+            vcenter_version: info.licenseProductVersion,
+          }
+        end
+        @about_info
       end
 
       # fetch all data connected to a VirtualMachine, Folder, Datacenter, or ResourcePool
@@ -203,8 +216,8 @@ module PuppetX
       end
 
       private
-        def datacenter
-          self.class.datacenter
+        def datacenter_instance
+          self.class.datacenter_instance
         end
 
         def vim
