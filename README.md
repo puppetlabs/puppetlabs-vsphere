@@ -355,16 +355,20 @@ machine.
 off.
 
 #####`uuid`
-*Read Only*. the BIOS unique identifier
+*Read Only*. The BIOS unique identifier.
 
 #####`instance_uuid`
-*Read Only*. unique identifier for the vSphere instance
+*Read Only*. Unique identifier for the vSphere instance.
 
 #####`hostname`
-*Read Only*. the hostname of the machine is one is assigned
+*Read Only*. The hostname of the machine if one is assigned.
 
 #####`guest_ip`
-*Read Only*. the IP address assigned to the machine
+*Read Only*. The IP address assigned to the machine.
+
+#####`datacenter`
+*Read Only*. The datacenter this machine is running on.
+
 
 ##Limitations
 

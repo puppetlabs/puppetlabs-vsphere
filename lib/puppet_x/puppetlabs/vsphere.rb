@@ -31,7 +31,7 @@ module PuppetX
         end
       end
 
-      def self.datacenter
+      def self.datacenter_instance
         dc = vim.serviceInstance.find_datacenter(config.datacenter)
         unless dc
           message = "Unable to find datacenter"
@@ -203,8 +203,8 @@ module PuppetX
       end
 
       private
-        def datacenter
-          self.class.datacenter
+        def datacenter_instance
+          self.class.datacenter_instance
         end
 
         def vim

@@ -30,18 +30,19 @@ describe type_class do
 
   let :read_only_properties do
     [
-      :memory_reservation,
       :cpu_reservation,
+      :datacenter,
+      :guest_ip,
+      :hostname,
+      :instance_uuid,
+      :memory_reservation,
       :number_ethernet_cards,
       :power_state,
-      :tools_installer_mounted,
       :snapshot_disabled,
       :snapshot_locked,
       :snapshot_power_off_behavior,
+      :tools_installer_mounted,
       :uuid,
-      :instance_uuid,
-      :guest_ip,
-      :hostname,
     ]
   end
 
@@ -202,19 +203,20 @@ describe type_class do
   end
 
   [
-    :memory_reservation,
     :cpu_reservation,
-    :number_ethernet_cards,
-    :power_state,
-    :tools_installer_mounted,
-    :snapshot_disabled,
-    :snapshot_locked,
-    :snapshot_power_off_behavior,
-    :uuid,
-    :instance_uuid,
+    :datacenter,
     :guest_ip,
     :guest_os,
     :hostname,
+    :instance_uuid,
+    :memory_reservation,
+    :number_ethernet_cards,
+    :power_state,
+    :snapshot_disabled,
+    :snapshot_locked,
+    :snapshot_power_off_behavior,
+    :tools_installer_mounted,
+    :uuid,
   ].each do |property|
     it "should require #{property} to be read only" do
       expect(type_class).to be_read_only(property)

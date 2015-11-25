@@ -96,16 +96,17 @@ describe 'vsphere_vm' do
       end
 
       [
-        'memory_reservation',
         'cpu_reservation',
+        'datacenter',
+        'instance_uuid',
+        'memory_reservation',
         'number_ethernet_cards',
         'power_state',
-        'tools_installer_mounted',
         'snapshot_disabled',
         'snapshot_locked',
         'snapshot_power_off_behavior',
+        'tools_installer_mounted',
         'uuid',
-        'instance_uuid',
       ].each do |read_only_property|
         it "#{read_only_property} is reported" do
           regex = /(#{read_only_property})(\s*)(=>)(\s*)/

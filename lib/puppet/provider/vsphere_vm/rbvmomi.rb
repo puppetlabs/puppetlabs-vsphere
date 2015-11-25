@@ -15,7 +15,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     begin
       result = nil
       benchmark(:debug, 'loaded list of VMs') do
-        data = load_machine_info(datacenter)
+        data = load_machine_info(datacenter_instance)
         result = data[RbVmomi::VIM::VirtualMachine].collect do |obj, machine|
           hash = nil
           benchmark(:debug, "loaded machine information for #{machine['name']}") do
@@ -117,6 +117,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       resource_pool: resource_pool_from_machine_data(machine, data),
       ensure: machine_state(machine['runtime.powerState']),
       hostname: api_properties['hostname'] == '(none)' ? nil : api_properties['hostname'],
+      datacenter: data[RbVmomi::VIM::Datacenter].first.last['name'],
       extra_config: extra_config,
       object: obj,
     }
@@ -155,13 +156,13 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
 
   def create_from_path(args)
     base_machine = PuppetX::Puppetlabs::Vsphere::Machine.new(resource[:source])
-    vm = datacenter.find_vm(base_machine.local_path)
+    vm = datacenter_instance.find_vm(base_machine.local_path)
     raise Puppet::Error, "No machine found at #{base_machine.local_path}" unless vm
 
     if resource[:resource_pool]
       path_components = resource[:resource_pool].split('/').select { |s| !s.empty? }
       compute_resource_name = path_components.shift
-      compute_resource = datacenter.find_compute_resource(compute_resource_name)
+      compute_resource = datacenter_instance.find_compute_resource(compute_resource_name)
       raise Puppet::Error, "No compute resource found named #{compute_resource_name}" unless compute_resource
       if path_components.empty?
         pool = compute_resource.resourcePool
@@ -170,7 +171,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       end
       raise Puppet::Error, "No resource pool found named #{resource[:resource_pool]}" unless pool
     else
-      hosts = datacenter.hostFolder.children
+      hosts = datacenter_instance.hostFolder.children
       raise Puppet::Error, "No resource pool found for default datacenter" if hosts.empty?
       pool = hosts.first.resourcePool
     end
@@ -211,7 +212,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     clone_spec.config.annotation = resource[:annotation] if resource[:annotation]
 
     vm.CloneVM_Task(
-      :folder => find_or_create_folder(datacenter.vmFolder, instance.folder),
+      :folder => find_or_create_folder(datacenter_instance.vmFolder, instance.folder),
       :name => instance.name,
       :spec => clone_spec).wait_for_completion
 
@@ -228,24 +229,24 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     vm_folder = resource[:source]
     vm_ext = template ? "vmtx" : "vmx"
 
-    datastore = datacenter.datastore.first
+    datastore = datacenter_instance.datastore.first
     raise Puppet::Error, "No datastore found for default datacenter" unless datastore
 
     if resource[:resource_pool]
-      compute = datacenter.find_compute_resource(resource[:resource_pool])
+      compute = datacenter_instance.find_compute_resource(resource[:resource_pool])
       raise Puppet::Error, "No resource pool found with name #{resource[:resource_pool]}" unless compute
       host = template ? compute.host.first : nil
       raise Puppet::Error, "No host system found for resource pool #{resource[:resource_pool]}" unless host
       pool = template ? nil : compute.resourcePool
       raise Puppet::Error, "No resource pool found for #{resource[:resource_pool]}" unless pool
     else
-      hosts = datacenter.hostFolder.children
+      hosts = datacenter_instance.hostFolder.children
       raise Puppet::Error, "No resource pool found for default datacenter" if hosts.empty?
       host = template ? hosts.first.host.first : nil
       pool = template ? nil : hosts.first.resourcePool
     end
 
-    folder = find_or_create_folder(datacenter.vmFolder, base_machine.folder)
+    folder = find_or_create_folder(datacenter_instance.vmFolder, base_machine.folder)
     folder.RegisterVM_Task(
       :path       => "[#{datastore.name}] #{vm_folder}/#{vm_folder}.#{vm_ext}",
       :asTemplate => template,
@@ -256,7 +257,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
 
   def execute_command_on_machine
     new_machine = PuppetX::Puppetlabs::Vsphere::Machine.new(name)
-    machine = datacenter.find_vm(new_machine.local_path)
+    machine = datacenter_instance.find_vm(new_machine.local_path)
     machine_credentials = {
       interactiveSession: false,
       username: resource[:create_command]['user'],
@@ -393,7 +394,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     def machine
       unless @property_hash[:object]
         benchmark(:debug, "fetched #{instance.local_path} info from vSphere") do
-          vim_machine = datacenter.find_vm(instance.local_path)
+          vim_machine = datacenter_instance.find_vm(instance.local_path)
           data = self.class.load_machine_info(vim_machine)
           machine = data[RbVmomi::VIM::VirtualMachine][vim_machine]
           hash = self.class.hash_from_machine_data(vim_machine, machine, data)

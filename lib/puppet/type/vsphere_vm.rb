@@ -173,19 +173,20 @@ Puppet::Type.newtype(:vsphere_vm) do
   end
 
   read_only_properties = {
-    memory_reservation: 'memoryReservation',
     cpu_reservation: 'cpuReservation',
+    datacenter: 'datacenter',
+    guest_ip: 'ipAddress',
+    guest_os: 'guestFullName',
+    hostname: 'hostName',
+    instance_uuid: 'instanceUuid',
+    memory_reservation: 'memoryReservation',
     number_ethernet_cards: 'numEthernetCards',
     power_state: 'powerState',
-    tools_installer_mounted: 'toolsInstallerMounted',
     snapshot_disabled: 'snapshotDisabled',
     snapshot_locked: 'snapshotLocked',
     snapshot_power_off_behavior: 'snapshotPowerOffBehavior',
-    guest_ip: 'ipAddress',
+    tools_installer_mounted: 'toolsInstallerMounted',
     uuid: 'uuid',
-    instance_uuid: 'instanceUuid',
-    hostname: 'hostName',
-    guest_os: 'guestFullName',
   }
 
   read_only_properties.each do |property, value|
