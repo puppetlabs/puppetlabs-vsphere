@@ -22,7 +22,6 @@ describe 'vsphere_machine' do
     }
     @template = 'machine.pp.tmpl'
     PuppetManifest.new(@template, @config).apply
-    @machine = @client.get_machine(@path)
   end
 
   [
@@ -43,7 +42,8 @@ describe 'vsphere_machine' do
                      max_sleep_seconds: 60,
                      rescue: NotFinished,
                     ) do
-          hostname = @machine.summary.guest.hostName
+          machine = @client.get_machine(@path)
+          hostname = machine.summary.guest.hostName
           raise NotFinished.new unless hostname == 'CLOUD-custom' # Windows host has a non-empty hostname from the template
           hostname
         end
