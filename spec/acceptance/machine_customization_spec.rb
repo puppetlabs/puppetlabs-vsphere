@@ -39,7 +39,7 @@ describe 'vsphere_machine' do
       end
 
       it 'should create a VM with the hostname set to the value from the customization spec' do
-        hostname = with_retries(max_tries: 15,
+        hostname = with_retries(max_tries: 20,
                      max_sleep_seconds: 60,
                      rescue: NotFinished,
                     ) do
