@@ -82,7 +82,7 @@ namespace :integration do
       configs.each do |config|
         PE_RELEASES.each do |version, pe_dir|
           desc "Run integration tests for #{config} on #{ns} with PE #{version}"
-          Beaker::Tasks::RakeTask.new("#{config}_#{version}".to_sym) do |task, args|
+          Beaker::Tasks::RakeTask.new("#{config}_#{version}".to_sym => [:spec_prep]) do |task, args|
             task.config = "integration/hosts/#{ns}/#{config}.cfg"
             task.pe_dir = ENV['BEAKER_PE_DIR'] || pe_dir
             task.keyfile = '~/.ssh/id_rsa-acceptance' if ns == :pooler

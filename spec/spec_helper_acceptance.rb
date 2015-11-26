@@ -20,7 +20,7 @@ class PuppetManifest < Mustache
 
   def apply
     manifest = self.render.gsub("\n", '')
-    cmd = "bundle exec puppet apply --detailed-exitcodes -e \"#{manifest}\" --modulepath ../ --libdir lib --debug"
+    cmd = "bundle exec puppet apply --detailed-exitcodes -e \"#{manifest}\" --modulepath spec/fixtures/modules --libdir lib --debug"
     result = { output: [], exit_status: nil }
 
     Open3.popen2e(cmd) do |stdin, stdout_err, wait_thr|
@@ -165,7 +165,7 @@ class TestExecutor
     end
     cmd << "#{@name} "
     cmd << options
-    cmd << " #{command_flags}"
+    cmd << " --libdir lib --modulepath spec/fixtures/modules #{command_flags}"
     # apply the command
     response = shell(cmd)
     response
