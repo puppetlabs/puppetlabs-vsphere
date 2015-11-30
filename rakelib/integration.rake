@@ -61,7 +61,8 @@ end
 
 PE_RELEASES = {
   '3.8.1' => 'http://pe-releases.puppetlabs.lan/3.8.1/',
-  '2015.2' => 'http://enterprise.delivery.puppetlabs.net/2015.2/preview/',
+  '2015.2' => 'http://pe-releases.puppetlabs.lan/2015.2.3/',
+  '2015.3' => 'http://enterprise.delivery.puppetlabs.net/2015.3/preview/',
 }
 
 namespace :integration do
@@ -82,7 +83,7 @@ namespace :integration do
       configs.each do |config|
         PE_RELEASES.each do |version, pe_dir|
           desc "Run integration tests for #{config} on #{ns} with PE #{version}"
-          Beaker::Tasks::RakeTask.new("#{config}_#{version}".to_sym) do |task, args|
+          Beaker::Tasks::RakeTask.new("#{config}_#{version}".to_sym => [:spec_prep]) do |task, args|
             task.config = "integration/hosts/#{ns}/#{config}.cfg"
             task.pe_dir = ENV['BEAKER_PE_DIR'] || pe_dir
             task.keyfile = '~/.ssh/id_rsa-acceptance' if ns == :pooler

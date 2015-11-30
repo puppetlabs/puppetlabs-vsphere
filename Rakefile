@@ -35,7 +35,7 @@ end
 PuppetSyntax.exclude_paths = exclude_paths
 
 desc "Run acceptance tests"
-RSpec::Core::RakeTask.new(:acceptance) do |t|
+RSpec::Core::RakeTask.new(:acceptance => [:spec_prep]) do |t|
   t.pattern = 'spec/acceptance'
 end
 

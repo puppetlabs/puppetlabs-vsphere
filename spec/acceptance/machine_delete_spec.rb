@@ -79,7 +79,7 @@ describe 'vsphere_vm' do
 
     context 'when looked for using puppet resource' do
       before(:all) do
-        @result = TestExecutor.puppet_resource('vsphere_vm', {:name => @path}, '--modulepath ../')
+        @result = TestExecutor.puppet_resource('vsphere_vm', {:name => @path})
       end
 
       it 'should not return an error' do
@@ -133,7 +133,7 @@ describe 'vsphere_vm' do
 
     context 'when looked for using puppet resource' do
       before(:all) do
-        @result = TestExecutor.puppet_resource('vsphere_vm', {:name => @path}, '--modulepath ../')
+        @result = TestExecutor.puppet_resource('vsphere_vm', {:name => @path})
       end
 
       it 'should not return an error' do
