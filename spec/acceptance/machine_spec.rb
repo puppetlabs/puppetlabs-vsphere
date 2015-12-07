@@ -111,6 +111,7 @@ describe 'vsphere_vm' do
         'vcenter_name',
         'vcenter_uuid',
         'vcenter_version',
+        'drs_behavior',
       ].each do |read_only_property|
         it "#{read_only_property} is reported" do
           regex = /(#{read_only_property})(\s*)(=>)(\s*)/

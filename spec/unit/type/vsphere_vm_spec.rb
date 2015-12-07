@@ -43,6 +43,7 @@ describe type_class do
       :snapshot_power_off_behavior,
       :tools_installer_mounted,
       :uuid,
+      :drs_behavior,
     ]
   end
 
@@ -217,6 +218,7 @@ describe type_class do
     :snapshot_power_off_behavior,
     :tools_installer_mounted,
     :uuid,
+    :drs_behavior,
   ].each do |property|
     it "should require #{property} to be read only" do
       expect(type_class).to be_read_only(property)
