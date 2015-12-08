@@ -192,6 +192,8 @@ Puppet::Type.newtype(:vsphere_vm) do
     vcenter_uuid: 'AboutInfo.instanceUuid',
     vcenter_version: 'AboutInfo.licenseProductVersion',
     drs_behavior: 'drsConfig and drsVmConfig',
+    memory_affinity: 'memoryAffinity',
+    cpu_affinity: 'cpuAffinity',
   }
 
   read_only_properties.each do |property, value|

@@ -111,6 +111,9 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       }
     ]
 
+    cpu_affinity = machine['config.cpuAffinity']
+    memory_affinity = machine['config.memoryAffinity']
+
     curated_properties = {
       name: name,
       resource_pool: resource_pool_from_machine_data(machine, data),
@@ -118,6 +121,8 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       hostname: api_properties['hostname'] == '(none)' ? nil : api_properties['hostname'],
       datacenter: data[RbVmomi::VIM::Datacenter].first.last['name'],
       drs_behavior: drs_behavior_from_machine_data(machine, data),
+      memory_affinity: memory_affinity.respond_to?('affinitySet') ? memory_affinity.affinitySet : [],
+      cpu_affinity: cpu_affinity.respond_to?('affinitySet') ? cpu_affinity.affinitySet : [],
       object: obj,
     }
 

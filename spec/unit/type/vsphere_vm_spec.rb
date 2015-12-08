@@ -44,6 +44,8 @@ describe type_class do
       :tools_installer_mounted,
       :uuid,
       :drs_behavior,
+      :memory_affinity,
+      :cpu_affinity,
     ]
   end
 
@@ -219,6 +221,8 @@ describe type_class do
     :tools_installer_mounted,
     :uuid,
     :drs_behavior,
+    :memory_affinity,
+    :cpu_affinity,
   ].each do |property|
     it "should require #{property} to be read only" do
       expect(type_class).to be_read_only(property)

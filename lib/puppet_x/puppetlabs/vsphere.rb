@@ -183,6 +183,8 @@ module PuppetX
                 'config.annotation',
                 'config.guestFullName',
                 'config.flags.snapshotPowerOffBehavior',
+                'config.cpuAffinity',
+                'config.memoryAffinity',
                 'summary.config.memorySizeMB',
                 'summary.config.template',
                 'summary.config.memoryReservation',
