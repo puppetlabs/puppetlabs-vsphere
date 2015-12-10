@@ -334,6 +334,14 @@ machine.
 *Read Only*. How much of the memory allocated is reserved just for this
 machine.
 
+#####`cpu_affinity`
+*Read Only*. A list of processors which can be used by the VM. Presented
+as an array of the numeric identifiers.
+
+#####`memory_affinity`
+*Read Only*. A list of NUMA nodes which can be used by the VM. Presented
+as an array of the numeric identifiers.
+
 #####`number_ethernet_cards`
 *Read Only* The number of virtual ethernet cards available to the
 machine.
