@@ -1,12 +1,12 @@
 {
   "name": "puppetlabs-vsphere",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "Puppet Labs",
   "summary": "Create and manage machines running on VMWare vSphere with Puppet",
   "license": "PuppetLabs-Enterprise",
   "source": "https://github.com/puppetlabs/puppetlabs-vsphere",
-  "project_page": "https://forge.puppetlabs.com/puppetlabs/puppetlabs-vsphere",
-  "issues_url": "https://tickets.puppetlabs.com/browse/CLOUD",
+  "project_page": "https://forge.puppetlabs.com/puppetlabs/vsphere",
+  "issues_url": "https://tickets.puppetlabs.com/browse/MODULES",
   "operatingsystem_support": [
     {
       "operatingsystem": "RedHat",
@@ -61,6 +61,6 @@
     }
   ],
   "dependencies": [
-
+  
   ]
 }
