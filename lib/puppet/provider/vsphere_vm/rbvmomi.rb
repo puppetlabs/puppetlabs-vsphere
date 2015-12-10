@@ -83,6 +83,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     end
     name = '/' + path_components.reverse.join('/')
 
+
     property_mappings = {
       cpus: 'summary.config.numCpu',
       snapshot_disabled: 'config.flags.snapshotDisabled',
@@ -95,7 +96,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       memory_reservation: 'summary.config.memoryReservation',
       cpu_reservation: 'summary.config.cpuReservation',
       number_ethernet_cards: 'summary.config.numEthernetCards',
-      power_state: 'summary.runtime.powerState',
+      power_state: 'runtime.powerState',
       tools_installer_mounted: 'summary.runtime.toolsInstallerMounted',
       uuid: 'summary.config.uuid',
       instance_uuid: 'summary.config.instanceUuid',
@@ -116,6 +117,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       ensure: machine_state(machine['runtime.powerState']),
       hostname: api_properties['hostname'] == '(none)' ? nil : api_properties['hostname'],
       datacenter: data[RbVmomi::VIM::Datacenter].first.last['name'],
+      drs_behavior: drs_behavior_from_machine_data(machine, data),
       object: obj,
     }
 
@@ -123,6 +125,33 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     curated_properties[:extra_config] = Hash[machine['config.extraConfig'].collect { |setting| [setting.key, setting.value] }] if machine.has_key? 'config.extraConfig'
 
     api_properties.merge(about_info).merge(curated_properties)
+  end
+
+  def self.cluster_compute_from_machine_data(machine, data)
+    focus = data[RbVmomi::VIM::ResourcePool][machine['resourcePool']]
+    while focus and focus.class != RbVmomi::VIM::ClusterComputeResource
+      if (focus.class == Hash && focus.has_key?('parent'))
+        focus = focus['parent']
+      elsif focus.respond_to? 'parent'
+        focus = focus.parent
+      else
+        focus = nil
+      end
+    end
+    focus
+  end
+
+  def self.drs_behavior_from_machine_data(machine, data)
+    cluster_compute = cluster_compute_from_machine_data(machine, data)
+    if cluster_compute
+      config = data[RbVmomi::VIM::ClusterComputeResource][cluster_compute_from_machine_data(machine, data)]['configurationEx']
+      override = config.drsVmConfig.find {|c| c.key.name == machine['name'] }
+      if override
+        override.behavior
+      else
+        config.drsConfig.defaultVmBehavior
+      end
+    end
   end
 
   def self.machine_state(power_state)

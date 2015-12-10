@@ -191,6 +191,7 @@ Puppet::Type.newtype(:vsphere_vm) do
     vcenter_name: 'AboutInfo.licenseProductName',
     vcenter_uuid: 'AboutInfo.instanceUuid',
     vcenter_version: 'AboutInfo.licenseProductVersion',
+    drs_behavior: 'drsConfig and drsVmConfig',
   }
 
   read_only_properties.each do |property, value|

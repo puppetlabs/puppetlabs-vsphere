@@ -194,6 +194,7 @@ module PuppetX
                 'summary.config.instanceUuid',
                 'summary.guest.hostName',
                 'runtime.powerState',
+                'runtime.host',
               ]
             },
             {
@@ -208,8 +209,9 @@ module PuppetX
               :pathSet => [
                 'name',
                 'parent',
+                'configurationEx',
               ]
-            }
+            },
           ]
         )
         vim.propertyCollector.RetrieveProperties(:specSet => [filter_spec])
