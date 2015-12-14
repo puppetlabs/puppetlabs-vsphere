@@ -390,7 +390,7 @@ off.
 *Read Only*. The product version of the vCenter managing this machine.
 
 #####`drs_behavior`
-*Read Only*. Distrubuted Resource Scheduler behvaiour, should be one of:
+*Read Only*. Distributed Resource Scheduler behaviour, should be one of:
 
 * fullyAutomated - Specifies that VirtualCenter should auxtomate both the
 migration of virtual machines and their placement with a host at power
