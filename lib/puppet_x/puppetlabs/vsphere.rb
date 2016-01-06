@@ -234,10 +234,13 @@ module PuppetX
       attr_reader :name, :folder, :datacenter, :local_path
 
       def initialize(path)
-        @name = path.split('/')[-1]
-        @datacenter = path.split('/')[1]
-        @folder = path.split('/')[3...-1]
-        @local_path = "/#{path.split('/')[3..-1].join('/')}"
+        data = path.split('/')
+        raise ArgumentError, 'Invalid path' unless data.size >= 4
+        
+        @name       = data[-1]
+        @datacenter = data[1]
+        @folder     = data[3...-1]
+        @local_path = "/#{@folder.join('/')}"
       end
     end
 
