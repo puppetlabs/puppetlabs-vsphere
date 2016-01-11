@@ -108,8 +108,21 @@ class VsphereHelper
     machine = get_machine(path)
     manager = @vim.serviceContent.guestOperationsManager
     auth = RbVmomi::VIM::NamePasswordAuthentication(machine_credentials)
-    manager.authManager.ValidateCredentialsInGuest(vm: machine, auth: auth)
-    manager.processManager.ListProcessesInGuest(vm: machine, auth: auth)
+    with_retries(max_tries: 10,
+                 max_sleep_seconds: 10,
+                 rescue: NotFinished,
+                ) do
+      begin
+        manager.authManager.ValidateCredentialsInGuest(vm: machine, auth: auth)
+        manager.processManager.ListProcessesInGuest(vm: machine, auth: auth)
+      rescue RbVmomi::Fault => exception
+        if exception.message.split(':').first == 'GuestOperationsUnavailable'
+          raise NotFinished.new
+        else
+          raise
+        end
+      end
+    end
   end
 
   def execute_command(path, program_path, arguments)
