@@ -137,8 +137,6 @@ powered on:
 vsphere_vm { '/opdx1/vm/eng/sample':
   ensure => running,
   source => '/opdx1/vm/eng/source',
-  memory => 1024,
-  cpus   => 1,
 }
 ~~~
 
@@ -149,8 +147,6 @@ change the `ensure` parameter to `stopped`:
 vsphere_vm { '/opdx1/vm/eng/sample':
   ensure => stopped,
   source => '/opdx1/vm/eng/source',
-  memory => 1024,
-  cpus   => 1,
 }
 ~~~
 
