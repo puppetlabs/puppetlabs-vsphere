@@ -189,6 +189,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
   end
 
   def create_from_path(args)
+    Puppet.info("Creating #{type_name} #{name}")
     base_machine = PuppetX::Puppetlabs::Vsphere::Machine.new(resource[:source])
     vm = datacenter_instance.find_vm(base_machine.local_path)
     raise Puppet::Error, "No machine found at #{base_machine.local_path}" unless vm
@@ -240,10 +241,17 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       end
     end
 
-    clone_spec.config = RbVmomi::VIM.VirtualMachineConfigSpec(deviceChange: [])
-    clone_spec.config.numCPUs = resource[:cpus] if resource[:cpus]
-    clone_spec.config.memoryMB = resource[:memory] if resource[:memory]
-    clone_spec.config.annotation = resource[:annotation] if resource[:annotation]
+    if resource[:cpus] || resource[:memory] || resource[:annotation]
+      Puppet.debug("adding VirtualMachineConfigSpec for #{type_name} #{name}")
+      clone_spec.config = RbVmomi::VIM.VirtualMachineConfigSpec(deviceChange: [])
+      clone_spec.config.numCPUs = resource[:cpus] if resource[:cpus] && resource[:cpus] != vm.summary.config.numCpu
+      # Store the set values in @property_hash, so that flush can skip those values
+      @property_hash[:cpus] = resource[:cpus]
+      clone_spec.config.memoryMB = resource[:memory] if resource[:memory] && resource[:memory] != vm.summary.config.memorySizeMB
+      @property_hash[:memory] = resource[:memory]
+      clone_spec.config.annotation = resource[:annotation] if resource[:annotation] && resource[:annotation] != vm.config.annotation
+      @property_hash[:annotation] = resource[:annotation]
+    end
 
     vm.CloneVM_Task(
       :folder => find_or_create_folder(datacenter_instance.vmFolder, instance.folder),
@@ -335,9 +343,10 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
   def flush
     if ! @property_hash.empty? and @property_hash[:ensure] != :absent
       config_spec = RbVmomi::VIM.VirtualMachineConfigSpec
-      config_spec.numCPUs = resource[:cpus] if resource[:cpus]
-      config_spec.memoryMB = resource[:memory] if resource[:memory]
-      config_spec.annotation = resource[:annotation] if resource[:annotation]
+      # check for existing values in the template, as vSphere does reboot the machine to set those values even if they stay the same
+      config_spec.numCPUs = resource[:cpus] if resource[:cpus] && resource[:cpus] != @property_hash[:cpus]
+      config_spec.memoryMB = resource[:memory] if resource[:memory] && resource[:memory] != @property_hash[:memory]
+      config_spec.annotation = resource[:annotation] if resource[:annotation] && resource[:annotation] != @property_hash[:annotation]
       if resource[:extra_config]
         config_spec.extraConfig = resource[:extra_config].map do |k,v|
           {:key => k, :value => v}

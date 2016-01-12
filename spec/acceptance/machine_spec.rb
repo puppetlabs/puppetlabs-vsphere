@@ -534,6 +534,8 @@ describe 'vsphere_vm' do
         :optional => {
           :source      => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
           :source_type => :template,
+          :memory        => 512,
+          :cpus          => 1,
         },
         :create_command => {
           :command => '/bin/ps',
