@@ -178,8 +178,6 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
   end
 
   def create(args={})
-    Puppet.info("Creating #{type_name} #{name}")
-
     raise Puppet::Error, "Must provide a source machine, template or datastore folder to base the machine on" unless resource[:source]
     if resource[:source_type] == :folder
       create_from_folder
@@ -251,6 +249,12 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       @property_hash[:memory] = resource[:memory]
       clone_spec.config.annotation = resource[:annotation] if resource[:annotation] && resource[:annotation] != vm.config.annotation
       @property_hash[:annotation] = resource[:annotation]
+      if resource[:extra_config]
+        clone_spec.config.extraConfig = resource[:extra_config].map do |k,v|
+          {:key => k, :value => v}
+        end
+        @property_hash[:extra_config] = resource[:extra_config].dup
+      end
     end
 
     vm.CloneVM_Task(
@@ -340,6 +344,11 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     end
   end
 
+  # ensure that 'is' has all key/value pairs present in 'should'
+  def extra_config_matches?(is, should)
+    Hash[should.keys.collect { |k| [k, is[k]] } ] == should
+  end
+
   def flush
     if ! @property_hash.empty? and @property_hash[:ensure] != :absent
       config_spec = RbVmomi::VIM.VirtualMachineConfigSpec
@@ -347,17 +356,24 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       config_spec.numCPUs = resource[:cpus] if resource[:cpus] && resource[:cpus] != @property_hash[:cpus]
       config_spec.memoryMB = resource[:memory] if resource[:memory] && resource[:memory] != @property_hash[:memory]
       config_spec.annotation = resource[:annotation] if resource[:annotation] && resource[:annotation] != @property_hash[:annotation]
-      if resource[:extra_config]
+
+      if resource[:extra_config] && !extra_config_matches?(@property_hash[:extra_config], resource[:extra_config])
         config_spec.extraConfig = resource[:extra_config].map do |k,v|
           {:key => k, :value => v}
         end
       end
 
       if config_spec.props.count > 0
-        power_on = running?
-        stop if power_on
+        do_reboot = running?
+        if do_reboot
+          Puppet.info("Stopping #{name} to apply configuration changes")
+          stop
+        end
         machine.ReconfigVM_Task(:spec => config_spec).wait_for_completion
-        start if power_on
+        if do_reboot
+          Puppet.info("Starting #{name} after applying configuration changes")
+          start
+        end
       end
     end
   end

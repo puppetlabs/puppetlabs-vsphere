@@ -542,7 +542,10 @@ describe 'vsphere_vm' do
           :arguments => 'aux',
           :user => ENV['VCENTER_GUEST_USERNAME'],
           :password => ENV['VCENTER_GUEST_PASSWORD'],
-        }
+        },
+        :extra_config  => {
+          'advanced.setting' => 'value',
+        },
       }
       PuppetManifest.new(template, @config).apply
       @machine = @client.get_machine(@path)
@@ -571,6 +574,21 @@ describe 'vsphere_vm' do
 
     it 'with the named process owned by the correct user' do
       expect(@processes.first.owner).to eq(ENV['VCENTER_GUEST_USERNAME'])
+    end
+
+    context 'when looked for using puppet resource' do
+      before(:all) do
+        @result = TestExecutor.puppet_resource('vsphere_vm', {:name => @path})
+      end
+
+      it 'should not return an error' do
+        expect(@result.stderr).not_to match(/\b/)
+      end
+
+      it 'should report the extra_config value' do
+        regex = /('advanced.setting')(\s*)(=>)(\s*)('value')/
+        expect(@result.stdout).to match(regex)
+      end
     end
   end
 
