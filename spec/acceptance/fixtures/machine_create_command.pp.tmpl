@@ -7,5 +7,10 @@ vsphere_vm { '{{name}}':
   {{#create_command}}
   {{k}} => '{{v}}',
   {{/create_command}}
-  }
+  },
+  extra_config => {
+  {{#extra_config}}
+  '{{k}}' => '{{v}}',
+  {{/extra_config}}
+  },
 }
