@@ -327,25 +327,29 @@ describe 'vsphere_vm' do
       @config_after = @client.get_machine(@path).summary.config
     end
 
-    it 'should have same config for unchanged properties' do
-      [
-        :cpuReservation,
-        :guestFullName,
-        :guestId,
-        :installBootRequired,
-        :memoryReservation,
-        :numEthernetCards,
-        :numVirtualDisks,
-      ].each do |property|
+    after(:all) do
+      @client.destroy_machine(@path)
+    end
+
+    [
+      :cpuReservation,
+      :guestFullName,
+      :guestId,
+      :installBootRequired,
+      :memoryReservation,
+      :numEthernetCards,
+      :numVirtualDisks,
+    ].each do |property|
+      it "should have #{property} unchanged" do
         expect(@config_after[property]).to eq(@config_before[property])
       end
     end
 
-    it 'should have new config for changed properties' do
-      [
-        :numCpu,
-        :memorySizeMB,
-      ].each do |property|
+    [
+      :numCpu,
+      :memorySizeMB,
+    ].each do |property|
+      it "should have changed #{property}" do
         expect(@config_after[property]).not_to eq(@config_before[property])
         expect(@config_after[property].to_i).to eq(@config_before[property].to_i * 2)
       end
@@ -354,10 +358,6 @@ describe 'vsphere_vm' do
     it 'should update the annotation' do
       expect(@config_before[:annotation]).to eq(@config[:optional][:annotation])
       expect(@config_after[:annotation]).to eq(@new_config[:optional][:annotation])
-    end
-
-    after(:all) do
-      @client.destroy_machine(@path)
     end
   end
 
