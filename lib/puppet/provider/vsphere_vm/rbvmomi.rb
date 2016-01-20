@@ -11,6 +11,15 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
 
   mk_resource_methods
 
+  [ :cpus, :memory, :extra_config, :annotation ].each do |property|
+    define_method("#{property}=") do |v|
+      # if @property_hash[property] != v
+        @property_hash[property] = v
+        @property_hash[:flush_reboot] = true
+      # end
+    end
+  end
+
   def self.instances
     begin
       result = nil
@@ -350,14 +359,13 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
   end
 
   def flush
-    if ! @property_hash.empty? and @property_hash[:ensure] != :absent
+    if ! @property_hash.empty? and @property_hash[:flush_reboot]
       config_spec = RbVmomi::VIM.VirtualMachineConfigSpec
-      # check for existing values in the template, as vSphere does reboot the machine to set those values even if they stay the same
-      config_spec.numCPUs = resource[:cpus] if resource[:cpus] && resource[:cpus] != @property_hash[:cpus]
-      config_spec.memoryMB = resource[:memory] if resource[:memory] && resource[:memory] != @property_hash[:memory]
-      config_spec.annotation = resource[:annotation] if resource[:annotation] && resource[:annotation] != @property_hash[:annotation]
+      config_spec.numCPUs = resource[:cpus] if resource[:cpus]
+      config_spec.memoryMB = resource[:memory] if resource[:memory]
+      config_spec.annotation = resource[:annotation] if resource[:annotation]
 
-      if resource[:extra_config] && !extra_config_matches?(@property_hash[:extra_config], resource[:extra_config])
+      if resource[:extra_config]
         config_spec.extraConfig = resource[:extra_config].map do |k,v|
           {:key => k, :value => v}
         end
