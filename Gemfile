@@ -17,6 +17,7 @@ group :development do
   gem 'guard-rake'
   gem 'pry-rescue'
   gem 'pry-stack_explorer'
+  gem 'dotenv'
 end
 
 group :acceptance do
