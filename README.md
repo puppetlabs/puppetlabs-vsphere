@@ -54,14 +54,18 @@ Managing vSphere machines using the Puppet DSL.
 2. Install the required gems with this command:
 
   ```
-  /opt/puppet/bin/gem install rbvmomi hocon --no-ri --no-rdoc
+  /opt/puppet/bin/gem install rbvmomi --no-ri --no-rdoc
+  /opt/puppet/bin/gem install hocon --version='~>1.0.0' --no-ri --no-rdoc
   ```
 
   If you are running Puppet Enterprise 2015.2.0 you need to use the updated path:
 
   ```
-  /opt/puppetlabs/puppet/bin/gem install rbvmomi hocon --no-ri --no-rdoc
+  /opt/puppetlabs/puppet/bin/gem install rbvmomi --no-ri --no-rdoc
+  /opt/puppetlabs/puppet/bin/gem install hocon --version='~>1.0.0' --no-ri --no-rdoc
   ```
+
+**Note:** Example pins the hocon gem version to prevent possible incompatibilities.
 
 #### Configuring credentials
 
