@@ -14,7 +14,7 @@ Status](https://magnum.travis-ci.com/puppetlabs/puppetlabs-vsphere.svg?token=Rqt
   * [Customize vSphere machines](#customize-vsphere-machines)
   * [Create linked clones](#create-linked-clones)
   * [Delete vSphere machines](#delete-vsphere-machines)
-  * [More usage examples](#more-usage-examples)
+  * [Purge unmanaged virtual machines](#purge-unmanaged-virtual-machines)
 6. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
   * [Types](#types)
   * [Parameters](#parameters)
