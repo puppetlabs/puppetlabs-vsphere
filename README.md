@@ -34,6 +34,7 @@ Managing vSphere machines using the Puppet DSL.
 * Puppet Enterprise 3.7 or greater
 * Ruby 1.9 or greater
 * Rbvmomi Ruby gem 1.8 or greater
+* vSphere 5.5
 
 ### Installing the vSphere module
 
@@ -449,6 +450,7 @@ host, but should automatically implement only the placement at power on.
 ## Limitations
 
 This module is available only for Puppet Enterprise 3.7 and later.
+This module has been tested with vSphere 5.5.
 
 ## Known Issues
 
