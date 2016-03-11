@@ -54,12 +54,16 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
   def self.resource_pool_from_machine_data(machine, data)
     path_components = []
     i = data[RbVmomi::VIM::ResourcePool][machine['resourcePool']]
+
     while i
       path_components << i['name']
       if i.has_key? 'parent'
-        if data[RbVmomi::VIM::ResourcePool].has_key? i['parent']
+        if data[RbVmomi::VIM::ResourcePool].has_key?(i['parent'])
           i = data[RbVmomi::VIM::ResourcePool][i['parent']]
-        elsif data[RbVmomi::VIM::ClusterComputeResource].has_key? i['parent']
+        elsif data[RbVmomi::VIM::ComputeResource] && data[RbVmomi::VIM::ComputeResource].has_key?(i['parent'])
+          path_components.pop
+          i = data[RbVmomi::VIM::ComputeResource][i['parent']]
+        elsif data[RbVmomi::VIM::ClusterComputeResource] && data[RbVmomi::VIM::ClusterComputeResource].has_key?(i['parent'])
           # There's always a top-level "Resources" pool that we do not want to show
           path_components.pop
           i = data[RbVmomi::VIM::ClusterComputeResource][i['parent']]

@@ -207,6 +207,14 @@ module PuppetX
               ]
             },
             {
+              :type => 'ComputeResource',
+              :pathSet => [
+                'name',
+                'parent',
+                'configurationEx',
+              ]
+            },
+            {
               :type => 'ClusterComputeResource',
               :pathSet => [
                 'name',
