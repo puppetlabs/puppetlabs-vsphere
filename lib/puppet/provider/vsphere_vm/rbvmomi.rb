@@ -25,12 +25,16 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       result = nil
       benchmark(:debug, 'loaded list of VMs') do
         data = load_machine_info(datacenter_instance)
-        result = data[RbVmomi::VIM::VirtualMachine].collect do |obj, machine|
-          hash = nil
-          benchmark(:debug, "loaded machine information for #{machine['name']}") do
-            hash = hash_from_machine_data(obj, machine, data)
+        if data[RbVmomi::VIM::VirtualMachine]
+          result = data[RbVmomi::VIM::VirtualMachine].collect do |obj, machine|
+            hash = nil
+            benchmark(:debug, "loaded machine information for #{machine['name']}") do
+              hash = hash_from_machine_data(obj, machine, data)
+            end
+            new(hash)
           end
-          new(hash)
+        else
+          result = []
         end
       end
       result
