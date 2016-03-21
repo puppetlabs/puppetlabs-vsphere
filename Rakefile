@@ -46,6 +46,13 @@ task :metadata do
   sh "bundle exec metadata-json-lint metadata.json --no-strict-license"
 end
 
+# Repeat the override of the metadata linting metadata_lint task.
+Rake::Task[:metadata_lint].clear
+desc "Check metadata is valid JSON"
+task :metadata_lint do
+  sh "bundle exec metadata-json-lint metadata.json --no-strict-license"
+end
+
 desc "Run syntax, lint, and spec tests."
 task :test => [
   :metadata,
