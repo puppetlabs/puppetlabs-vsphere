@@ -124,6 +124,15 @@ file. Store this as `vcenter.conf` in the relevant
         ssl: false
       }
       ```
+    **Warning**: Usernames that contain a backslash, typically Active Directory domain accounts, must be triple-quoted. For example:
+    
+      ```
+      vcenter: {
+        host: "your-host"
+        user: """DOMAIN\your-username"""
+        password: "your-password"
+      }
+      ```
 
     Note that you can use either the environment variables or the config file. If both are present the environment variables will be used. You **cannot** have some settings in environment variables and others in the config file.
 
