@@ -1,3 +1,12 @@
+##Supported Version 1.2.2
+
+This release includes:
+
+* Documentation Updates
+* Fixes failure when Datacenter has no VMs
+* Fixes failure to load some instances when the compute resource is not a base ResourcePool or ClusterComputeResource
+* Adds Debian 8 compatibility
+
 ##2016-02-23 - Supported Version 1.2.1
 
 This release includes:

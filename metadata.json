@@ -1,6 +1,6 @@
 {
   "name": "puppetlabs-vsphere",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "author": "Puppet Labs",
   "summary": "Create and manage machines running on VMWare vSphere with Puppet",
   "license": "PuppetLabs-Enterprise",
@@ -56,10 +56,6 @@
     }
   ],
   "requirements": [
-    {
-      "name": "pe",
-      "version_requirement": ">=3.7.0 < 2015.4.0"
-    },
     {
       "name": "puppet",
       "version_requirement": ">=3.7.2 < 5.0.0"
