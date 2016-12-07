@@ -1,0 +1,18 @@
+---
+.travis.yml:
+  docker_sets: []
+
+Gemfile:
+  optional:
+    ':development':
+      - gem: 'rbvmomi'
+      - gem: 'hocon'
+    ':acceptance':
+      - gem: 'mustache'
+        version: '0.99.8'
+
+LICENSE:
+  unmanaged: true
+
+Rakefile:
+  unmanaged: true
