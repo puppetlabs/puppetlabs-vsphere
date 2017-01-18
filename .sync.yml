@@ -12,7 +12,7 @@ Gemfile:
         version: '0.99.8'
 
 LICENSE:
-  unmanaged: true
+  license_type: 'puppetpe'
 
 Rakefile:
   unmanaged: true
