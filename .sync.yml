@@ -1,4 +1,6 @@
 ---
+appveyor.yml:
+  delete: true
 .travis.yml:
   docker_sets: []
 
