@@ -125,7 +125,7 @@ file. Store this as `vcenter.conf` in the relevant
       }
       ```
     **Warning**: Usernames that contain a backslash, typically Active Directory domain accounts, must be triple-quoted. For example:
-    
+
       ```
       vcenter: {
         host: "your-host"
@@ -295,9 +295,13 @@ Debug: Stored state in 0.43 seconds
 
 By default, this module uses the default datacenter for your installation. If this fails or if you have multiple virtual datacenters on vSphere, you can specify which datacenter you are managing using the `VCENTER_DATACENTER` environment variable like so:
 
-`VCENTER_DATACENTER=my-datacenter puppet resource vsphere_vm`
+`export VCENTER_DATACENTER=my-datacenter`
 
 This can also be set in the config file as `datacenter`.
+
+If the datacenter is nested within folders (groups) in vSphere, then you will need to specify the full path to the datacenter, eg:
+
+`export VCENTER_DATACENTER=Australia/Perth/DC1`
 
 ## Reference
 
