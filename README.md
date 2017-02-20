@@ -295,13 +295,13 @@ Debug: Stored state in 0.43 seconds
 
 By default, this module uses the default datacenter for your installation. If this fails or if you have multiple virtual datacenters on vSphere, you can specify which datacenter you are managing using the `VCENTER_DATACENTER` environment variable like so:
 
-`VCENTER_DATACENTER=my-datacenter`
+`export VCENTER_DATACENTER=my-datacenter`
 
 This can also be set in the config file as `datacenter`.
 
-If the datacenter is nested within folders (groups) in vSphere, then you will need to specify the full path to the datacentre, eg:
+If the datacenter is nested within folders (groups) in vSphere, then you will need to specify the full path to the datacenter, eg:
 
-`VCENTER_DATACENTER=Australia/Perth/DC1`
+`export VCENTER_DATACENTER=Australia/Perth/DC1`
 
 ## Reference
 
