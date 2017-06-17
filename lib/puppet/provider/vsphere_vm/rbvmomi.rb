@@ -226,6 +226,15 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       pool = hosts.first.resourcePool
     end
 
+    # Use the given datastore by name, or find the first datastore in 
+    # the destination cluster.
+    datastore = if resource[:datastore]
+      datacenter_instance.find_datastore(resource[:datastore])
+    else
+      compute_resource.datastore.first
+    end 
+    raise Puppet::Error, "No datastore found named #{resource[:datastore]}" unless datastore
+
     relocate_spec = if is_linked_clone?
       vm.add_delta_disk_layer_on_all_disks
       # although we wait for the previous task to complete I was able
@@ -234,7 +243,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       sleep 5
       RbVmomi::VIM.VirtualMachineRelocateSpec(:pool => pool, :diskMoveType => :moveChildMostDiskBacking)
     else
-      RbVmomi::VIM.VirtualMachineRelocateSpec(:pool => pool)
+      RbVmomi::VIM.VirtualMachineRelocateSpec(:pool => pool, :datastore => datastore)
     end
 
     power_on = args[:stopped] == true ? false : true
