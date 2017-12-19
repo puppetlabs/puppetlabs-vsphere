@@ -151,6 +151,41 @@ describe 'vsphere_vm' do
 
   end
 
+  describe 'should be able to create a machine within a nested resource pool' do
+
+    before(:all) do
+      @name = "CLOUD-#{SecureRandom.hex(8)}"
+      @path = "/opdx1/vm/eng/test/#{@name}"
+      @config = {
+        :name     => @path,
+        :ensure   => 'present',
+        :optional => {
+          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source_type   => :template,
+          :resource_pool => '/general1/test_folder/CLOUD-Test1',
+          :memory        => 512,
+          :cpus          => 1,
+        }
+      }
+      PuppetManifest.new(@template, @config).apply
+      @machine = @client.get_machine(@path)
+    end
+
+    after(:all) do
+      @client.destroy_machine(@path)
+    end
+
+    it 'with the specified name' do
+      expect(@machine.name).to eq(@name)
+    end
+
+    it 'should report the correct resource_pool value' do
+      regex = /(resource_pool)(\s*)(=>)(\s*)('#{@config[:optional][:resource_pool]}')/
+      expect(@result.stdout).to match(regex)
+    end
+
+  end
+
   describe 'should be able to create a machine from another machine' do
     before(:all) do
       @name = "CLOUD-#{SecureRandom.hex(8)}"
