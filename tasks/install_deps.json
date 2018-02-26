@@ -1,0 +1,5 @@
+{
+  "description": "Installs aws-sdk and retries gem for the puppetlabs/aws module",
+  "supports_noop": false,
+  "input_method": "environment"
+}
