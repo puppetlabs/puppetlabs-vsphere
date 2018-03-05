@@ -164,6 +164,17 @@ vsphere_vm { '/opdx1/vm/eng/sample':
 }
 ```
 
+To create the same machine on a specific datastore add the `datastore` parameter:
+
+```
+vsphere_vm { '/opdx1/vm/eng/sample':
+  ensure    => stopped,
+  source    => '/opdx1/vm/eng/source',
+  datastore => 'datastore1',
+}
+```
+
+
 ## Usage
 
 ### List and manage vSphere machines
@@ -341,6 +352,12 @@ The source type of the new virtual machine. Valid options are 'vm' if the source
 is another virtual machine, 'template' if the source is a template, or 'folder'
 if the source is an imported/uploaded virtual machine folder on the datastore.
 Defaults to 'vm'.
+
+##### `datastore`
+The datastore name within the specified `resource_pool` where the virtual machine
+will be reside. This option is only available when creating a virtual machine from 
+a `source` and is required when specifying a different `resource_pool`.
+This defaults to the first datastore in the `resource_pool`.
 
 ##### `template`
 Whether or not the machine is a template. Defaults to false.

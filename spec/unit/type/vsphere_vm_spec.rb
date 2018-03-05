@@ -13,6 +13,7 @@ describe type_class do
       :linked_clone,
       :create_command,
       :delete_from_disk,
+      :datastore,
     ]
   end
 
@@ -203,6 +204,10 @@ describe type_class do
 
   it 'should require linked_clone to be a boolean' do
     expect{type_class.new(:name => 'sample', :linked_clone => 'sample')}.to raise_error
+  end
+
+  it 'should require datastore to be a string' do
+    expect{type_class.new(:name => 'sample', :datastore => true)}.to raise_error
   end
 
   [

@@ -118,6 +118,13 @@ Puppet::Type.newtype(:vsphere_vm) do
     newvalues(:true, :false)
   end
 
+  newparam(:datastore) do
+    desc 'The name of the datastore with which to associate the virtual machine. This is only appliciable when cloning a VM.'
+    validate do |value|
+      fail 'Virtual machine datastore should be a String' unless value.is_a? String
+    end
+  end
+
   newproperty(:memory) do
     desc 'The amount of memory in MB to use for the machine.'
     def insync?(is)
@@ -171,6 +178,7 @@ Puppet::Type.newtype(:vsphere_vm) do
       is.to_s == should.to_s
     end
   end
+
 
   read_only_properties = {
     cpu_reservation: 'cpuReservation',
