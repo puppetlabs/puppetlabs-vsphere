@@ -214,6 +214,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       compute_resource_name = path_components.shift
       compute_resource = datacenter_instance.find_compute_resource(compute_resource_name)
       # FM-6637 Search nested paths
+      compute_resource = datacenter_instance.find_compute_resource(resource[:resource_pool]) unless compute_resource
       unless compute_resource
         cr = datacenter_instance.hostFolder.children.map do | folder |
             folder.find(compute_resource_name) or
