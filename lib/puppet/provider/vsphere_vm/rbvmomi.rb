@@ -213,6 +213,17 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       path_components = resource[:resource_pool].split('/').select { |s| !s.empty? }
       compute_resource_name = path_components.shift
       compute_resource = datacenter_instance.find_compute_resource(compute_resource_name)
+      # FM-6637 Search nested paths
+      compute_resource = datacenter_instance.find_compute_resource(resource[:resource_pool]) unless compute_resource
+      unless compute_resource
+        cr = datacenter_instance.hostFolder.children.map do | folder |
+            folder.find(compute_resource_name) or
+            folder.children.map do | cluster |
+                cluster.resourcePool.find(compute_resource_name)
+            end
+        end
+        compute_resource = cr.flatten.pop
+      end
       raise Puppet::Error, "No compute resource found named #{compute_resource_name}" unless compute_resource
       if path_components.empty?
         pool = compute_resource.resourcePool
