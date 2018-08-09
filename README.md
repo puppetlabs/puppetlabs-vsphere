@@ -481,8 +481,9 @@ host, but should automatically implement only the placement at power on.
 
 ## Limitations
 
-This module is available only for Puppet Enterprise 3.7 and later.
-This module has been tested with vSphere 5.5.
+For an extensive list of supported operating systems, see [metadata.json](https://github.com/puppetlabs/puppetlabs-vsphere/blob/master/metadata.json)
+
+This module is available only for Puppet Enterprise 3.7 and later. This module has been tested with vSphere 5.5.
 
 ## Known Issues
 
