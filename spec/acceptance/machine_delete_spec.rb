@@ -5,18 +5,18 @@ shared_context 'a running vm' do
   before(:all) do
     @client = VsphereHelper.new
     @template = 'machine.pp.tmpl'
-    @name = "CLOUD-#{SecureRandom.hex(8)}"
-    @path = "/opdx1/vm/eng/#{@name}"
+    @name = "MODULES-#{SecureRandom.hex(8)}"
+    @path = "/opdx/vm/vsphere-module-testing/#{@name}"
     @config = {
       :name     => @path,
       :optional => {
-        :source      => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+        :source      => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
         :source_type => :template,
       },
     }
     datacenter = @client.datacenter
     path = @config[:optional][:source]
-    path.slice!('/opdx1/vm')
+    path.slice!('/opdx/vm')
     template = datacenter.find_vm(path)
     pool = datacenter.hostFolder.children.first.resourcePool
     relocate_spec = RbVmomi::VIM.VirtualMachineRelocateSpec(:pool => pool)
@@ -25,7 +25,7 @@ shared_context 'a running vm' do
       :powerOn  => true,
       :template => false)
     clone_spec.config = RbVmomi::VIM.VirtualMachineConfigSpec(deviceChange: [])
-    target_folder = datacenter.vmFolder.find('eng')
+    target_folder = datacenter.vmFolder.find('vsphere-module-testing')
     template.CloneVM_Task(
       :folder => target_folder,
       :name   => @name,
@@ -36,7 +36,7 @@ shared_context 'a running vm' do
   end
 
   after(:all) do
-    @machine = @client.destroy_machine(@path)
+    @client.destroy_machine(@path)
   end
 end
 
@@ -72,9 +72,9 @@ describe 'vsphere_vm' do
     end
 
     it 'should keep the machine\'s vmdk file around' do
-      vmdk = @datastore.browser.SearchDatastoreSubFolders_Task({:datastorePath => "[#{@datastore.name}] #{@name}", :searchSpec => { :matchPattern => ["#{@name}_1.vmdk"] } }).wait_for_completion
+      vmdk = @datastore.browser.SearchDatastoreSubFolders_Task({:datastorePath => "[#{@datastore.name}] #{@name}", :searchSpec => { :matchPattern => ["#{@name}_19.vmdk"] } }).wait_for_completion
       expect(vmdk).not_to be_nil
-      expect(vmdk.first.file.first.path).to eq("#{@name}_1.vmdk")
+      expect(vmdk.first.file.first.path).to eq("#{@name}_19.vmdk")
     end
 
     context 'when looked for using puppet resource' do
@@ -127,7 +127,7 @@ describe 'vsphere_vm' do
 
     it 'should have removed the machine\'s vmdk file' do
       expect {
-        @datastore.browser.SearchDatastoreSubFolders_Task({:datastorePath => "[#{@datastore.name}] #{@name}", :searchSpec => { :matchPattern => ["#{@name}_1.vmdk"] } }).wait_for_completion
+        @datastore.browser.SearchDatastoreSubFolders_Task({:datastorePath => "[#{@datastore.name}] #{@name}", :searchSpec => { :matchPattern => ["#{@name}_19.vmdk"] } }).wait_for_completion
       }.to raise_error(RbVmomi::Fault, /FileNotFound/)
     end
 
