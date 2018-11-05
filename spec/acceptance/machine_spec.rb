@@ -11,18 +11,18 @@ describe 'vsphere_vm' do
   describe 'should be able to create a machine' do
 
     before(:all) do
-      @name = "CLOUD-#{SecureRandom.hex(8)}"
-      @path = "/opdx1/vm/eng/test/#{@name}"
+      @name = "MODULES-#{SecureRandom.hex(8)}"
+      @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       @config = {
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           :source_type   => :template,
           :memory        => 512,
           :cpus          => 2,
-          :resource_pool => '/general1/CLOUD-Test1',
-          :annotation    => 'some text',
+          :resource_pool => 'acceptance1',
+          :annotation    => 'puppetlabs-vsphere testing',
         }
       }
       PuppetManifest.new(@template, @config).apply
@@ -38,15 +38,15 @@ describe 'vsphere_vm' do
     end
 
     it 'attached to the specified resource pool' do
-      expect(@machine.resourcePool.name).to eq('CLOUD-Test1')
+      expect(@machine.resourcePool.name).to eq('Resources')
     end
 
     it 'in the correct resource allocation location' do
-      expect(@machine.resourcePool.parent.name).to eq('Resources')
+      expect(@machine.resourcePool.parent.name).to eq('acceptance1')
     end
 
     it 'in the correct cluster' do
-      expect(@machine.resourcePool.parent.parent.name).to eq('general1')
+      expect(@machine.resourcePool.parent.parent.name).to eq('host')
     end
 
     it 'with the specified memory setting' do
@@ -81,17 +81,19 @@ describe 'vsphere_vm' do
       end
 
       it 'should report the correct memory value' do
-        regex = /(memory)(\s*)(=>)(\s*)('#{@config[:optional][:memory]}')/
+        regex = /(memory)(\s*)(=>)(\s*)(#{@config[:optional][:memory]})/
         expect(@result.stdout).to match(regex)
       end
 
       it 'should report the correct resource_pool value' do
-        regex = /(resource_pool)(\s*)(=>)(\s*)('#{@config[:optional][:resource_pool]}')/
+        path_components = @config[:optional][:resource_pool].split('/').select { |s| !s.empty? }
+        resource_pool = path_components.shift
+        regex = /(resource_pool)(\s*)(=>)(\s*)('\/#{resource_pool}')/
         expect(@result.stdout).to match(regex)
       end
 
       it 'should report the correct cpu value' do
-        regex = /(cpus)(\s*)(=>)(\s*)('#{@config[:optional][:cpus]}')/
+        regex = /(cpus)(\s*)(=>)(\s*)(#{@config[:optional][:cpus]})/
         expect(@result.stdout).to match(regex)
       end
 
@@ -124,15 +126,15 @@ describe 'vsphere_vm' do
   describe 'should be able to create a machine within a nested folder' do
 
     before(:all) do
-      @name = "CLOUD-#{SecureRandom.hex(8)}"
-      @path = "/opdx1/vm/eng/test/test/#{@name}"
+      @name = "MODULES-#{SecureRandom.hex(8)}"
+      @path = "/opdx/vm/vsphere-module-testing/eng/tests/nested-tests/#{@name}"
       @config = {
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           :source_type   => :template,
-          :resource_pool => 'general1',
+          :resource_pool => 'acceptance1',
           :memory        => 512,
           :cpus          => 1,
         }
@@ -151,18 +153,18 @@ describe 'vsphere_vm' do
 
   end
 
-  describe 'should be able to create a machine within a nested resource pool' do
-
+# Test cannot be ran as our vCenter licence does not support creating resource pools
+  pending 'should be able to create a machine within a nested resource pool' do
     before(:all) do
-      @name = "CLOUD-#{SecureRandom.hex(8)}"
-      @path = "/opdx1/vm/eng/test/#{@name}"
+      @name = "MODULES-#{SecureRandom.hex(8)}"
+      @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       @config = {
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           :source_type   => :template,
-          :resource_pool => '/general1/test_folder/CLOUD-Test1',
+          :resource_pool => '/acceptance1/Resources',
           :memory        => 512,
           :cpus          => 1,
         }
@@ -188,16 +190,16 @@ describe 'vsphere_vm' do
 
   describe 'should be able to create a machine from another machine' do
     before(:all) do
-      @name = "CLOUD-#{SecureRandom.hex(8)}"
+      @name = "MODULES-#{SecureRandom.hex(8)}"
 
-      @source_path = "/opdx1/vm/eng/test/#{@name}-source"
+      @source_path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}-source"
       @source_config = {
         :name     => @source_path,
         :ensure   => 'present',
         :optional => {
-          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           :source_type   => :template,
-          :resource_pool => 'general1',
+          :resource_pool => 'acceptance1',
           :memory        => 512,
           :cpus          => 1,
         }
@@ -205,14 +207,14 @@ describe 'vsphere_vm' do
       PuppetManifest.new(@template, @source_config).apply
       @source_machine = @client.get_machine(@source_path)
 
-      @target_path = "/opdx1/vm/eng/test/#{@name}-target"
-      source_vm_path = @source_path.clone
+      @target_path =  "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}-target"
       @target_config = {
         :name     => @target_path,
         :ensure   => 'present',
         :optional => {
-          :source      => source_vm_path,
+          :source      => @source_path,
           :source_type => :vm,
+          :resource_pool => 'acceptance1', # fails without specifying resource_pool
         }
       }
       PuppetManifest.new(@template, @target_config).apply
@@ -245,13 +247,13 @@ describe 'vsphere_vm' do
   describe 'should be able to create a template from another template' do
 
     before(:all) do
-      @name = "CLOUD-#{SecureRandom.hex(8)}"
-      @path = "/opdx1/vm/eng/test/#{@name}"
+      @name = "MODULES-#{SecureRandom.hex(8)}"
+      @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       @config = {
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :source      => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source      => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           :source_type => :template,
           :template    => true,
         }
@@ -275,27 +277,27 @@ describe 'vsphere_vm' do
 
   describe 'should be able to create a template from another machine' do
     before(:all) do
-      @name = "CLOUD-#{SecureRandom.hex(8)}"
+      @name = "MODULES-#{SecureRandom.hex(8)}"
 
-      @source_path = "/opdx1/vm/eng/test/#{@name}-source"
+      @source_path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}-source"
       @source_config = {
         :name     => @source_path,
         :ensure   => 'present',
         :optional => {
-          :source      => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source      => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           :source_type => :template,
+          #:resource_pool => 'acceptance1', # fails without specifying resource_pool
         }
       }
       PuppetManifest.new(@template, @source_config).apply
       @source_machine = @client.get_machine(@source_path)
 
-      @target_path = "/opdx1/vm/eng/test/#{@name}-target"
-      source_vm_path = @source_path.clone
+      @target_path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}-target"
       @target_config = {
         :name     => @target_path,
         :ensure   => 'present',
         :optional => {
-          :source   => source_vm_path,
+          :source   => @source_path,
           :template => true,
         }
       }
@@ -331,19 +333,19 @@ describe 'vsphere_vm' do
 
   describe 'should be able to customize an existing machine' do
     before(:all) do
-      @name = "CLOUD-#{SecureRandom.hex(8)}"
+      @name = "MODULES-#{SecureRandom.hex(8)}"
 
-      @path = "/opdx1/vm/eng/test/#{@name}"
+      @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       @config = {
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           :source_type   => :template,
-          :resource_pool => 'general1',
+          :resource_pool => 'acceptance1',
           :cpus          => 1,
           :memory        => 512,
-          :annotation    => 'some test',
+          :annotation    => 'puppetlabs-vsphere testing',
         }
       }
       PuppetManifest.new(@template, @config).apply
@@ -355,7 +357,7 @@ describe 'vsphere_vm' do
         :optional => {
           :cpus       => 2,
           :memory     => 1024,
-          :annotation => 'some other test',
+          :annotation => 'puppetlabs-vsphere testing - updated annotation',
         }
       }
       PuppetManifest.new(@template, @new_config).apply
@@ -398,16 +400,16 @@ describe 'vsphere_vm' do
 
   describe 'should be able to create a linked clone from another machine' do
     before(:all) do
-      @name = "CLOUD-#{SecureRandom.hex(8)}"
+      @name = "MODULES-#{SecureRandom.hex(8)}"
 
-      @source_path = "/opdx1/vm/eng/test/#{@name}-source"
+      @source_path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}-source"
       @source_config = {
         :name     => @source_path,
         :ensure   => 'present',
         :optional => {
-          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           :source_type   => :template,
-          :resource_pool => 'general1',
+          :resource_pool => 'acceptance1',
           :memory        => 512,
           :cpus          => 1,
         }
@@ -415,13 +417,12 @@ describe 'vsphere_vm' do
       PuppetManifest.new(@template, @source_config).apply
       @source_machine = @client.get_machine(@source_path)
 
-      @target_path = "/opdx1/vm/eng/test/#{@name}-target"
-      source_vm_path = @source_path.clone
+      @target_path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}-target"
       @target_config = {
         :name     => @target_path,
         :ensure   => 'present',
         :optional => {
-          :source       => source_vm_path,
+          :source       => @source_path,
           :source_type  => :vm,
           :linked_clone => true,
         }
@@ -470,16 +471,16 @@ describe 'vsphere_vm' do
 
   describe 'should be able to suspend and then reset a vm' do
     before(:all) do
-      @name = "CLOUD-#{SecureRandom.hex(8)}"
+      @name = "MODULES-#{SecureRandom.hex(8)}"
 
-      @path = "/opdx1/vm/eng/test/#{@name}"
+      @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       @config = {
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           :source_type   => :template,
-          :resource_pool => 'general1',
+          :resource_pool => 'acceptance1',
           :cpus          => 1,
           :memory        => 512,
         }
@@ -515,16 +516,16 @@ describe 'vsphere_vm' do
 
   describe 'should be able to stop a running vm and restart it' do
     before(:all) do
-      @name = "CLOUD-#{SecureRandom.hex(8)}"
+      @name = "MODULES-#{SecureRandom.hex(8)}"
 
-      @path = "/opdx1/vm/eng/test/#{@name}"
+      @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       @config = {
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           :source_type   => :template,
-          :resource_pool => 'general1',
+          :resource_pool => 'acceptance1',
         }
       }
       PuppetManifest.new(@template, @config).apply
@@ -556,18 +557,17 @@ describe 'vsphere_vm' do
     end
   end
 
-
   describe 'should be able to create a machine and run a command on the guest' do
 
     before(:all) do
-      @name = "CLOUD-#{SecureRandom.hex(8)}"
-      @path = "/opdx1/vm/eng/test/#{@name}"
+      @name = "MODULES-#{SecureRandom.hex(8)}"
+      @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       template = 'machine_create_command.pp.tmpl'
       @config = {
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :source      => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source      => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           :source_type => :template,
           :memory        => 512,
           :cpus          => 1,
@@ -632,14 +632,14 @@ describe 'vsphere_vm' do
     context 'with invalid guest credentials' do
 
       before(:all) do
-        name = "CLOUD-#{SecureRandom.hex(8)}"
-        @path = "/opdx1/vm/eng/test/#{name}"
+        name = "MODULES-#{SecureRandom.hex(8)}"
+        @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{name}"
         @template = 'machine_create_command.pp.tmpl'
         @config = {
           :name     => @path,
           :ensure   => 'present',
           :optional => {
-            :source      => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+            :source      => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
             :source_type => :template,
           },
           :create_command => {
@@ -676,13 +676,13 @@ describe 'vsphere_vm' do
     context 'for a machine with an invalid source machine' do
 
       before(:all) do
-        name = "CLOUD-#{SecureRandom.hex(8)}"
-        @path = "/opdx1/vm/eng/test/#{name}"
+        name = "MODULES-#{SecureRandom.hex(8)}"
+        @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{name}"
         @config = {
           :name     => @path,
           :ensure   => 'present',
           :optional => {
-            :source  => '/opdx1/vm/eng/templates/invalid',
+            :source  => '/opdx/vm/vsphere-module-testing/eng/templates/superdupercomputer-x10000',
           },
         }
         @apply = PuppetManifest.new(@template, @config).apply
@@ -698,15 +698,15 @@ describe 'vsphere_vm' do
       end
 
       it 'should report the problem' do
-        expect(@apply[:output].map { |i| i.include? 'No machine found at /eng/templates/invalid' }.include? true).to eq(true)
+        expect(@apply[:output].map { |i| i.include? 'No machine found at /vsphere-module-testing/eng/templates/superdupercomputer-x10000' }.include? true).to eq(true)
       end
     end
 
     context 'for an non-existent machine with no source property' do
 
       before(:all) do
-        name = "CLOUD-#{SecureRandom.hex(8)}"
-        @path = "/opdx1/vm/eng/test/#{name}"
+        name = "MODULES-#{SecureRandom.hex(8)}"
+        @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{name}"
         @config = {
           :name     => @path,
           :ensure   => 'present',
@@ -731,14 +731,14 @@ describe 'vsphere_vm' do
     context 'for a machine with an invalid compute resource' do
 
       before(:all) do
-        name = "CLOUD-#{SecureRandom.hex(8)}"
-        @path = "/opdx1/vm/eng/test/#{name}"
+        name = "MODULES-#{SecureRandom.hex(8)}"
+        @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{name}"
         @config = {
           :name     => @path,
           :ensure   => 'present',
           :optional => {
             :resource_pool => 'invalid',
-            :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+            :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           },
         }
         @apply = PuppetManifest.new(@template, @config).apply
@@ -761,14 +761,14 @@ describe 'vsphere_vm' do
     context 'for a machine with an invalid resource pool' do
 
       before(:all) do
-        name = "CLOUD-#{SecureRandom.hex(8)}"
-        @path = "/opdx1/vm/eng/test/#{name}"
+        name = "MODULES-#{SecureRandom.hex(8)}"
+        @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{name}"
         @config = {
           :name     => @path,
           :ensure   => 'present',
           :optional => {
-            :resource_pool => '/general1/invalid',
-            :source        => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+            :resource_pool => '/acceptance1/invalid',
+            :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           },
         }
         @apply = PuppetManifest.new(@template, @config).apply
@@ -791,14 +791,14 @@ describe 'vsphere_vm' do
     context 'for a machine specifying a read-only property' do
 
       before(:all) do
-        name = "CLOUD-#{SecureRandom.hex(8)}"
-        @path = "/opdx1/vm/eng/test/#{name}"
+        name = "MODULES-#{SecureRandom.hex(8)}"
+        @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{name}"
         @config = {
           :name     => @path,
           :ensure   => 'present',
           :optional => {
             :uuid   => 'invalid',
-            :source => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+            :source => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           },
         }
         @apply = PuppetManifest.new(@template, @config).apply
@@ -821,13 +821,13 @@ describe 'vsphere_vm' do
     context 'for a template with an invalid source machine' do
 
       before(:all) do
-        name = "CLOUD-#{SecureRandom.hex(8)}"
-        @path = "/opdx1/vm/eng/test/#{name}"
+        name = "MODULES-#{SecureRandom.hex(8)}"
+        @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{name}"
         @config = {
           :name     => @path,
           :ensure   => 'present',
           :optional => {
-            :source   => '/opdx1/vm/eng/templates/invalid',
+            :source   => '/opdx/vm/vsphere-module-testing/eng/templates/invalid',
             :template => true,
           },
         }
@@ -844,23 +844,23 @@ describe 'vsphere_vm' do
       end
 
       it 'should report the problem' do
-        expect(@apply[:output].map { |i| i.include? 'No machine found at /eng/templates/invalid' }.include? true).to eq(true)
+        expect(@apply[:output].map { |i| i.include? 'No machine found at /vsphere-module-testing/eng/templates/invalid' }.include? true).to eq(true)
       end
     end
   end
 
   describe 'should be able to register a vm on disk' do
     before(:all) do
-      @name = "CLOUD-#{SecureRandom.hex(8)}"
+      @name = "MODULES-#{SecureRandom.hex(8)}"
 
-      @path = "/opdx1/vm/eng/test/#{@name}"
+      @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       @config = {
         :name     => @path,
         :ensure   => 'present',
         :optional => {
-          :source  => '/opdx1/vm/eng/templates/debian-wheezy-3.2.0.4-amd64-vagrant-vmtools_9349',
+          :source  => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           :source_type   => :template,
-          :resource_pool => 'general1',
+          :resource_pool => 'acceptance1',
           :cpus          => 1,
           :memory        => 512,
         }

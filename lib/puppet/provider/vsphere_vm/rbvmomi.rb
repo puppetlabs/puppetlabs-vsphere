@@ -217,6 +217,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       compute_resource = datacenter_instance.find_compute_resource(resource[:resource_pool]) unless compute_resource
       unless compute_resource
         cr = datacenter_instance.hostFolder.children.map do | folder |
+            raise Puppet::Error, "No compute resource found named #{compute_resource_name}" unless folder.respond_to?('find')
             folder.find(compute_resource_name) or
             folder.children.map do | cluster |
                 cluster.resourcePool.find(compute_resource_name)
@@ -241,11 +242,12 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     # the destination cluster.
     datastore = if resource[:datastore]
       datacenter_instance.find_datastore(resource[:datastore])
-    else
+    elsif resource[:resource_pool]
       compute_resource.datastore.first
+    else
+      datastore = datacenter_instance.datastore.first
     end 
     raise Puppet::Error, "No datastore found named #{resource[:datastore]}" unless datastore
-
     relocate_spec = if is_linked_clone?
       vm.add_delta_disk_layer_on_all_disks
       # although we wait for the previous task to complete I was able
