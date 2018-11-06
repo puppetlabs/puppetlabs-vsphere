@@ -1,31 +1,30 @@
 [![Build
-Status](https://magnum.travis-ci.com/puppetlabs/puppetlabs-vsphere.svg?token=RqtxRv25TsPVz69Qso5L)](https://magnum.travis-ci.com/puppetlabs/puppetlabs-vsphere)
+Status](https://travis-ci.com/puppetlabs/puppetlabs-vsphere.svg?token=eSG6MMwAUKyfRwi9jMcv&branch=master)](https://travis-ci.org/puppetlabs/puppetlabs-vsphere)
+
+# vsphere
 
 #### Table of Contents
 
-1. [Overview](#overview)
-2. [Description - What the module does and why it is useful](#module-description)
-3. [Setup](#setup)
-  * [Requirements](#requirements)
-  * [Installing the vsphere module](#installing-the-vsphere-module)
-4. [Getting Started with vSphere](#getting-started-with-vsphere)
-5. [Usage - Configuration options and additional functionality](#usage)
-  * [List and manage vSphere machines](#list-and-manage-vsphere-machines)
-  * [Customize vSphere machines](#customize-vsphere-machines)
-  * [Create linked clones](#create-linked-clones)
-  * [Delete vSphere machines](#delete-vsphere-machines)
-  * [Purge unmanaged virtual machines](#purge-unmanaged-virtual-machines)
-6. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
-  * [Types](#types)
-  * [Parameters](#parameters)
-7. [Known Issues](#known-issues)
-8. [Limitations - OS compatibility, etc.](#limitations)
+1. [Module Description - What the module does and why it is useful](#module-description)
+2. [Setup](#setup)
+    * [Requirements](#requirements)
+    * [Installing the vsphere module](#installing-the-vsphere-module)
+3. [Getting Started with vSphere](#getting-started-with-vsphere)
+4. [Usage - Configuration options and additional functionality](#usage)
+    * [List and manage vSphere machines](#list-and-manage-vsphere-machines)
+    * [Customize vSphere machines](#customize-vsphere-machines)
+    * [Create linked clones](#create-linked-clones)
+    * [Delete vSphere machines](#delete-vsphere-machines)
+    * [Purge unmanaged virtual machines](#purge-unmanaged-virtual-machines)
+5. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
+    * [Types](#types)
+    * [Parameters](#parameters)
+6. [Known Issues](#known-issues)
+7. [Limitations - OS compatibility, etc.](#limitations)
 
-## Overview
+## Module Description
 
-Managing vSphere machines using the Puppet DSL.
-
-## Description
+VMware vSphere is VMware's cloud computing virtualization platform. This module allows you to manage vSphere machines using the Puppet DSL.
 
 ## Setup
 
@@ -70,69 +69,68 @@ Managing vSphere machines using the Puppet DSL.
 
 #### Configuring credentials
 
-1. Set the following environment variables specific to your vSphere
-   installation:
+1. Set the following environment variables specific to your vSphere installation:
 
-  * Required Settings:
+    * Required Settings:
 
-      ```
-      export VCENTER_SERVER='your-host'
-      export VCENTER_USER='your-username'
-      export VCENTER_PASSWORD='your-password'
-      ```
+    ```
+    export VCENTER_SERVER='your-host'
+    export VCENTER_USER='your-username'
+    export VCENTER_PASSWORD='your-password'
+    ```
 
-  * Optional Settings:
+    * Optional Settings:
 
-      ```
-      # Whether to ignore SSL certificate errors. Defaults to true.
-      export VCENTER_INSECURE='true or false'
+    ```
+    # Whether to ignore SSL certificate errors. Defaults to true.
+    export VCENTER_INSECURE='true or false'
 
-      # Whether to use SSL. Defaults to true.
-      export VCENTER_SSL='true or false'
+    # Whether to use SSL. Defaults to true.
+    export VCENTER_SSL='true or false'
 
-      # Sets vSphere server port to connect to. Defaults to 443(SSL) or 80(non-SSL).
-      export VCENTER_PORT='your-port'
-      ```
+    # Sets vSphere server port to connect to. Defaults to 443(SSL) or 80(non-SSL).
+    export VCENTER_PORT='your-port'
+    ```
 
-   Alternatively, you can provide the information in a configuration
-file. Store this as `vcenter.conf` in the relevant
-[confdir](https://docs.puppetlabs.com/puppet/latest/reference/dirs_confdir.html). This should be:
+    Alternatively, you can provide the information in a configuration
+    file. Store this as `vcenter.conf` in the relevant
+    [confdir](https://docs.puppetlabs.com/puppet/latest/reference/dirs_confdir.html). This should be:
 
-   * nix Systems: `/etc/puppetlabs/puppet`
-   * Windows: `C:\ProgramData\PuppetLabs\puppet\etc`
-   * non-root users: `~/.puppetlabs/etc/puppet`
+    * nix Systems: `/etc/puppetlabs/puppet`
+    * Windows: `C:\ProgramData\PuppetLabs\puppet\etc`
+    * non-root users: `~/.puppetlabs/etc/puppet`
 
-   The file format is:
+    The file format is:
 
-      ```
-      vcenter: {
-        host: "your-host"
-        user: "your-username"
-        password: "your-password"
-      }
-      ```
+    ```
+    vcenter: {
+      host: "your-host"
+      user: "your-username"
+      password: "your-password"
+    }
+    ```
 
-   Or with all the settings:
+    Or with all the settings:
 
-      ```
-      vcenter: {
-        host: "your-host"
-        user: "your-username"
-        password: "your-password"
-        port: your-port
-        insecure: false
-        ssl: false
-      }
-      ```
+    ```
+    vcenter: {
+      host: "your-host"
+      user: "your-username"
+      password: "your-password"
+      port: your-port
+      insecure: false
+      ssl: false
+    }
+    ```
     **Warning**: Usernames that contain a backslash, typically Active Directory domain accounts, must be triple-quoted. For example:
 
-      ```
-      vcenter: {
-        host: "your-host"
-        user: """DOMAIN\your-username"""
-        password: "your-password"
-      }
-      ```
+    ```
+    vcenter: {
+      host: "your-host"
+      user: """DOMAIN\your-username"""
+      password: "your-password"
+    }
+    ```
 
     Note that you can use either the environment variables or the config file. If both are present the environment variables will be used. You **cannot** have some settings in environment variables and others in the config file.
 
