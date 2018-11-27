@@ -1,4 +1,21 @@
-##Supported Version 1.2.2
+## [1.3.0](https://github.com/puppetlabs/puppetlabs-vsphere/tree/1.3.0) (2018-11-26)
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-vsphere/compare/1.2.2...1.3.0)
+
+### Added
+
+- Add Ubuntu Xenial to metadata [#118](https://github.com/puppetlabs/puppetlabs-vsphere/pull/118) ([eputnam](https://github.com/eputnam))
+- (FM-6227) Add support for a datastore option [#124](https://github.com/puppetlabs/puppetlabs-vsphere/pull/124) ([jarretlavallee](https://github.com/jarretlavallee))
+- (MODULES-5144) Prep for puppet 5 [#125](https://github.com/puppetlabs/puppetlabs-vsphere/pull/125) ([hunner](https://github.com/hunner))
+- Adds task to install dependency gems for puppet server [#118](https://github.com/puppetlabs/puppetlabs-vsphere/pull/129) ([mrzarquon](https://github.com/mrzarquon))
+- (FM-6637) Search nested Host and Clusters [#132](https://github.com/puppetlabs/puppetlabs-vsphere/pull/132) ([jarretlavallee](https://github.com/jarretlavallee))
+- (MODULES-8294) - Update metadata support to Puppet 6 [#141](https://github.com/puppetlabs/puppetlabs-vsphere/pull/141) ([eimlav](https://github.com/eimlav))
+
+### Fixed
+- [FM-6971] Removal of unsupported OS from vsphere [#134](https://github.com/puppetlabs/puppetlabs-vsphere/pull/134) ([david22swan](https://github.com/david22swan))
+- (FM-7082) - Update tests to fix CI [#139](https://github.com/puppetlabs/puppetlabs-vsphere/pull/139) ([eimlav](https://github.com/eimlav))
+
+## Supported Version 1.2.2
 
 This release includes:
 
@@ -7,7 +24,7 @@ This release includes:
 * Fixes failure to load some instances when the compute resource is not a base ResourcePool or ClusterComputeResource
 * Adds Debian 8 compatibility
 
-##2016-02-23 - Supported Version 1.2.1
+## 2016-02-23 - Supported Version 1.2.1
 
 This release includes:
 
@@ -21,7 +38,7 @@ This release includes:
 * Compatibility update for hocon 1.0.0
 
 
-##2015-12-09 - Supported Version 1.2.0
+## 2015-12-09 - Supported Version 1.2.0
 
 This release includes:
 
@@ -36,14 +53,14 @@ This release also fixes the following issues:
 * Correct the display of the guest IP address in Puppet resource
 
 
-##2015-08-25 - Supported Version 1.1.0
+## 2015-08-25 - Supported Version 1.1.0
 
 This release includes:
 
 * Performance improvements to prefetch
 * Support for specifying a customization spec for new VMs
 
-##2015-07-21 - Supported Release 1.0.0
+## 2015-07-21 - Supported Release 1.0.0
 
 The first public release of the vSphere module provides basic support for
 cloning and creating VMs and templates.

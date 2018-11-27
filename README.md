@@ -24,7 +24,7 @@ Status](https://travis-ci.com/puppetlabs/puppetlabs-vsphere.svg?token=eSG6MMwAUK
 
 ## Module Description
 
-VMware vSphere is VMware's cloud computing virtualization platform. This module allows you to manage vSphere machines using the Puppet DSL.
+VMware vSphere is a cloud computing virtualization platform. The vSphere module allows you to manage vSphere machines using Puppet.
 
 ## Setup
 
@@ -162,7 +162,7 @@ vsphere_vm { '/opdx1/vm/eng/sample':
 }
 ```
 
-To create the same machine on a specific datastore add the `datastore` parameter:
+To create the same machine on a specific datastore, add the `datastore` parameter:
 
 ```
 vsphere_vm { '/opdx1/vm/eng/sample':
@@ -308,7 +308,7 @@ By default, this module uses the default datacenter for your installation. If th
 
 This can also be set in the config file as `datacenter`.
 
-If the datacenter is nested within folders (groups) in vSphere, then you will need to specify the full path to the datacenter, eg:
+If the datacenter is nested within folders (groups) in vSphere, specify the full path to the datacenter, for example:
 
 `export VCENTER_DATACENTER=Australia/Perth/DC1`
 
@@ -355,7 +355,7 @@ Defaults to 'vm'.
 
 ##### `datastore`
 The datastore name within the specified `resource_pool` where the virtual machine
-will be reside. This option is only available when creating a virtual machine from 
+will reside. This option is only available when creating a virtual machine from 
 a `source` and is required when specifying a different `resource_pool`.
 This defaults to the first datastore in the `resource_pool`.
 
@@ -481,7 +481,7 @@ host, but should automatically implement only the placement at power on.
 
 For an extensive list of supported operating systems, see [metadata.json](https://github.com/puppetlabs/puppetlabs-vsphere/blob/master/metadata.json)
 
-This module is available only for Puppet Enterprise 3.7 and later. This module has been tested with vSphere 5.5.
+The vSphere module is only available for Puppet Enterprise 3.7 and later. This module has been tested with vSphere 5.5.
 
 ## Known Issues
 
