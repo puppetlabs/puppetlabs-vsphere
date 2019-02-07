@@ -340,7 +340,7 @@ The name of the resource_pool in which to launch the machine. If you have nested
 
 For compatibility with version 1.1.0 and earlier, you can also specify just the name of a host cluster without any slashes. This usage generates a warning and is removed at a later time.
 
-When using clusters nested under a folder, specify the whole path to the resource pool. For example, to use a resource pool named `QA` in a cluster named "general1" that is in a folder named "Folder1", specify `/Folder1/general1/QA`. The module will attempt to search down the tree for the resource pool, but explicitly specifying the path will ensure compatibility. 
+When using clusters nested under a folder, specify the whole path to the resource pool. For example, to use a resource pool named `QA` in a cluster named "general1" that is in a folder named "Folder1", specify `/Folder1/general1/QA`. The module will attempt to search down the tree for the resource pool, but explicitly specifying the path will ensure compatibility.
 
 ##### `source`
 The path within the specified datacenter to the virtual machine or
@@ -355,7 +355,7 @@ Defaults to 'vm'.
 
 ##### `datastore`
 The datastore name within the specified `resource_pool` where the virtual machine
-will reside. This option is only available when creating a virtual machine from 
+will reside. This option is only available when creating a virtual machine from
 a `source` and is required when specifying a different `resource_pool`.
 This defaults to the first datastore in the `resource_pool`.
 
