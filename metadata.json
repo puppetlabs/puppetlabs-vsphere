@@ -5,7 +5,7 @@
   "summary": "Create and manage machines running on VMWare vSphere with Puppet",
   "license": "PuppetLabs-Enterprise",
   "source": "https://github.com/puppetlabs/puppetlabs-vsphere",
-  "project_page": "https://forge.puppetlabs.com/puppetlabs/vsphere",
+  "project_page": "https://github.com/puppetlabs/puppetlabs-vsphere",
   "issues_url": "https://tickets.puppetlabs.com/browse/MODULES",
   "dependencies": [
   
