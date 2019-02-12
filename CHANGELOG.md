@@ -1,3 +1,11 @@
+## [1.3.1](https://github.com/puppetlabs/puppetlabs-vsphere/tree/1.3.1) (2019-02-12)
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-vsphere/compare/1.3.0...1.3.1)
+
+### Fixed
+
+- Updated license terms [#145](https://github.com/puppetlabs/puppetlabs-vsphere/pull/145) ([turbodog](https://github.com/turbodog))
+
 ## [1.3.0](https://github.com/puppetlabs/puppetlabs-vsphere/tree/1.3.0) (2018-11-26)
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-vsphere/compare/1.2.2...1.3.0)
