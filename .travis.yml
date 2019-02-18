@@ -1,12 +1,11 @@
 ---
-sudo: false
 dist: trusty
 language: ruby
 cache: bundler
 before_install:
   - bundle -v
   - rm -f Gemfile.lock
-  - gem update --system
+  - gem update --system $RUBYGEMS_VERSION
   - gem --version
   - bundle -v
 script:
@@ -16,12 +15,12 @@ rvm:
   - 2.5.1
 env:
   global:
-    - PUPPET_GEM_VERSION="~> 6.0"
+    - BEAKER_PUPPET_COLLECTION=puppet6 PUPPET_GEM_VERSION="~> 6.0"
 matrix:
   fast_finish: true
   include:
     -
-      env: CHECK="syntax lint metadata_lint check:symlinks check:git_ignore check:dot_underscore check:test_file"
+      env: CHECK="syntax lint metadata_lint check:symlinks check:git_ignore check:dot_underscore check:test_file rubocop"
     -
       env: CHECK=parallel_spec
     -
@@ -31,6 +30,14 @@ branches:
   only:
     - master
     - /^v\d/
-    - release
 notifications:
   email: false
+deploy:
+  provider: puppetforge
+  user: puppet
+  password:
+    secure: ""
+  on:
+    tags: true
+    all_branches: true
+    condition: "$DEPLOY_TO_FORGE = yes"

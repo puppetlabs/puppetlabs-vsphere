@@ -13,8 +13,5 @@ Gemfile:
       - gem: 'mustache'
         version: '0.99.8'
 
-LICENSE:
-  license_type: 'puppetpe'
-
 Rakefile:
   unmanaged: true
