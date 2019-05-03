@@ -37,6 +37,8 @@ VMware vSphere is a cloud computing virtualization platform. The vSphere module 
 
 ### Installing the vSphere module
 
+The following are *dependencies* of the module. Install these on the system which you configure the module on. For example, in a master-agent setup, install the dependencies on the agent.
+
 #### On Debian 7 and 8, Ubuntu 14.04 LTS, and similar
 
 1. Install the required dependencies:
