@@ -39,7 +39,7 @@ describe 'vsphere_machine' do
 
       it 'should create a VM with the hostname set to the value from the customization spec' do
         # The large timeout is to account for the installation time of the Windows 2012 VM
-        hostname = with_retries(max_tries: 40,
+        hostname = with_retries(max_tries: 50,
                      max_sleep_seconds: 60,
                      rescue: NotFinished,
                     ) do
