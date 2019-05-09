@@ -1,18 +1,31 @@
+# The Puppet Extensions Module.
+#
 module PuppetX
+  # PuppetLabs Module.
   module Puppetlabs
+    # Vsphere configuration
+
     class VsphereConfig
+      #   @param name
+      #     The full path for the machine, including the datacenter identifier.
+      #   @param envs
+      #     environment variables
       REQUIRED = {
         names: [:host, :user, :password],
         envs: ['VCENTER_SERVER', 'VCENTER_USER', 'VCENTER_PASSWORD'],
       }
 
+      # Creates instance variables and corresponding methods that return the
+      # value of each instance variable. String arguments are converted to symbols.
       attr_reader :host, :user, :password, :datacenter, :insecure, :port, :ssl
 
+      # default configuration file
       def default_config_file
         Puppet.initialize_settings unless Puppet[:confdir]
         File.join(Puppet[:confdir], 'vcenter.conf')
       end
 
+      # initialize
       def initialize(config_file=nil)
         settings = process_environment_variables || process_config_file(config_file || default_config_file)
         if settings.nil?
@@ -37,6 +50,9 @@ module PuppetX
         end
       end
 
+      # process config file
+      # @param
+      #   file_path - The full path of the configuration file
       def process_config_file(file_path)
         file_present = File.file?(file_path)
         unless file_present
@@ -67,6 +83,7 @@ module PuppetX
         end
       end
 
+      # process environment variables
       def process_environment_variables
         required = REQUIRED[:envs]
         missing = required - ENV.keys

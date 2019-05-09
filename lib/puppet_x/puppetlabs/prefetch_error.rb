@@ -1,4 +1,6 @@
+# The Puppet Extensions Module.
 module PuppetX
+  # PuppetLabs Module.
   module Puppetlabs
     # We purposefully inherit from Exception here due to PUP-3656
     # If we throw something based on StandardError prior to Puppet 4
@@ -10,6 +12,7 @@ module PuppetX
         @type = type
       end
 
+      # Prefetch Error
       def to_s
         """Puppet detected a problem with the information returned from vSphere when accessing #{@type}. The specific error was:
 #{@message}"""

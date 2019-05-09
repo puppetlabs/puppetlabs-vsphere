@@ -2,10 +2,19 @@ require 'puppet_x/puppetlabs/prefetch_error'
 require 'puppet_x/puppetlabs/vsphere'
 require 'retries'
 
+# @ summary StandardError when unable to load configuration
 class UnableToLoadConfigurationError < StandardError
 end
 
 Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs::Vsphere) do
+  @doc = <<-EOS
+  @summary Vsphere type. This type allows puppet to manage vSphere virtual machines.
+   
+  Can create new machine from a template or other machine, can manage its state or delete it.
+  The configuration can be setup using environment variables or using a config file.
+  Virtual machines can be customized using teh Puppet DSL. Also can specify that a newly launched machine should be a linked clone.
+  EOS
+
   confine feature: :rbvmomi
   confine feature: :hocon
 

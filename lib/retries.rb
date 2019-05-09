@@ -23,9 +23,10 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
 
+# Retries class
 class Retries
+  # default value 1.0.0
   VERSION = "1.0.0"
-
   class << self
     # You can use this to turn off all sleeping in with_retries. This can be useful in tests. Defaults to
     # `true`.
@@ -35,6 +36,7 @@ end
 
 Retries.sleep_enabled = true
 
+# Module Kernel
 module Kernel
   # Runs the supplied code block an retries with an exponential backoff.
   #
