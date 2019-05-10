@@ -15,6 +15,7 @@ Puppet::Type.newtype(:vsphere_vm) do
   end
 
   newproperty(:ensure) do
+    desc 'Specifies the basic state of the virtual machine'
     defaultto :present
     newvalue(:present) do
       provider.create unless provider.exists?
