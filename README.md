@@ -5,26 +5,32 @@ Status](https://travis-ci.com/puppetlabs/puppetlabs-vsphere.svg?token=eSG6MMwAUK
 
 #### Table of Contents
 
-1. [Module Description - What the module does and why it is useful](#module-description)
-2. [Setup](#setup)
+1. [Overview](#overview)
+2. [Module Description](#module-description)
+3. [Setup](#setup)
     * [Requirements](#requirements)
     * [Installing the vsphere module](#installing-the-vsphere-module)
-3. [Getting Started with vSphere](#getting-started-with-vsphere)
-4. [Usage - Configuration options and additional functionality](#usage)
+    * [Getting Started with vSphere](#getting-started-with-vsphere)
+4. [Usage](#usage)
     * [List and manage vSphere machines](#list-and-manage-vsphere-machines)
     * [Customize vSphere machines](#customize-vsphere-machines)
     * [Create linked clones](#create-linked-clones)
     * [Delete vSphere machines](#delete-vsphere-machines)
     * [Purge unmanaged virtual machines](#purge-unmanaged-virtual-machines)
-5. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
+5. [Reference](#reference)
     * [Types](#types)
     * [Parameters](#parameters)
-6. [Known Issues](#known-issues)
-7. [Limitations - OS compatibility, etc.](#limitations)
+6. [Limitations](#limitations)
+7. [Development](#development)
+8. [Known Issues](#known-issues)
+
+## Overview
+
+VMware vSphere is a cloud computing virtualization platform.
 
 ## Module Description
 
-VMware vSphere is a cloud computing virtualization platform. The vSphere module allows you to manage vSphere machines using Puppet.
+The vSphere module allows you to manage vSphere machines using Puppet.
 
 ## Setup
 
@@ -36,6 +42,8 @@ VMware vSphere is a cloud computing virtualization platform. The vSphere module 
 * vSphere 5.5
 
 ### Installing the vSphere module
+
+The following are *dependencies* of the module. Install these on the system which you configure the module on. For example, in a master-agent setup, install the dependencies on the agent.
 
 #### On Debian 7 and 8, Ubuntu 14.04 LTS, and similar
 
@@ -139,7 +147,7 @@ VMware vSphere is a cloud computing virtualization platform. The vSphere module 
   `puppet module install puppetlabs-vsphere`
 
 
-## Getting started with vSphere
+### Getting started with vSphere
 
 This module allows for describing a vSphere machine using the Puppet
 DSL. To create a new machine from a template or other machine and keep it
@@ -314,168 +322,7 @@ If the datacenter is nested within folders (groups) in vSphere, specify the full
 
 ## Reference
 
-### Types
-
-* `vsphere_vm`: Manages a vSphere virtual machine.
-
-### Parameters
-
-#### Type: vsphere_vm
-
-##### `ensure`
-Specifies the basic state of the resource. Valid values are 'present', 'running',
-stopped', and 'absent'. If the machine is a template, then only 'present' and 'absent' are valid states. Defaults to 'present'.
-
-Values have the following effects:
-
-* 'present', 'running': Ensures that the VM is up and running. If the VM doesn't yet exist, a new one is created as specified by the other properties.
-* 'stopped': Ensures that the VM is created, but is not running. This can be used to shut down running VMs, as well as for creating VMs without having them boot immediately.
-* 'absent': Ensures that the VM and all of its files are removed.
-
-##### `name`
-*Required* The full path for the machine, including the datacenter identifier.
-
-##### `resource_pool`
-The name of the resource_pool in which to launch the machine. If you have nested resource pools, you can specify them using a slash-separated value. For example, with a cluster named "general1" that contains a resource pool called "QA", specify `/general1/QA` to put a VM into this resource pool. Defaults to the first cluster in the datacenter.
-
-For compatibility with version 1.1.0 and earlier, you can also specify just the name of a host cluster without any slashes. This usage generates a warning and is removed at a later time.
-
-When using clusters nested under a folder, specify the whole path to the resource pool. For example, to use a resource pool named `QA` in a cluster named "general1" that is in a folder named "Folder1", specify `/Folder1/general1/QA`. The module will attempt to search down the tree for the resource pool, but explicitly specifying the path will ensure compatibility.
-
-##### `source`
-The path within the specified datacenter to the virtual machine or
-template to base the new virtual machine on. Specifying a source
-is required when specifying `ensure => 'present'`.
-
-##### `source_type`
-The source type of the new virtual machine. Valid options are 'vm' if the source
-is another virtual machine, 'template' if the source is a template, or 'folder'
-if the source is an imported/uploaded virtual machine folder on the datastore.
-Defaults to 'vm'.
-
-##### `datastore`
-The datastore name within the specified `resource_pool` where the virtual machine
-will reside. This option is only available when creating a virtual machine from
-a `source` and is required when specifying a different `resource_pool`.
-This defaults to the first datastore in the `resource_pool`.
-
-##### `template`
-Whether or not the machine is a template. Defaults to false.
-
-##### `memory`
-The amount of memory to allocate to the new machine. Defaults to the same as the template or source machine.
-
-##### `cpus`
-The number of CPUs to allocate to the new machine. Defaults to the same as the template or source machine.
-
-##### `delete_from_disk`
-Whether or not to delete the files from disk. Valid options are true or false.
-Providing a value of true results in the VM and all of the related files being
-deleted from the datastore. Providing false removes the VM from the inventory,
-but retain the VM files on the datastore. Defaults to true.
-
-##### `annotation`
-User provided description of the machine.
-
-##### `extra_config`
-A hash containing [vSphere extraConfig](https://www.vmware.com/support/developer/converter-sdk/conv55_apireference/vim.vm.ConfigInfo.html) settings for the virtual machine. Defaults to undef.
-
-##### `create_command`
-A hash containing details of a command to be run on the newly launched guest when it is first created. Note that this requires the guest to have a system user with a known password and for the machine to have VMware tools preinstalled.
-
-```
-create_command => {
-  command => '/bin/ps',
-  arguments => 'aux',
-  working_directory => '/',
-  user => 'root',
-  password => 'password',
-}
-```
-
-Both `working_directory` (defaults to `/`) and `arguments` (defaults to
-`nil`) are optional.
-
-##### `customization_spec`
-The name of an existing customization spec in vCenter which is applied
-to the VM when it is cloned.
-
-##### `cpu_reservation`
-*Read Only*. How many of the CPUs allocated are reserved just for this
-machine.
-
-##### `memory_reservation`
-*Read Only*. How much of the memory allocated is reserved just for this
-machine.
-
-##### `cpu_affinity`
-*Read Only*. A list of processors which can be used by the VM. Presented
-as an array of the numeric identifiers.
-
-##### `memory_affinity`
-*Read Only*. A list of NUMA nodes which can be used by the VM. Presented
-as an array of the numeric identifiers.
-
-##### `number_ethernet_cards`
-*Read Only* The number of virtual ethernet cards available to the
-machine.
-
-##### `power_state`
-*Read Only*. Whether the machine is on or off.
-
-##### `tools_installer_mounted`
-*Read Only*. Whether or nor the VMware tools installer is mounted.
-
-##### `snapshot_disabled`
-*Read Only*. Snapshots are disabled for this machine.
-
-##### `snapshot_locked`
-*Read Only*. Snapshots for this machine are currently locked.
-
-##### `snapshot_power_off_behaviour`
-*Read Only*. Whether to revert to a snapshot when the machine is powered
-off.
-
-##### `uuid`
-*Read Only*. The BIOS unique identifier.
-
-##### `instance_uuid`
-*Read Only*. Unique identifier for the vSphere instance.
-
-##### `hostname`
-*Read Only*. The hostname of the machine if one is assigned.
-
-##### `guest_ip`
-*Read Only*. The IP address assigned to the machine.
-
-##### `datacenter`
-*Read Only*. The datacenter this machine is running on.
-
-##### `vcenter_full_version`
-*Read Only*. The full version of the vCenter managing this machine.
-
-##### `vcenter_name`
-*Read Only*. The name of the vCenter managing this machine.
-
-##### `vcenter_uuid`
-*Read Only*. The UUID of the vCenter managing this machine.
-
-##### `vcenter_version`
-*Read Only*. The product version of the vCenter managing this machine.
-
-##### `drs_behavior`
-*Read Only*. Distributed Resource Scheduler behaviour, should be one of:
-
-* fullyAutomated - Specifies that VirtualCenter should auxtomate both the
-migration of virtual machines and their placement with a host at power
-on.
-* manual -Specifies that VirtualCenter should generate recommendations for
-virtual machine migration and for placement with a host, but should not
-implement the recommendations automatically.
-* partiallyAutomated - Specifies that VirtualCenterter should generate
-recommendations for virtual machine migration and for placement with a
-host, but should automatically implement only the placement at power on.
-
+For information on the classes and types, see the [REFERENCE.md](https://github.com/puppetlabs/puppetlabs-vsphere/blob/master/REFERENCE.md).
 
 ## Limitations
 
@@ -483,24 +330,24 @@ For an extensive list of supported operating systems, see [metadata.json](https:
 
 The vSphere module is only available for Puppet Enterprise 3.7 and later. This module has been tested with vSphere 5.5.
 
-## Known Issues
-
-When using the vSphere module with the Puppet Server, you first need to
-ensure the module is successfully loaded. Run the Puppet agent on the master node, for instance, with `puppet agent
--t`. If you do not do this, the first, and only the first, run of
-the `vsphere_vm` resource fails on the agent with the following error:
-
-```
-Error: Could not retrieve catalog from remote server: Error 400 on
-SERVER: Could not autoload puppet/type/vsphere_vm: Could not autoload
-puppet/provider/vsphere_vm/rbvmomi: no such file to load --
-puppet_x/puppetlabs/prefetch_error on node
-```
-
 ## Development
 
 This module was built by Puppet Labs specifically for use with Puppet Enterprise (PE).
+Puppet modules on the Puppet Forge are open projects, and community contributions are essential for keeping them great. To contribute to Puppet projects, see our [module contribution guide.](https://github.com/puppetlabs/puppetlabs-vsphere/blob/master/CONTRIBUTING.md)
 
 If you run into an issue with this module, or if you would like to request a feature, please [file a ticket](https://tickets.puppetlabs.com/browse/MODULES/).
-
 If you have problems getting this module up and running, please [contact Support](http://puppetlabs.com/services/customer-support).
+
+## Known Issues	
+
+When using the vSphere module with the Puppet Server, you first need to	
+ensure the module is successfully loaded. Run the Puppet agent on the master node, for instance, with `puppet agent	
+-t`. If you do not do this, the first, and only the first, run of	
+the `vsphere_vm` resource fails on the agent with the following error:	
+
+ ```	
+Error: Could not retrieve catalog from remote server: Error 400 on	
+SERVER: Could not autoload puppet/type/vsphere_vm: Could not autoload	
+puppet/provider/vsphere_vm/rbvmomi: no such file to load --	
+puppet_x/puppetlabs/prefetch_error on node	
+```

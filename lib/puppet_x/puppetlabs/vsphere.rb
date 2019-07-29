@@ -1,8 +1,12 @@
 require 'puppet_x/puppetlabs/vsphere_config'
 
+# The Puppet Extensions Module.
 module PuppetX
+  # PuppetLabs Module.
   module Puppetlabs
+    # Vsphere provider
     class Vsphere < Puppet::Provider
+      # apply read-only property
       def self.read_only(*methods)
         methods.each do |method|
           define_method("#{method}=") do |v|
@@ -11,10 +15,12 @@ module PuppetX
         end
       end
 
+      # vsphere configuration
       def self.config
         PuppetX::Puppetlabs::VsphereConfig.new
       end
 
+      # access VSphere virtual machine
       def self.vim
         credentials = {
           host: config.host,
@@ -31,6 +37,8 @@ module PuppetX
         end
       end
 
+      # datacenter instance
+      # it can be specified using VCENTER_DATACENTER environment variable or it can be set in the config file as datacenter
       def self.datacenter_instance
         dc = vim.serviceInstance.find_datacenter(config.datacenter)
         unless dc
@@ -41,6 +49,8 @@ module PuppetX
         dc
       end
 
+      # info
+      # @return hash information about vcenter
       def self.about_info
         unless @about_info
           info = vim.serviceInstance.content.about
@@ -238,7 +248,10 @@ module PuppetX
 
     end
 
+    # Vsphere virtual machine
     class Vsphere::Machine
+      # Creates instance variables and corresponding methods that return the
+      # value of each instance variable. String arguments are converted to symbols.
       attr_reader :name, :folder, :datacenter, :local_path
 
       def initialize(path)
