@@ -8,9 +8,8 @@
   "project_page": "https://github.com/puppetlabs/puppetlabs-vsphere",
   "issues_url": "https://tickets.puppetlabs.com/browse/MODULES",
   "dependencies": [
-  
+
   ],
-  "data_provider": null,
   "operatingsystem_support": [
     {
       "operatingsystem": "RedHat",
@@ -60,5 +59,8 @@
       "name": "puppet",
       "version_requirement": ">= 4.7.0 < 7.0.0"
     }
-  ]
+  ],
+  "pdk-version": "1.11.1",
+  "template-url": "pdk-default#1.11.1",
+  "template-ref": "1.11.1-0-g2ff8c24"
 }
