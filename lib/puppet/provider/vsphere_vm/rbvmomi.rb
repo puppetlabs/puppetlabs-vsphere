@@ -9,7 +9,7 @@ end
 Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs::Vsphere) do
   @doc = <<-EOS
   @summary Vsphere type. This type allows puppet to manage vSphere virtual machines.
-   
+
   Can create new machine from a template or other machine, can manage its state or delete it.
   The configuration can be setup using environment variables or using a config file.
   Virtual machines can be customized using teh Puppet DSL. Also can specify that a newly launched machine should be a linked clone.
@@ -247,7 +247,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       pool = hosts.first.resourcePool
     end
 
-    # Use the given datastore by name, or find the first datastore in 
+    # Use the given datastore by name, or find the first datastore in
     # the destination cluster.
     datastore = if resource[:datastore]
       datacenter_instance.find_datastore(resource[:datastore])
@@ -255,7 +255,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       compute_resource.datastore.first
     else
       datastore = datacenter_instance.datastore.first
-    end 
+    end
     raise Puppet::Error, "No datastore found named #{resource[:datastore]}" unless datastore
     relocate_spec = if is_linked_clone?
       vm.add_delta_disk_layer_on_all_disks
@@ -308,7 +308,13 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     vm.CloneVM_Task(
       :folder => find_or_create_folder(datacenter_instance.vmFolder, instance.folder),
       :name => instance.name,
-      :spec => clone_spec).wait_for_completion
+      :spec => clone_spec).wait_for_progress do |progress|
+        if (progress.is_a? Numeric) && (progress / 10).floor != (last_progress / 10).floor
+          Puppet.info "Progress: #{progress}%"
+          last_progress = progress
+      end
+    end
+    Puppet.info 'Done!'
 
     execute_command_on_machine if resource[:create_command]
 
