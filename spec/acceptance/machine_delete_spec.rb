@@ -29,7 +29,7 @@ shared_context 'a running vm' do
     template.CloneVM_Task(
       :folder => target_folder,
       :name   => @name,
-      :spec   => clone_spec).wait_for_completion
+      :spec   => clone_spec).wait_for_progress
 
     @datastore = @client.datacenter.datastore.first
     @machine = @client.get_machine(@path)
