@@ -305,6 +305,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       end
     end
 
+    last_progress = 0
     vm.CloneVM_Task(
       :folder => find_or_create_folder(datacenter_instance.vmFolder, instance.folder),
       :name => instance.name,
