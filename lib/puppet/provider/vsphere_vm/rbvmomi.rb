@@ -317,10 +317,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     end
     Puppet.info 'Done!'
 
-    puts "7777 execute on command"
-    puts "resource[:create_command]=#{resource[:create_command]}"
     execute_command_on_machine if resource[:create_command]
-
     @property_hash[:ensure] = :present
   end
 
@@ -369,8 +366,6 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     manager = vim.serviceContent.guestOperationsManager
     auth = RbVmomi::VIM::NamePasswordAuthentication(machine_credentials)
     handler = Proc.new do |exception, attempt_number, total_delay|
-      puts "6"*100
-      puts attempt_number
       Puppet.debug("#{exception.message}; retry attempt #{attempt_number}; #{total_delay} seconds have passed")
       # All exceptions in RbVmomi are RbVmomi::Fault, rather than the actual API exception
       # The actual exceptions come out in the message, so we parse them out
@@ -387,9 +382,8 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     end
     arguments = resource[:create_command].has_key?('arguments') ? resource[:create_command]['arguments'] : ''
     working_directory = resource[:create_command].has_key?('working_directory') ? resource[:create_command]['working_directory'] : '/'
-    Puppet.debug("max_tries=#{resource[:max_tries]}")
 
-    max_tries=resource[:max_tries]
+    max_tries=resource[:max_tries].to_i unless resource[:max_tries].nil?
     spec = RbVmomi::VIM::GuestProgramSpec(
       programPath: resource[:create_command]['command'],
       arguments: arguments,
