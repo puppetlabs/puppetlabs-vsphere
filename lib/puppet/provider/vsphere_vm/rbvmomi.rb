@@ -389,7 +389,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       arguments: arguments,
       workingDirectory: working_directory,
     )
-    with_retries(:max_tries => max_tries,
+    with_retries(:max_tries => max_tries || 10,
                  :handler => handler,
                  :base_sleep_seconds => 5,
                  :max_sleep_seconds => 15,
