@@ -582,6 +582,7 @@ describe 'vsphere_vm' do
           'advanced.setting' => 'value',
         },
       }
+
       PuppetManifest.new(template, @config).apply
       @machine = @client.get_machine(@path)
       @processes = @client.list_processes(@path)
@@ -719,7 +720,7 @@ describe 'vsphere_vm' do
       end
 
       it 'should report the incorrect credentials' do
-        expect(@apply[:output].map { |i| i.include? 'Incorrect credentials for the guest machine' }.include? true).to eq(true)
+        expect(@apply[:output].map { |i| i.include? 'InvalidGuestLogin: Failed to authenticate with the guest operating system using the supplied credentials' }.include? true).to eq(true)
       end
     end
   end
