@@ -582,6 +582,7 @@ describe 'vsphere_vm' do
           'advanced.setting' => 'value',
         },
       }
+
       PuppetManifest.new(template, @config).apply
       @machine = @client.get_machine(@path)
       @processes = @client.list_processes(@path)
@@ -627,6 +628,59 @@ describe 'vsphere_vm' do
     end
   end
 
+  describe 'should be able to create a machine and run a command on the guest specifying max_tries option' do
+
+    before(:all) do
+      @name = "MODULES-#{SecureRandom.hex(8)}"
+      @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
+      template = 'machine_create_command.pp.tmpl'
+      @config = {
+        :name     => @path,
+        :ensure   => 'present',
+        :optional => {
+          :source      => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          :source_type => :template,
+          :memory        => 512,
+          :cpus          => 1,
+          :max_tries     => '7',
+        },
+        :create_command => {
+          :command => '/bin/ps',
+          :arguments => 'aux',
+          :user => ENV['VCENTER_GUEST_USERNAME'],
+          :password => ENV['VCENTER_GUEST_PASSWORD'],
+        },
+      }
+      PuppetManifest.new(template, @config).apply
+      @machine = @client.get_machine(@path)
+      @processes = @client.list_processes(@path)
+    end
+
+    after(:all) do
+      @client.destroy_machine(@path)
+    end
+
+    it 'with the specified name' do
+      expect(@machine.name).to eq(@name)
+    end
+
+    it 'with processes running on the guest' do
+      expect(@processes).not_to be_empty
+    end
+
+    it 'with the named process running on the guest' do
+      expect(@processes.first.name).to eq('ps')
+    end
+
+    it 'with the named process running the relevant command' do
+      expect(@processes.first.cmdLine).to eq('"/bin/ps" aux')
+    end
+
+    it 'with the named process owned by the correct user' do
+      expect(@processes.first.owner).to eq(ENV['VCENTER_GUEST_USERNAME'])
+    end
+  end
+
   describe 'should create a machine but fail to run command on the guest' do
 
     context 'with invalid guest credentials' do
@@ -666,7 +720,7 @@ describe 'vsphere_vm' do
       end
 
       it 'should report the incorrect credentials' do
-        expect(@apply[:output].map { |i| i.include? 'Incorrect credentials for the guest machine' }.include? true).to eq(true)
+        expect(@apply[:output].map { |i| i.include? 'InvalidGuestLogin: Failed to authenticate with the guest operating system using the supplied credentials' }.include? true).to eq(true)
       end
     end
   end

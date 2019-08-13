@@ -262,6 +262,10 @@ Puppet::Type.newtype(:vsphere_vm) do
     end
   end
 
+  newparam(:max_tries) do
+    desc 'Maxim number of retries to connect to the newly created machine.'
+  end
+
   autorequire(:vsphere_vm) do
     self[:source]
   end
