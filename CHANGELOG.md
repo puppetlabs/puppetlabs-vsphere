@@ -1,3 +1,18 @@
+## [1.4.0](https://github.com/puppetlabs/puppetlabs-vsphere/tree/1.4.0) (2019-08-14)
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-vsphere/compare/1.3.1...1.4.0)
+
+### Fixed
+
+- Clarify installation dependencies [DOCUMENT-1001](https://github.com/puppetlabs/puppetlabs-vsphere/pull/152)
+- CloneVM_Task - wait_for_progress and display report on progress [MODULES-9261](https://github.com/puppetlabs/puppetlabs-vsphere/pull/158)
+- Failure to execute process via create_command with generalised windows template [MODULES-9674](https://github.com/puppetlabs/puppetlabs-vsphere/pull/160)
+
+### Added
+
+- Puppet-strings documentation [FM-7941](https://github.com/puppetlabs/puppetlabs-vsphere/pull/154)
+- Redhat8 support [FM-8036](https://github.com/puppetlabs/puppetlabs-vsphere/pull/155)
+
 ## [1.3.1](https://github.com/puppetlabs/puppetlabs-vsphere/tree/1.3.1) (2019-02-12)
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-vsphere/compare/1.3.0...1.3.1)
