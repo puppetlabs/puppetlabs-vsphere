@@ -154,39 +154,40 @@ describe 'vsphere_vm' do
   end
 
 # Test cannot be ran as our vCenter licence does not support creating resource pools
-  pending 'should be able to create a machine within a nested resource pool' do
-    before(:all) do
-      @name = "MODULES-#{SecureRandom.hex(8)}"
-      @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
-      @config = {
-        :name     => @path,
-        :ensure   => 'present',
-        :optional => {
-          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-          :source_type   => :template,
-          :resource_pool => '/acceptance1/Resources',
-          :memory        => 512,
-          :cpus          => 1,
-        }
-      }
-      PuppetManifest.new(@template, @config).apply
-      @machine = @client.get_machine(@path)
-    end
+# FM-8635: Commenting out all test steps
+  # pending 'should be able to create a machine within a nested resource pool' do
+  #   before(:all) do
+  #     @name = "MODULES-#{SecureRandom.hex(8)}"
+  #     @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
+  #     @config = {
+  #       :name     => @path,
+  #       :ensure   => 'present',
+  #       :optional => {
+  #         :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+  #         :source_type   => :template,
+  #         :resource_pool => '/acceptance1/Resources',
+  #         :memory        => 512,
+  #         :cpus          => 1,
+  #       }
+  #     }
+  #     PuppetManifest.new(@template, @config).apply
+  #     @machine = @client.get_machine(@path)
+  #   end
 
-    after(:all) do
-      @client.destroy_machine(@path)
-    end
+  #   after(:all) do
+  #     @client.destroy_machine(@path)
+  #   end
 
-    it 'with the specified name' do
-      expect(@machine.name).to eq(@name)
-    end
+  #   it 'with the specified name' do
+  #     expect(@machine.name).to eq(@name)
+  #   end
 
-    it 'should report the correct resource_pool value' do
-      regex = /(resource_pool)(\s*)(=>)(\s*)('#{@config[:optional][:resource_pool]}')/
-      expect(@result.stdout).to match(regex)
-    end
+  #   it 'should report the correct resource_pool value' do
+  #     regex = /(resource_pool)(\s*)(=>)(\s*)('#{@config[:optional][:resource_pool]}')/
+  #     expect(@result.stdout).to match(regex)
+  #   end
 
-  end
+  # end
 
   describe 'should be able to create a machine from another machine' do
     before(:all) do
