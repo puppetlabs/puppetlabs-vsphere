@@ -155,7 +155,7 @@ describe 'vsphere_vm' do
 
 # Test cannot be ran as our vCenter licence does not support creating resource pools
 # FM-8635: Commenting out all test steps
-  # pending 'should be able to create a machine within a nested resource pool' do
+  pending 'should be able to create a machine within a nested resource pool' do
   #   before(:all) do
   #     @name = "MODULES-#{SecureRandom.hex(8)}"
   #     @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
@@ -187,7 +187,7 @@ describe 'vsphere_vm' do
   #     expect(@result.stdout).to match(regex)
   #   end
 
-  # end
+  end
 
   describe 'should be able to create a machine from another machine' do
     before(:all) do
