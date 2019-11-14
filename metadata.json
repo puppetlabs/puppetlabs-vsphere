@@ -3,14 +3,13 @@
   "version": "1.4.0",
   "author": "Puppet Labs",
   "summary": "Create and manage machines running on VMWare vSphere with Puppet",
-  "license": "PuppetLabs-Enterprise",
+  "license": "proprietary",
   "source": "https://github.com/puppetlabs/puppetlabs-vsphere",
   "project_page": "https://github.com/puppetlabs/puppetlabs-vsphere",
   "issues_url": "https://tickets.puppetlabs.com/browse/MODULES",
   "dependencies": [
-  
+
   ],
-  "data_provider": null,
   "operatingsystem_support": [
     {
       "operatingsystem": "RedHat",
@@ -61,5 +60,8 @@
       "name": "puppet",
       "version_requirement": ">= 4.7.0 < 7.0.0"
     }
-  ]
+  ],
+  "pdk-version": "1.14.1",
+  "template-url": "pdk-default#1.14.1",
+  "template-ref": "1.14.1-0-g0b5b39b"
 }
