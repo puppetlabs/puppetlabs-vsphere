@@ -9,6 +9,7 @@ Rake::Task[:beaker].clear
 
 module Beaker
   module Tasks
+    # replace the beaker rake tasks with local stuff
     class RakeTask < ::Rake::TaskLib
       include ::Rake::DSL if defined?(::Rake::DSL)
 

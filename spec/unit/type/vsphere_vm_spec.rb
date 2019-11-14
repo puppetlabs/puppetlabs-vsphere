@@ -102,12 +102,6 @@ describe type_class do
     end
   end
 
-  it 'requires CPUs to be greater than 0' do
-    expect {
-      type_class.new({})
-    }.to raise_error(Puppet::Error, 'Title or name must be provided')
-  end
-
   it 'requires memory to be greater than 0' do
     expect {
       type_class.new(name: 'sample', memory: 0)
@@ -125,7 +119,7 @@ describe type_class do
   end
 
   it 'supports :stopped as a value to :ensure' do
-    type_class.new(name: 'sample', ensure: :running)
+    type_class.new(name: 'sample', ensure: :stopped)
   end
 
   it 'defaults template to false' do

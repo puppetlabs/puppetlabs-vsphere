@@ -4,7 +4,6 @@ module PuppetX
   # PuppetLabs Module.
   module Puppetlabs
     # Vsphere configuration
-
     class VsphereConfig
       #   @param name
       #     The full path for the machine, including the datacenter identifier.

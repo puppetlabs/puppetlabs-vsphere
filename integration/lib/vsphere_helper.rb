@@ -110,8 +110,8 @@ def vm_powerstate?(datacenter, name, desired_state)
   vim = RbVmomi::VIM.connect insecure: 'true', host: server, user: userid, password: passwd
   (dc = vim.serviceInstance.find_datacenter(datacenter)) || raise('datacenter not found')
   vm = dc.find_vm("/eng/integration/vm/#{name}")
-  powerState = vm.runtime.powerState
-  fail_test "The current VM power state is '#{powerState}'" unless powerState == desired_state
+  power_state = vm.runtime.powerState
+  fail_test "The current VM power state is '#{power_state}'" unless power_state == desired_state
 end
 
 # Method vm_config?(datacenter, name, fact, desired_config)

@@ -100,7 +100,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, parent: PuppetX::Puppetlabs::Vs
               data[RbVmomi::VIM::Datacenter][i['parent']]
             else
               nil
-                end
+            end
           else
             nil
           end
@@ -251,8 +251,8 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, parent: PuppetX::Puppetlabs::Vs
                 elsif resource[:resource_pool]
                   compute_resource.datastore.first
                 else
-                  datastore = datacenter_instance.datastore.first
-    end
+                  datacenter_instance.datastore.first
+                end
     raise Puppet::Error, "No datastore found named #{resource[:datastore]}" unless datastore
     relocate_spec = if is_linked_clone?
                       vm.add_delta_disk_layer_on_all_disks
@@ -263,7 +263,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, parent: PuppetX::Puppetlabs::Vs
                       RbVmomi::VIM.VirtualMachineRelocateSpec(pool: pool, diskMoveType: :moveChildMostDiskBacking)
                     else
                       RbVmomi::VIM.VirtualMachineRelocateSpec(pool: pool, datastore: datastore)
-    end
+                    end
 
     power_on = (args[:stopped] == true) ? false : true
     power_on = false if is_template?
@@ -312,7 +312,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, parent: PuppetX::Puppetlabs::Vs
       if (progress.is_a? Numeric) && (progress / 10).floor != (last_progress / 10).floor
         Puppet.info "Progress: #{progress}%"
         last_progress = progress
-    end
+      end
     end
     Puppet.info 'Done!'
 

@@ -1,10 +1,6 @@
 test_name 'FM-46231 - C97275 - Install PE license key on master'
 
-# Set variables for test
-license_key = '/etc/puppetlabs/license.key'
-license_bak = '/tmp/license.key.bak'
-
-myLicenseFile = <<-EOF
+license_content = <<-EOF
 #######################
 #  Begin License File #
 #######################
@@ -19,7 +15,7 @@ end: 2035-06-13
 EOF
 
 step 'Create /etc/puppetlabs/license.key file...' do
-  create_remote_file(master, '/etc/puppetlabs/license.key', myLicenseFile)
+  create_remote_file(master, '/etc/puppetlabs/license.key', license_content)
   on(master, 'chmod 644 /etc/puppetlabs/license.key')
 end
 
