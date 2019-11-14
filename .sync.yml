@@ -3,6 +3,8 @@ appveyor.yml:
   delete: true
 .travis.yml:
   docker_sets: []
+.rubocop.yml:
+  include_todos: true
 
 Gemfile:
   optional:
