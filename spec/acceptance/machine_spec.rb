@@ -2,28 +2,26 @@ require 'spec_helper_acceptance'
 require 'securerandom'
 
 describe 'vsphere_vm' do
-
   before(:all) do
     @client = VsphereHelper.new
     @template = 'machine.pp.tmpl'
   end
 
   describe 'should be able to create a machine' do
-
     before(:all) do
       @name = "MODULES-#{SecureRandom.hex(8)}"
       @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       @config = {
-        :name     => @path,
-        :ensure   => 'present',
-        :optional => {
-          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-          :source_type   => :template,
-          :memory        => 512,
-          :cpus          => 2,
-          :resource_pool => 'acceptance1',
-          :annotation    => 'puppetlabs-vsphere testing',
-        }
+        name: @path,
+        ensure: 'present',
+        optional: {
+          source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          source_type: :template,
+          memory: 512,
+          cpus: 2,
+          resource_pool: 'acceptance1',
+          annotation: 'puppetlabs-vsphere testing',
+        },
       }
       PuppetManifest.new(@template, @config).apply
       @machine = @client.get_machine(@path)
@@ -68,32 +66,32 @@ describe 'vsphere_vm' do
 
     context 'when looked for using puppet resource' do
       before(:all) do
-        @result = TestExecutor.puppet_resource('vsphere_vm', {:name => @path})
+        @result = TestExecutor.puppet_resource('vsphere_vm', name: @path)
       end
 
-      it 'should not return an error' do
-        expect(@result.stderr).not_to match(/\b/)
+      it 'does not return an error' do
+        expect(@result.stderr).not_to match(%r{\b})
       end
 
-      it 'should report the correct ensure value' do
-        regex = /(ensure)(\s*)(=>)(\s*)('running')/
+      it 'reports the correct ensure value' do
+        regex = %r{(ensure)(\s*)(=>)(\s*)('running')}
         expect(@result.stdout).to match(regex)
       end
 
-      it 'should report the correct memory value' do
-        regex = /(memory)(\s*)(=>)(\s*)(#{@config[:optional][:memory]})/
+      it 'reports the correct memory value' do
+        regex = %r{(memory)(\s*)(=>)(\s*)(#{@config[:optional][:memory]})}
         expect(@result.stdout).to match(regex)
       end
 
-      it 'should report the correct resource_pool value' do
-        path_components = @config[:optional][:resource_pool].split('/').select { |s| !s.empty? }
+      it 'reports the correct resource_pool value' do
+        path_components = @config[:optional][:resource_pool].split('/').reject { |s| s.empty? }
         resource_pool = path_components.shift
         regex = /(resource_pool)(\s*)(=>)(\s*)('\/#{resource_pool}')/
         expect(@result.stdout).to match(regex)
       end
 
-      it 'should report the correct cpu value' do
-        regex = /(cpus)(\s*)(=>)(\s*)(#{@config[:optional][:cpus]})/
+      it 'reports the correct cpu value' do
+        regex = %r{(cpus)(\s*)(=>)(\s*)(#{@config[:optional][:cpus]})}
         expect(@result.stdout).to match(regex)
       end
 
@@ -116,7 +114,7 @@ describe 'vsphere_vm' do
         'drs_behavior',
       ].each do |read_only_property|
         it "#{read_only_property} is reported" do
-          regex = /(#{read_only_property})(\s*)(=>)(\s*)/
+          regex = %r{(#{read_only_property})(\s*)(=>)(\s*)}
           expect(@result.stdout).to match(regex)
         end
       end
@@ -124,20 +122,19 @@ describe 'vsphere_vm' do
   end
 
   describe 'should be able to create a machine within a nested folder' do
-
     before(:all) do
       @name = "MODULES-#{SecureRandom.hex(8)}"
       @path = "/opdx/vm/vsphere-module-testing/eng/tests/nested-tests/#{@name}"
       @config = {
-        :name     => @path,
-        :ensure   => 'present',
-        :optional => {
-          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-          :source_type   => :template,
-          :resource_pool => 'acceptance1',
-          :memory        => 512,
-          :cpus          => 1,
-        }
+        name: @path,
+        ensure: 'present',
+        optional: {
+          source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          source_type: :template,
+          resource_pool: 'acceptance1',
+          memory: 512,
+          cpus: 1,
+        },
       }
       PuppetManifest.new(@template, @config).apply
       @machine = @client.get_machine(@path)
@@ -150,45 +147,43 @@ describe 'vsphere_vm' do
     it 'with the specified name' do
       expect(@machine.name).to eq(@name)
     end
-
   end
 
-# Test cannot be run as our vCenter licence does not support creating resource pools
-# FM-8635: Commenting out all test steps
-  it 'should be able to create a machine within a nested resource pool' do
+  # Test cannot be run as our vCenter licence does not support creating resource pools
+  # FM-8635: Commenting out all test steps
+  it 'is able to create a machine within a nested resource pool' do
     pending('FM-8635: Test cannot be run as our vCenter licence does not support creating resource pools')
-    fail
-  #   before(:all) do
-  #     @name = "MODULES-#{SecureRandom.hex(8)}"
-  #     @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
-  #     @config = {
-  #       :name     => @path,
-  #       :ensure   => 'present',
-  #       :optional => {
-  #         :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-  #         :source_type   => :template,
-  #         :resource_pool => '/acceptance1/Resources',
-  #         :memory        => 512,
-  #         :cpus          => 1,
-  #       }
-  #     }
-  #     PuppetManifest.new(@template, @config).apply
-  #     @machine = @client.get_machine(@path)
-  #   end
+    raise
+    #   before(:all) do
+    #     @name = "MODULES-#{SecureRandom.hex(8)}"
+    #     @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
+    #     @config = {
+    #       :name     => @path,
+    #       :ensure   => 'present',
+    #       :optional => {
+    #         :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+    #         :source_type   => :template,
+    #         :resource_pool => '/acceptance1/Resources',
+    #         :memory        => 512,
+    #         :cpus          => 1,
+    #       }
+    #     }
+    #     PuppetManifest.new(@template, @config).apply
+    #     @machine = @client.get_machine(@path)
+    #   end
 
-  #   after(:all) do
-  #     @client.destroy_machine(@path)
-  #   end
+    #   after(:all) do
+    #     @client.destroy_machine(@path)
+    #   end
 
-  #   it 'with the specified name' do
-  #     expect(@machine.name).to eq(@name)
-  #   end
+    #   it 'with the specified name' do
+    #     expect(@machine.name).to eq(@name)
+    #   end
 
-  #   it 'should report the correct resource_pool value' do
-  #     regex = /(resource_pool)(\s*)(=>)(\s*)('#{@config[:optional][:resource_pool]}')/
-  #     expect(@result.stdout).to match(regex)
-  #   end
-
+    #   it 'should report the correct resource_pool value' do
+    #     regex = /(resource_pool)(\s*)(=>)(\s*)('#{@config[:optional][:resource_pool]}')/
+    #     expect(@result.stdout).to match(regex)
+    #   end
   end
 
   describe 'should be able to create a machine from another machine' do
@@ -197,28 +192,28 @@ describe 'vsphere_vm' do
 
       @source_path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}-source"
       @source_config = {
-        :name     => @source_path,
-        :ensure   => 'present',
-        :optional => {
-          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-          :source_type   => :template,
-          :resource_pool => 'acceptance1',
-          :memory        => 512,
-          :cpus          => 1,
-        }
+        name: @source_path,
+        ensure: 'present',
+        optional: {
+          source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          source_type: :template,
+          resource_pool: 'acceptance1',
+          memory: 512,
+          cpus: 1,
+        },
       }
       PuppetManifest.new(@template, @source_config).apply
       @source_machine = @client.get_machine(@source_path)
 
       @target_path =  "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}-target"
       @target_config = {
-        :name     => @target_path,
-        :ensure   => 'present',
-        :optional => {
-          :source      => @source_path,
-          :source_type => :vm,
-          :resource_pool => 'acceptance1', # fails without specifying resource_pool
-        }
+        name: @target_path,
+        ensure: 'present',
+        optional: {
+          source: @source_path,
+          source_type: :vm,
+          resource_pool: 'acceptance1', # fails without specifying resource_pool
+        },
       }
       PuppetManifest.new(@template, @target_config).apply
       @target_machine = @client.get_machine(@target_path)
@@ -229,7 +224,7 @@ describe 'vsphere_vm' do
       @client.destroy_machine(@target_path)
     end
 
-    it 'should have same config as source vm' do
+    it 'has same config as source vm' do
       [
         :cpuReservation,
         :guestFullName,
@@ -248,18 +243,17 @@ describe 'vsphere_vm' do
   end
 
   describe 'should be able to create a template from another template' do
-
     before(:all) do
       @name = "MODULES-#{SecureRandom.hex(8)}"
       @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       @config = {
-        :name     => @path,
-        :ensure   => 'present',
-        :optional => {
-          :source      => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-          :source_type => :template,
-          :template    => true,
-        }
+        name: @path,
+        ensure: 'present',
+        optional: {
+          source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          source_type: :template,
+          template: true,
+        },
       }
       PuppetManifest.new(@template, @config).apply
       @machine = @client.get_machine(@path)
@@ -284,25 +278,25 @@ describe 'vsphere_vm' do
 
       @source_path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}-source"
       @source_config = {
-        :name     => @source_path,
-        :ensure   => 'present',
-        :optional => {
-          :source      => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-          :source_type => :template,
+        name: @source_path,
+        ensure: 'present',
+        optional: {
+          source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          source_type: :template,
           #:resource_pool => 'acceptance1', # fails without specifying resource_pool
-        }
+        },
       }
       PuppetManifest.new(@template, @source_config).apply
       @source_machine = @client.get_machine(@source_path)
 
       @target_path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}-target"
       @target_config = {
-        :name     => @target_path,
-        :ensure   => 'present',
-        :optional => {
-          :source   => @source_path,
-          :template => true,
-        }
+        name: @target_path,
+        ensure: 'present',
+        optional: {
+          source: @source_path,
+          template: true,
+        },
       }
       PuppetManifest.new(@template, @target_config).apply
       @target_machine = @client.get_machine(@target_path)
@@ -317,7 +311,7 @@ describe 'vsphere_vm' do
       expect(@target_machine.summary.config.template).to eq(true)
     end
 
-    it 'should have same config as source vm' do
+    it 'has same config as source vm' do
       [
         :cpuReservation,
         :guestFullName,
@@ -340,28 +334,28 @@ describe 'vsphere_vm' do
 
       @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       @config = {
-        :name     => @path,
-        :ensure   => 'present',
-        :optional => {
-          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-          :source_type   => :template,
-          :resource_pool => 'acceptance1',
-          :cpus          => 1,
-          :memory        => 512,
-          :annotation    => 'puppetlabs-vsphere testing',
-        }
+        name: @path,
+        ensure: 'present',
+        optional: {
+          source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          source_type: :template,
+          resource_pool: 'acceptance1',
+          cpus: 1,
+          memory: 512,
+          annotation: 'puppetlabs-vsphere testing',
+        },
       }
       PuppetManifest.new(@template, @config).apply
       @config_before = @client.get_machine(@path).summary.config
 
       @new_config = {
-        :name     => @path,
-        :ensure   => 'present',
-        :optional => {
-          :cpus       => 2,
-          :memory     => 1024,
-          :annotation => 'puppetlabs-vsphere testing - updated annotation',
-        }
+        name: @path,
+        ensure: 'present',
+        optional: {
+          cpus: 2,
+          memory: 1024,
+          annotation: 'puppetlabs-vsphere testing - updated annotation',
+        },
       }
       PuppetManifest.new(@template, @new_config).apply
       @config_after = @client.get_machine(@path).summary.config
@@ -395,7 +389,7 @@ describe 'vsphere_vm' do
       end
     end
 
-    it 'should update the annotation' do
+    it 'updates the annotation' do
       expect(@config_before[:annotation]).to eq(@config[:optional][:annotation])
       expect(@config_after[:annotation]).to eq(@new_config[:optional][:annotation])
     end
@@ -407,28 +401,28 @@ describe 'vsphere_vm' do
 
       @source_path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}-source"
       @source_config = {
-        :name     => @source_path,
-        :ensure   => 'present',
-        :optional => {
-          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-          :source_type   => :template,
-          :resource_pool => 'acceptance1',
-          :memory        => 512,
-          :cpus          => 1,
-        }
+        name: @source_path,
+        ensure: 'present',
+        optional: {
+          source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          source_type: :template,
+          resource_pool: 'acceptance1',
+          memory: 512,
+          cpus: 1,
+        },
       }
       PuppetManifest.new(@template, @source_config).apply
       @source_machine = @client.get_machine(@source_path)
 
       @target_path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}-target"
       @target_config = {
-        :name     => @target_path,
-        :ensure   => 'present',
-        :optional => {
-          :source       => @source_path,
-          :source_type  => :vm,
-          :linked_clone => true,
-        }
+        name: @target_path,
+        ensure: 'present',
+        optional: {
+          source: @source_path,
+          source_type: :vm,
+          linked_clone: true,
+        },
       }
       PuppetManifest.new(@template, @target_config).apply
       @target_machine = @client.get_machine(@target_path)
@@ -440,7 +434,7 @@ describe 'vsphere_vm' do
       @client.destroy_machine(@source_path)
     end
 
-    it 'should have same config as source vm' do
+    it 'has same config as source vm' do
       [
         :cpuReservation,
         :guestFullName,
@@ -457,16 +451,16 @@ describe 'vsphere_vm' do
       end
     end
 
-    it 'should have a disk attached' do
+    it 'has a disk attached' do
       expect(@disks).not_to be_empty
     end
 
-    it 'should not have non linked disks' do
-      own_disks = @disks.select { |x| x.backing.parent == nil }
+    it 'does not have non linked disks' do
+      own_disks = @disks.select { |x| x.backing.parent.nil? }
       expect(own_disks).to be_empty
     end
 
-    it 'should have the same disk attached as the source machine' do
+    it 'has the same disk attached as the source machine' do
       source_disks = @source_machine.config.hardware.device.grep(RbVmomi::VIM::VirtualDisk)
       expect(@disks.first.backing.parent.uuid).to eq(source_disks.first.backing.uuid)
     end
@@ -478,35 +472,35 @@ describe 'vsphere_vm' do
 
       @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       @config = {
-        :name     => @path,
-        :ensure   => 'present',
-        :optional => {
-          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-          :source_type   => :template,
-          :resource_pool => 'acceptance1',
-          :cpus          => 1,
-          :memory        => 512,
-        }
+        name: @path,
+        ensure: 'present',
+        optional: {
+          source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          source_type: :template,
+          resource_pool: 'acceptance1',
+          cpus: 1,
+          memory: 512,
+        },
       }
       PuppetManifest.new(@template, @config).apply
       @state_before = @client.get_machine(@path).runtime.powerState.clone
 
       suspend_config = {
-        :name     => @path,
-        :ensure   => 'suspended',
+        name: @path,
+        ensure: 'suspended',
       }
       PuppetManifest.new(@template, suspend_config).apply
       @state_suspend = @client.get_machine(@path).runtime.powerState.clone
 
       reset_config = {
-        :name     => @path,
-        :ensure   => 'reset',
+        name: @path,
+        ensure: 'reset',
       }
       PuppetManifest.new(@template, reset_config).apply
       @state_reset = @client.get_machine(@path).runtime.powerState.clone
     end
 
-    it 'should change state correctly' do
+    it 'changes state correctly' do
       expect(@state_before).to eq('poweredOn')
       expect(@state_suspend).to eq('suspended')
       expect(@state_reset).to eq('poweredOn')
@@ -523,33 +517,33 @@ describe 'vsphere_vm' do
 
       @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       @config = {
-        :name     => @path,
-        :ensure   => 'present',
-        :optional => {
-          :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-          :source_type   => :template,
-          :resource_pool => 'acceptance1',
-        }
+        name: @path,
+        ensure: 'present',
+        optional: {
+          source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          source_type: :template,
+          resource_pool: 'acceptance1',
+        },
       }
       PuppetManifest.new(@template, @config).apply
       @state_before = @client.get_machine(@path).runtime.powerState.clone
 
       stop_config = {
-        :name     => @path,
-        :ensure   => 'stopped',
+        name: @path,
+        ensure: 'stopped',
       }
       PuppetManifest.new(@template, stop_config).apply
       @state_stopped = @client.get_machine(@path).runtime.powerState.clone
 
       start_config = {
-        :name     => @path,
-        :ensure   => 'running',
+        name: @path,
+        ensure: 'running',
       }
       PuppetManifest.new(@template, start_config).apply
       @state_started = @client.get_machine(@path).runtime.powerState.clone
     end
 
-    it 'should change state correctly' do
+    it 'changes state correctly' do
       expect(@state_before).to eq('poweredOn')
       expect(@state_stopped).to eq('poweredOff')
       expect(@state_started).to eq('poweredOn')
@@ -561,27 +555,26 @@ describe 'vsphere_vm' do
   end
 
   describe 'should be able to create a machine and run a command on the guest' do
-
     before(:all) do
       @name = "MODULES-#{SecureRandom.hex(8)}"
       @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       template = 'machine_create_command.pp.tmpl'
       @config = {
-        :name     => @path,
-        :ensure   => 'present',
-        :optional => {
-          :source      => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-          :source_type => :template,
-          :memory        => 512,
-          :cpus          => 1,
+        name: @path,
+        ensure: 'present',
+        optional: {
+          source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          source_type: :template,
+          memory: 512,
+          cpus: 1,
         },
-        :create_command => {
-          :command => '/bin/ps',
-          :arguments => 'aux',
-          :user => ENV['VCENTER_GUEST_USERNAME'],
-          :password => ENV['VCENTER_GUEST_PASSWORD'],
+        create_command: {
+          command: '/bin/ps',
+          arguments: 'aux',
+          user: ENV['VCENTER_GUEST_USERNAME'],
+          password: ENV['VCENTER_GUEST_PASSWORD'],
         },
-        :extra_config  => {
+        extra_config: {
           'advanced.setting' => 'value',
         },
       }
@@ -617,41 +610,40 @@ describe 'vsphere_vm' do
 
     context 'when looked for using puppet resource' do
       before(:all) do
-        @result = TestExecutor.puppet_resource('vsphere_vm', {:name => @path})
+        @result = TestExecutor.puppet_resource('vsphere_vm', name: @path)
       end
 
-      it 'should not return an error' do
-        expect(@result.stderr).not_to match(/\b/)
+      it 'does not return an error' do
+        expect(@result.stderr).not_to match(%r{\b})
       end
 
-      it 'should report the extra_config value' do
-        regex = /('advanced.setting')(\s*)(=>)(\s*)('value')/
+      it 'reports the extra_config value' do
+        regex = %r{('advanced.setting')(\s*)(=>)(\s*)('value')}
         expect(@result.stdout).to match(regex)
       end
     end
   end
 
   describe 'should be able to create a machine and run a command on the guest specifying max_tries option' do
-
     before(:all) do
       @name = "MODULES-#{SecureRandom.hex(8)}"
       @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       template = 'machine_create_command.pp.tmpl'
       @config = {
-        :name     => @path,
-        :ensure   => 'present',
-        :optional => {
-          :source      => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-          :source_type => :template,
-          :memory        => 512,
-          :cpus          => 1,
-          :max_tries     => '7',
+        name: @path,
+        ensure: 'present',
+        optional: {
+          source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          source_type: :template,
+          memory: 512,
+          cpus: 1,
+          max_tries: '7',
         },
-        :create_command => {
-          :command => '/bin/ps',
-          :arguments => 'aux',
-          :user => ENV['VCENTER_GUEST_USERNAME'],
-          :password => ENV['VCENTER_GUEST_PASSWORD'],
+        create_command: {
+          command: '/bin/ps',
+          arguments: 'aux',
+          user: ENV['VCENTER_GUEST_USERNAME'],
+          password: ENV['VCENTER_GUEST_PASSWORD'],
         },
       }
       PuppetManifest.new(template, @config).apply
@@ -685,26 +677,24 @@ describe 'vsphere_vm' do
   end
 
   describe 'should create a machine but fail to run command on the guest' do
-
     context 'with invalid guest credentials' do
-
       before(:all) do
         name = "MODULES-#{SecureRandom.hex(8)}"
         @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{name}"
         @template = 'machine_create_command.pp.tmpl'
         @config = {
-          :name     => @path,
-          :ensure   => 'present',
-          :optional => {
-            :source      => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-            :source_type => :template,
+          name: @path,
+          ensure: 'present',
+          optional: {
+            source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+            source_type: :template,
           },
-          :create_command => {
-            :command => '/bin/ps',
-            :arguments => 'aux',
-            :user => 'invalid',
-            :password => 'invalid',
-          }
+          create_command: {
+            command: '/bin/ps',
+            arguments: 'aux',
+            user: 'invalid',
+            password: 'invalid',
+          },
         }
         @apply = PuppetManifest.new(@template, @config).apply
       end
@@ -713,195 +703,188 @@ describe 'vsphere_vm' do
         @client.destroy_machine(@path)
       end
 
-      it 'should create a machine' do
+      it 'creates a machine' do
         expect(@client.get_machine(@path)).not_to be_nil
       end
 
-      it 'should fail to apply successfully' do
+      it 'fails to apply successfully' do
         success = @apply[:exit_status].success?
         expect(success).to eq(false)
       end
 
-      it 'should report the incorrect credentials' do
-        expect(@apply[:output].map { |i| i.include? 'InvalidGuestLogin: Failed to authenticate with the guest operating system using the supplied credentials' }.include? true).to eq(true)
+      it 'reports the incorrect credentials' do
+        expect(@apply[:output].map { |i| i.include? 'InvalidGuestLogin: Failed to authenticate with the guest operating system using the supplied credentials' }.include?(true)).to eq(true)
       end
     end
   end
 
   describe 'should provide useful error messages' do
-
     context 'for a machine with an invalid source machine' do
-
       before(:all) do
         name = "MODULES-#{SecureRandom.hex(8)}"
         @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{name}"
         @config = {
-          :name     => @path,
-          :ensure   => 'present',
-          :optional => {
-            :source  => '/opdx/vm/vsphere-module-testing/eng/templates/superdupercomputer-x10000',
+          name: @path,
+          ensure: 'present',
+          optional: {
+            source: '/opdx/vm/vsphere-module-testing/eng/templates/superdupercomputer-x10000',
           },
         }
         @apply = PuppetManifest.new(@template, @config).apply
       end
 
-      it 'should not create a machine' do
+      it 'does not create a machine' do
         expect(@client.get_machine(@path)).to be_nil
       end
 
-      it 'should fail to apply successfully' do
+      it 'fails to apply successfully' do
         success = @apply[:exit_status].success?
         expect(success).to eq(false)
       end
 
-      it 'should report the problem' do
-        expect(@apply[:output].map { |i| i.include? 'No machine found at /vsphere-module-testing/eng/templates/superdupercomputer-x10000' }.include? true).to eq(true)
+      it 'reports the problem' do
+        expect(@apply[:output].map { |i| i.include? 'No machine found at /vsphere-module-testing/eng/templates/superdupercomputer-x10000' }.include?(true)).to eq(true)
       end
     end
 
     context 'for an non-existent machine with no source property' do
-
       before(:all) do
         name = "MODULES-#{SecureRandom.hex(8)}"
         @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{name}"
         @config = {
-          :name     => @path,
-          :ensure   => 'present',
+          name: @path,
+          ensure: 'present',
         }
         @apply = PuppetManifest.new(@template, @config).apply
       end
 
-      it 'should not create a machine' do
+      it 'does not create a machine' do
         expect(@client.get_machine(@path)).to be_nil
       end
 
-      it 'should fail to apply successfully' do
+      it 'fails to apply successfully' do
         success = @apply[:exit_status].success?
         expect(success).to eq(false)
       end
 
-      it 'should report the problem' do
-        expect(@apply[:output].map { |i| i.include? 'Must provide a source machine, template or datastore folder to base the machine on' }.include? true).to eq(true)
+      it 'reports the problem' do
+        expect(@apply[:output].map { |i| i.include? 'Must provide a source machine, template or datastore folder to base the machine on' }.include?(true)).to eq(true)
       end
     end
 
     context 'for a machine with an invalid compute resource' do
-
       before(:all) do
         name = "MODULES-#{SecureRandom.hex(8)}"
         @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{name}"
         @config = {
-          :name     => @path,
-          :ensure   => 'present',
-          :optional => {
-            :resource_pool => 'invalid',
-            :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          name: @path,
+          ensure: 'present',
+          optional: {
+            resource_pool: 'invalid',
+            source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           },
         }
         @apply = PuppetManifest.new(@template, @config).apply
       end
 
-      it 'should not create a machine' do
+      it 'does not create a machine' do
         expect(@client.get_machine(@path)).to be_nil
       end
 
-      it 'should fail to apply successfully' do
+      it 'fails to apply successfully' do
         success = @apply[:exit_status].success?
         expect(success).to eq(false)
       end
 
-      it 'should report the problem' do
-        expect(@apply[:output].map { |i| i.include? "No compute resource found named #{@config[:optional][:resource_pool]}" }.include? true).to eq(true)
+      it 'reports the problem' do
+        expect(@apply[:output].map { |i| i.include? "No compute resource found named #{@config[:optional][:resource_pool]}" }.include?(true)).to eq(true)
       end
     end
 
     context 'for a machine with an invalid resource pool' do
-
       before(:all) do
         name = "MODULES-#{SecureRandom.hex(8)}"
         @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{name}"
         @config = {
-          :name     => @path,
-          :ensure   => 'present',
-          :optional => {
-            :resource_pool => '/acceptance1/invalid',
-            :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          name: @path,
+          ensure: 'present',
+          optional: {
+            resource_pool: '/acceptance1/invalid',
+            source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           },
         }
         @apply = PuppetManifest.new(@template, @config).apply
       end
 
-      it 'should not create a machine' do
+      it 'does not create a machine' do
         expect(@client.get_machine(@path)).to be_nil
       end
 
-      it 'should fail to apply successfully' do
+      it 'fails to apply successfully' do
         success = @apply[:exit_status].success?
         expect(success).to eq(false)
       end
 
-      it 'should report the problem' do
-        expect(@apply[:output].map { |i| i.include? "No resource pool found named #{@config[:optional][:resource_pool]}" }.include? true).to eq(true)
+      it 'reports the problem' do
+        expect(@apply[:output].map { |i| i.include? "No resource pool found named #{@config[:optional][:resource_pool]}" }.include?(true)).to eq(true)
       end
     end
 
     context 'for a machine specifying a read-only property' do
-
       before(:all) do
         name = "MODULES-#{SecureRandom.hex(8)}"
         @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{name}"
         @config = {
-          :name     => @path,
-          :ensure   => 'present',
-          :optional => {
-            :uuid   => 'invalid',
-            :source => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          name: @path,
+          ensure: 'present',
+          optional: {
+            uuid: 'invalid',
+            source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           },
         }
         @apply = PuppetManifest.new(@template, @config).apply
       end
 
-      it 'should not create a machine' do
+      it 'does not create a machine' do
         expect(@client.get_machine(@path)).to be_nil
       end
 
-      it 'should fail to apply successfully' do
+      it 'fails to apply successfully' do
         success = @apply[:exit_status].success?
         expect(success).to eq(false)
       end
 
-      it 'should report the problem' do
-        expect(@apply[:output].map { |i| i.include? "uuid is read-only and is only available via puppet resource." }.include? true).to eq(true)
+      it 'reports the problem' do
+        expect(@apply[:output].map { |i| i.include? 'uuid is read-only and is only available via puppet resource.' }.include?(true)).to eq(true)
       end
     end
 
     context 'for a template with an invalid source machine' do
-
       before(:all) do
         name = "MODULES-#{SecureRandom.hex(8)}"
         @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{name}"
         @config = {
-          :name     => @path,
-          :ensure   => 'present',
-          :optional => {
-            :source   => '/opdx/vm/vsphere-module-testing/eng/templates/invalid',
-            :template => true,
+          name: @path,
+          ensure: 'present',
+          optional: {
+            source: '/opdx/vm/vsphere-module-testing/eng/templates/invalid',
+            template: true,
           },
         }
         @apply = PuppetManifest.new(@template, @config).apply
       end
 
-      it 'should not create a template' do
+      it 'does not create a template' do
         expect(@client.get_machine(@path)).to be_nil
       end
 
-      it 'should fail to apply successfully' do
+      it 'fails to apply successfully' do
         success = @apply[:exit_status].success?
         expect(success).to eq(false)
       end
 
-      it 'should report the problem' do
-        expect(@apply[:output].map { |i| i.include? 'No machine found at /vsphere-module-testing/eng/templates/invalid' }.include? true).to eq(true)
+      it 'reports the problem' do
+        expect(@apply[:output].map { |i| i.include? 'No machine found at /vsphere-module-testing/eng/templates/invalid' }.include?(true)).to eq(true)
       end
     end
   end
@@ -912,51 +895,51 @@ describe 'vsphere_vm' do
 
       @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
       @config = {
-        :name     => @path,
-        :ensure   => 'present',
-        :optional => {
-          :source  => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-          :source_type   => :template,
-          :resource_pool => 'acceptance1',
-          :cpus          => 1,
-          :memory        => 512,
-        }
+        name: @path,
+        ensure: 'present',
+        optional: {
+          source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+          source_type: :template,
+          resource_pool: 'acceptance1',
+          cpus: 1,
+          memory: 512,
+        },
       }
       PuppetManifest.new(@template, @config).apply
       machine = @client.get_machine(@path)
       @original_config = machine.summary.config
 
       unregister_config = {
-        :name     => @path,
-        :ensure   => 'absent',
-        :optional => {
-          :delete_from_disk => false,
+        name: @path,
+        ensure: 'absent',
+        optional: {
+          delete_from_disk: false,
         },
       }
       PuppetManifest.new(@template, unregister_config).apply
       @unregistered_machine = @client.get_machine(@path)
 
       register_config = {
-        :name     => @path,
-        :ensure   => 'present',
-        :optional => {
-          :source      => @name,
-          :source_type => 'folder',
+        name: @path,
+        ensure: 'present',
+        optional: {
+          source: @name,
+          source_type: 'folder',
         },
       }
       PuppetManifest.new(@template, register_config).apply
       @newly_register_machine = @client.get_machine(@path)
     end
 
-    it 'should successfully unregister the original vm' do
+    it 'successfullies unregister the original vm' do
       expect(@unregistered_machine).to be_nil
     end
 
-    it 'should successfully register the vm from disk' do
+    it 'successfullies register the vm from disk' do
       expect(@newly_register_machine).not_to be_nil
     end
 
-    it 'should have same config as original vm' do
+    it 'has same config as original vm' do
       [
         :cpuReservation,
         :guestFullName,

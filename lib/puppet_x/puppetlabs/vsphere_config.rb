@@ -13,7 +13,7 @@ module PuppetX
       REQUIRED = {
         names: [:host, :user, :password],
         envs: ['VCENTER_SERVER', 'VCENTER_USER', 'VCENTER_PASSWORD'],
-      }
+      }.freeze
 
       # Creates instance variables and corresponding methods that return the
       # value of each instance variable. String arguments are converted to symbols.
@@ -26,12 +26,12 @@ module PuppetX
       end
 
       # initialize
-      def initialize(config_file=nil)
+      def initialize(config_file = nil)
         settings = process_environment_variables || process_config_file(config_file || default_config_file)
         if settings.nil?
           raise Puppet::Error, 'You must provide credentials in either environment variables or a config file.'
         else
-          settings = settings.delete_if { |k, v| v.nil? }
+          settings = settings.delete_if { |_k, v| v.nil? }
           missing = REQUIRED[:names] - settings.keys
           unless missing.empty?
             message = 'To use this module you must provide the following settings:'
@@ -55,14 +55,12 @@ module PuppetX
       #   file_path - The full path of the configuration file
       def process_config_file(file_path)
         file_present = File.file?(file_path)
-        unless file_present
-          nil
-        else
+        if file_present
           begin
             conf = ::Hocon::ConfigFactory.parse_file(file_path)
           rescue Hocon::ConfigError::ConfigParseError => e
-            raise Puppet::Error, """Your configuration file at #{file_path} is invalid. The error from the parser is
-#{e.message}"""
+            raise Puppet::Error, ''"Your configuration file at #{file_path} is invalid. The error from the parser is
+#{e.message}"''
           end
           vsphere_config = conf.root.unwrapped['vcenter']
           required = REQUIRED[:names].map { |var| var.to_s }
@@ -80,6 +78,8 @@ module PuppetX
           else
             nil
           end
+        else
+          nil
         end
       end
 

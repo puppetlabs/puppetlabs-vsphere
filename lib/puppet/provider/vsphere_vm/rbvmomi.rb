@@ -6,7 +6,7 @@ require 'retries'
 class UnableToLoadConfigurationError < StandardError
 end
 
-Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs::Vsphere) do
+Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, parent: PuppetX::Puppetlabs::Vsphere) do
   @doc = <<-EOS
   @summary Vsphere type. This type allows puppet to manage vSphere virtual machines.
 
@@ -20,40 +20,38 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
 
   mk_resource_methods
 
-  [ :cpus, :memory, :extra_config, :annotation ].each do |property|
+  [:cpus, :memory, :extra_config, :annotation].each do |property|
     define_method("#{property}=") do |v|
       # if @property_hash[property] != v
-        @property_hash[property] = v
-        @property_hash[:flush_reboot] = true
+      @property_hash[property] = v
+      @property_hash[:flush_reboot] = true
       # end
     end
   end
 
   def self.instances
-    begin
-      result = nil
-      benchmark(:debug, 'loaded list of VMs') do
-        data = load_machine_info(datacenter_instance)
-        if data[RbVmomi::VIM::VirtualMachine]
-          result = data[RbVmomi::VIM::VirtualMachine].collect do |obj, machine|
-            hash = nil
-            benchmark(:debug, "loaded machine information for #{machine['name']}") do
-              hash = hash_from_machine_data(obj, machine, data)
-            end
-            new(hash)
-          end
-        else
-          result = []
-        end
-      end
-      result
-    rescue Timeout::Error, StandardError => e
-      # put error in the debug log, as re-raising it below swallows the correct stack trace
-      Puppet.debug(e.inspect)
-      Puppet.debug(e.backtrace)
-
-      raise PuppetX::Puppetlabs::PrefetchError.new(self.resource_type.name.to_s, e.message)
+    result = nil
+    benchmark(:debug, 'loaded list of VMs') do
+      data = load_machine_info(datacenter_instance)
+      result = if data[RbVmomi::VIM::VirtualMachine]
+                 data[RbVmomi::VIM::VirtualMachine].map do |obj, machine|
+                   hash = nil
+                   benchmark(:debug, "loaded machine information for #{machine['name']}") do
+                     hash = hash_from_machine_data(obj, machine, data)
+                   end
+                   new(hash)
+                 end
+               else
+                 []
+               end
     end
+    result
+  rescue Timeout::Error, StandardError => e
+    # put error in the debug log, as re-raising it below swallows the correct stack trace
+    Puppet.debug(e.inspect)
+    Puppet.debug(e.backtrace)
+
+    raise PuppetX::Puppetlabs::PrefetchError.new(resource_type.name.to_s, e.message)
   end
 
   def self.prefetch(resources)
@@ -70,13 +68,13 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
 
     while i
       path_components << i['name']
-      if i.has_key? 'parent'
-        if data[RbVmomi::VIM::ResourcePool].has_key?(i['parent'])
+      if i.key? 'parent'
+        if data[RbVmomi::VIM::ResourcePool].key?(i['parent'])
           i = data[RbVmomi::VIM::ResourcePool][i['parent']]
-        elsif data[RbVmomi::VIM::ComputeResource] && data[RbVmomi::VIM::ComputeResource].has_key?(i['parent'])
+        elsif data[RbVmomi::VIM::ComputeResource] && data[RbVmomi::VIM::ComputeResource].key?(i['parent'])
           path_components.pop
           i = data[RbVmomi::VIM::ComputeResource][i['parent']]
-        elsif data[RbVmomi::VIM::ClusterComputeResource] && data[RbVmomi::VIM::ClusterComputeResource].has_key?(i['parent'])
+        elsif data[RbVmomi::VIM::ClusterComputeResource] && data[RbVmomi::VIM::ClusterComputeResource].key?(i['parent'])
           # There's always a top-level "Resources" pool that we do not want to show
           path_components.pop
           i = data[RbVmomi::VIM::ClusterComputeResource][i['parent']]
@@ -95,20 +93,19 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     i = machine
     while i
       path_components << i['name']
-      if i.has_key? 'parent'
-        if data[RbVmomi::VIM::Folder].has_key? i['parent']
-          i = data[RbVmomi::VIM::Folder][i['parent']]
-        elsif data[RbVmomi::VIM::Datacenter].has_key? i['parent']
-          i = data[RbVmomi::VIM::Datacenter][i['parent']]
-        else
-          i = nil
-        end
-      else
-        i = nil
-      end
+      i = if i.key? 'parent'
+            if data[RbVmomi::VIM::Folder].key? i['parent']
+              data[RbVmomi::VIM::Folder][i['parent']]
+            elsif data[RbVmomi::VIM::Datacenter].key? i['parent']
+              data[RbVmomi::VIM::Datacenter][i['parent']]
+            else
+              nil
+                end
+          else
+            nil
+          end
     end
     name = '/' + path_components.reverse.join('/')
-
 
     property_mappings = {
       cpus: 'summary.config.numCpu',
@@ -131,10 +128,10 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     }
 
     api_properties = Hash[property_mappings
-      .select { |_, v| machine.has_key? v }
-      .collect { |key, property_name|
-        [key, machine[property_name]]
-      }
+                     .select { |_, v| machine.key? v }
+                     .map do |key, property_name|
+                            [key, machine[property_name]]
+                          end
     ]
 
     cpu_affinity = machine['config.cpuAffinity']
@@ -144,7 +141,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       name: name,
       resource_pool: resource_pool_from_machine_data(machine, data),
       ensure: machine_state(machine['runtime.powerState']),
-      hostname: api_properties['hostname'] == '(none)' ? nil : api_properties['hostname'],
+      hostname: (api_properties['hostname'] == '(none)') ? nil : api_properties['hostname'],
       datacenter: data[RbVmomi::VIM::Datacenter].first.last['name'],
       drs_behavior: drs_behavior_from_machine_data(machine, data),
       memory_affinity: memory_affinity.respond_to?('affinitySet') ? memory_affinity.affinitySet : [],
@@ -153,21 +150,21 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     }
 
     # While the machine is booting, no extra config is available.
-    curated_properties[:extra_config] = Hash[machine['config.extraConfig'].collect { |setting| [setting.key, setting.value] }] if machine.has_key? 'config.extraConfig'
+    curated_properties[:extra_config] = Hash[machine['config.extraConfig'].map { |setting| [setting.key, setting.value] }] if machine.key? 'config.extraConfig'
 
     api_properties.merge(about_info).merge(curated_properties)
   end
 
   def self.cluster_compute_from_machine_data(machine, data)
     focus = data[RbVmomi::VIM::ResourcePool][machine['resourcePool']]
-    while focus and focus.class != RbVmomi::VIM::ClusterComputeResource
-      if (focus.class == Hash && focus.has_key?('parent'))
-        focus = focus['parent']
-      elsif focus.respond_to? 'parent'
-        focus = focus.parent
-      else
-        focus = nil
-      end
+    while focus && focus.class != RbVmomi::VIM::ClusterComputeResource
+      focus = if focus.class == Hash && focus.key?('parent')
+                focus['parent']
+              elsif focus.respond_to? 'parent'
+                focus.parent
+              else
+                nil
+              end
     end
     focus
   end
@@ -176,7 +173,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     cluster_compute = cluster_compute_from_machine_data(machine, data)
     if cluster_compute
       config = data[RbVmomi::VIM::ClusterComputeResource][cluster_compute_from_machine_data(machine, data)]['configurationEx']
-      override = config.drsVmConfig.find {|c| c.key.name == machine['name'] }
+      override = config.drsVmConfig.find { |c| c.key.name == machine['name'] }
       if override
         override.behavior
       else
@@ -200,11 +197,11 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
 
   def exists?
     Puppet.info("Checking if #{type_name} #{name} exists")
-    @property_hash[:ensure] and @property_hash[:ensure] != :absent
+    @property_hash[:ensure] && @property_hash[:ensure] != :absent
   end
 
-  def create(args={})
-    raise Puppet::Error, "Must provide a source machine, template or datastore folder to base the machine on" unless resource[:source]
+  def create(args = {})
+    raise Puppet::Error, 'Must provide a source machine, template or datastore folder to base the machine on' unless resource[:source]
     if resource[:source_type] == :folder
       create_from_folder
     else
@@ -219,65 +216,66 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     raise Puppet::Error, "No machine found at #{base_machine.local_path}" unless vm
 
     if resource[:resource_pool]
-      path_components = resource[:resource_pool].split('/').select { |s| !s.empty? }
+      path_components = resource[:resource_pool].split('/').reject { |s| s.empty? }
       compute_resource_name = path_components.shift
       compute_resource = datacenter_instance.find_compute_resource(compute_resource_name)
       # FM-6637 Search nested paths
       compute_resource = datacenter_instance.find_compute_resource(resource[:resource_pool]) unless compute_resource
       unless compute_resource
-        cr = datacenter_instance.hostFolder.children.map do | folder |
-            raise Puppet::Error, "No compute resource found named #{compute_resource_name}" unless folder.respond_to?('find')
-            folder.find(compute_resource_name) or
-            folder.children.map do | cluster |
-                cluster.resourcePool.find(compute_resource_name)
+        cr = datacenter_instance.hostFolder.children.map do |folder|
+          raise Puppet::Error, "No compute resource found named #{compute_resource_name}" unless folder.respond_to?('find')
+          folder.find(compute_resource_name) ||
+            folder.children.map do |cluster|
+              cluster.resourcePool.find(compute_resource_name)
             end
         end
         compute_resource = cr.flatten.pop
       end
       raise Puppet::Error, "No compute resource found named #{compute_resource_name}" unless compute_resource
-      if path_components.empty?
-        pool = compute_resource.resourcePool
-      else
-        pool = compute_resource.resourcePool.traverse path_components.join('/')
-      end
+      pool = if path_components.empty?
+               compute_resource.resourcePool
+             else
+               compute_resource.resourcePool.traverse path_components.join('/')
+             end
       raise Puppet::Error, "No resource pool found named #{resource[:resource_pool]}" unless pool
     else
       hosts = datacenter_instance.hostFolder.children
-      raise Puppet::Error, "No resource pool found for default datacenter" if hosts.empty?
+      raise Puppet::Error, 'No resource pool found for default datacenter' if hosts.empty?
       pool = hosts.first.resourcePool
     end
 
     # Use the given datastore by name, or find the first datastore in
     # the destination cluster.
     datastore = if resource[:datastore]
-      datacenter_instance.find_datastore(resource[:datastore])
-    elsif resource[:resource_pool]
-      compute_resource.datastore.first
-    else
-      datastore = datacenter_instance.datastore.first
+                  datacenter_instance.find_datastore(resource[:datastore])
+                elsif resource[:resource_pool]
+                  compute_resource.datastore.first
+                else
+                  datastore = datacenter_instance.datastore.first
     end
     raise Puppet::Error, "No datastore found named #{resource[:datastore]}" unless datastore
     relocate_spec = if is_linked_clone?
-      vm.add_delta_disk_layer_on_all_disks
-      # although we wait for the previous task to complete I was able
-      # to sometimes trigger a race condition. I didn't find a suitable
-      # assertion to make but a small sleep appears to aleviate the issue
-      sleep 5
-      RbVmomi::VIM.VirtualMachineRelocateSpec(:pool => pool, :diskMoveType => :moveChildMostDiskBacking)
-    else
-      RbVmomi::VIM.VirtualMachineRelocateSpec(:pool => pool, :datastore => datastore)
+                      vm.add_delta_disk_layer_on_all_disks
+                      # although we wait for the previous task to complete I was able
+                      # to sometimes trigger a race condition. I didn't find a suitable
+                      # assertion to make but a small sleep appears to aleviate the issue
+                      sleep 5
+                      RbVmomi::VIM.VirtualMachineRelocateSpec(pool: pool, diskMoveType: :moveChildMostDiskBacking)
+                    else
+                      RbVmomi::VIM.VirtualMachineRelocateSpec(pool: pool, datastore: datastore)
     end
 
-    power_on = args[:stopped] == true ? false : true
+    power_on = (args[:stopped] == true) ? false : true
     power_on = false if is_template?
     clone_spec = RbVmomi::VIM.VirtualMachineCloneSpec(
-      :location => relocate_spec,
-      :template => is_template?,
-      :powerOn => power_on)
+      location: relocate_spec,
+      template: is_template?,
+      powerOn: power_on,
+    )
 
     if resource[:customization_spec]
       begin
-        clone_spec.customization = vim.serviceContent.customizationSpecManager.GetCustomizationSpec({name: resource[:customization_spec]}).spec
+        clone_spec.customization = vim.serviceContent.customizationSpecManager.GetCustomizationSpec(name: resource[:customization_spec]).spec
       rescue RbVmomi::Fault => exception
         if exception.message.split(':').first == 'NotFound'
           raise Puppet::Error, "Customization specification #{resource[:customization_spec]} not found"
@@ -298,8 +296,8 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       clone_spec.config.annotation = resource[:annotation] if resource[:annotation] && resource[:annotation] != vm.config.annotation
       @property_hash[:annotation] = resource[:annotation]
       if resource[:extra_config]
-        clone_spec.config.extraConfig = resource[:extra_config].map do |k,v|
-          {:key => k, :value => v}
+        clone_spec.config.extraConfig = resource[:extra_config].map do |k, v|
+          { key: k, value: v }
         end
         @property_hash[:extra_config] = resource[:extra_config].dup
       end
@@ -307,13 +305,14 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
 
     last_progress = 0
     vm.CloneVM_Task(
-      :folder => find_or_create_folder(datacenter_instance.vmFolder, instance.folder),
-      :name => instance.name,
-      :spec => clone_spec).wait_for_progress do |progress|
-        if (progress.is_a? Numeric) && (progress / 10).floor != (last_progress / 10).floor
-          Puppet.info "Progress: #{progress}%"
-          last_progress = progress
-      end
+      folder: find_or_create_folder(datacenter_instance.vmFolder, instance.folder),
+      name: instance.name,
+      spec: clone_spec,
+    ).wait_for_progress do |progress|
+      if (progress.is_a? Numeric) && (progress / 10).floor != (last_progress / 10).floor
+        Puppet.info "Progress: #{progress}%"
+        last_progress = progress
+    end
     end
     Puppet.info 'Done!'
 
@@ -327,10 +326,10 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     base_machine = PuppetX::Puppetlabs::Vsphere::Machine.new(resource[:name])
     template = resource[:template].to_s == 'true' || false
     vm_folder = resource[:source]
-    vm_ext = template ? "vmtx" : "vmx"
+    vm_ext = template ? 'vmtx' : 'vmx'
 
     datastore = datacenter_instance.datastore.first
-    raise Puppet::Error, "No datastore found for default datacenter" unless datastore
+    raise Puppet::Error, 'No datastore found for default datacenter' unless datastore
 
     if resource[:resource_pool]
       compute = datacenter_instance.find_compute_resource(resource[:resource_pool])
@@ -341,17 +340,17 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
       raise Puppet::Error, "No resource pool found for #{resource[:resource_pool]}" unless pool
     else
       hosts = datacenter_instance.hostFolder.children
-      raise Puppet::Error, "No resource pool found for default datacenter" if hosts.empty?
+      raise Puppet::Error, 'No resource pool found for default datacenter' if hosts.empty?
       host = template ? hosts.first.host.first : nil
       pool = template ? nil : hosts.first.resourcePool
     end
 
     folder = find_or_create_folder(datacenter_instance.vmFolder, base_machine.folder)
     folder.RegisterVM_Task(
-      :path       => "[#{datastore.name}] #{vm_folder}/#{vm_folder}.#{vm_ext}",
-      :asTemplate => template,
-      :pool       => pool,
-      :host       => host
+      path: "[#{datastore.name}] #{vm_folder}/#{vm_folder}.#{vm_ext}",
+      asTemplate: template,
+      pool: pool,
+      host: host,
     ).wait_for_completion
   end
 
@@ -365,7 +364,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     }
     manager = vim.serviceContent.guestOperationsManager
     auth = RbVmomi::VIM::NamePasswordAuthentication(machine_credentials)
-    handler = Proc.new do |exception, attempt_number, total_delay|
+    handler = proc do |exception, attempt_number, total_delay|
       Puppet.debug("#{exception.message}; retry attempt #{attempt_number}; #{total_delay} seconds have passed")
       # All exceptions in RbVmomi are RbVmomi::Fault, rather than the actual API exception
       # The actual exceptions come out in the message, so we parse them out
@@ -380,20 +379,20 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
         raise Puppet::Error, 'Remote access is not supported by the guest operating system'
       end
     end
-    arguments = resource[:create_command].has_key?('arguments') ? resource[:create_command]['arguments'] : ''
-    working_directory = resource[:create_command].has_key?('working_directory') ? resource[:create_command]['working_directory'] : '/'
+    arguments = resource[:create_command].key?('arguments') ? resource[:create_command]['arguments'] : ''
+    working_directory = resource[:create_command].key?('working_directory') ? resource[:create_command]['working_directory'] : '/'
 
-    max_tries=resource[:max_tries].to_i unless resource[:max_tries].nil?
+    max_tries = resource[:max_tries].to_i unless resource[:max_tries].nil?
     spec = RbVmomi::VIM::GuestProgramSpec(
       programPath: resource[:create_command]['command'],
       arguments: arguments,
       workingDirectory: working_directory,
     )
-    with_retries(:max_tries => max_tries || 10,
-                 :handler => handler,
-                 :base_sleep_seconds => 5,
-                 :max_sleep_seconds => 15,
-                 :rescue => RbVmomi::Fault) do
+    with_retries(max_tries: max_tries || 10,
+                 handler: handler,
+                 base_sleep_seconds: 5,
+                 max_sleep_seconds: 15,
+                 rescue: RbVmomi::Fault) do
       manager.authManager.ValidateCredentialsInGuest(vm: machine, auth: auth)
       response = manager.processManager.StartProgramInGuest(vm: machine, auth: auth, spec: spec)
       Puppet.info("Ran #{resource[:create_command]['command']}, started with PID #{response}")
@@ -402,19 +401,19 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
 
   # ensure that 'is' has all key/value pairs present in 'should'
   def extra_config_matches?(is, should)
-    Hash[should.keys.collect { |k| [k, is[k]] } ] == should
+    Hash[should.keys.map { |k| [k, is[k]] }] == should
   end
 
   def flush
-    if ! @property_hash.empty? and @property_hash[:flush_reboot]
+    if !@property_hash.empty? && @property_hash[:flush_reboot]
       config_spec = RbVmomi::VIM.VirtualMachineConfigSpec
       config_spec.numCPUs = resource[:cpus] if resource[:cpus]
       config_spec.memoryMB = resource[:memory] if resource[:memory]
       config_spec.annotation = resource[:annotation] if resource[:annotation]
 
       if resource[:extra_config]
-        config_spec.extraConfig = resource[:extra_config].map do |k,v|
-          {:key => k, :value => v}
+        config_spec.extraConfig = resource[:extra_config].map do |k, v|
+          { key: k, value: v }
         end
       end
 
@@ -424,7 +423,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
           Puppet.info("Stopping #{name} to apply configuration changes")
           stop
         end
-        machine.ReconfigVM_Task(:spec => config_spec).wait_for_completion
+        machine.ReconfigVM_Task(spec: config_spec).wait_for_completion
         if do_reboot
           Puppet.info("Starting #{name} after applying configuration changes")
           start
@@ -439,7 +438,7 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
     else
       part = parts.shift
       folder = root.find(part)
-      folder = root.CreateFolder(:name => part) if folder.nil?
+      folder = root.CreateFolder(name: part) if folder.nil?
       find_or_create_folder(folder, parts)
     end
   end
@@ -505,37 +504,38 @@ Puppet::Type.type(:vsphere_vm).provide(:rbvmomi, :parent => PuppetX::Puppetlabs:
   end
 
   private
-    def machine
-      unless @property_hash[:object]
-        benchmark(:debug, "fetched #{instance.local_path} info from vSphere") do
-          vim_machine = datacenter_instance.find_vm(instance.local_path)
-          data = self.class.load_machine_info(vim_machine)
-          machine = data[RbVmomi::VIM::VirtualMachine][vim_machine]
-          hash = self.class.hash_from_machine_data(vim_machine, machine, data)
-          @property_hash[:object] = hash[:object]
-        end
+
+  def machine
+    unless @property_hash[:object]
+      benchmark(:debug, "fetched #{instance.local_path} info from vSphere") do
+        vim_machine = datacenter_instance.find_vm(instance.local_path)
+        data = self.class.load_machine_info(vim_machine)
+        machine = data[RbVmomi::VIM::VirtualMachine][vim_machine]
+        hash = self.class.hash_from_machine_data(vim_machine, machine, data)
+        @property_hash[:object] = hash[:object]
       end
-      raise Puppet::Error, "No virtual machine found at #{instance.local_path}" unless @property_hash[:object]
-      @property_hash[:object]
     end
+    raise Puppet::Error, "No virtual machine found at #{instance.local_path}" unless @property_hash[:object]
+    @property_hash[:object]
+  end
 
-    def instance
-      @instance ||= PuppetX::Puppetlabs::Vsphere::Machine.new(name)
-    end
+  def instance
+    @instance ||= PuppetX::Puppetlabs::Vsphere::Machine.new(name)
+  end
 
-    def is_template?
-      resource[:template].to_s == 'true'
-    end
+  def is_template?
+    resource[:template].to_s == 'true'
+  end
 
-    def is_linked_clone?
-      resource[:linked_clone].to_s == 'true'
-    end
+  def is_linked_clone?
+    resource[:linked_clone].to_s == 'true'
+  end
 
-    def type_name
-      is_template? ? "template" : "machine"
-    end
+  def type_name
+    is_template? ? 'template' : 'machine'
+  end
 
-    def max_tries
-      resource[:max_tries]
-    end
+  def max_tries
+    resource[:max_tries]
+  end
 end

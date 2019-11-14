@@ -3,7 +3,6 @@ require 'spec_helper'
 type_class = Puppet::Type.type(:vsphere_vm)
 
 describe type_class do
-
   let :params do
     [
       :name,
@@ -50,29 +49,29 @@ describe type_class do
     ]
   end
 
-  it 'should have expected properties' do
+  it 'has expected properties' do
     all_properties = properties + read_only_properties
     all_properties.each do |property|
       expect(type_class.properties.map(&:name)).to be_include(property)
     end
   end
 
-  it 'should have expected parameters' do
+  it 'has expected parameters' do
     params.each do |param|
       expect(type_class.parameters).to be_include(param)
     end
   end
 
-  it 'should require a name' do
+  it 'requires a name' do
     expect {
       type_class.new({})
     }.to raise_error(Puppet::Error, 'Title or name must be provided')
   end
 
-  it 'should require the last part of the name to be no more than 80 characters' do
+  it 'requires the last part of the name to be no more than 80 characters' do
     expect {
-      type_class.new({name: '/dc/vm/a-far-too-long-name-with-lots-of-words-in-it-that-apparently-goes-on-for-ever-and-a-day-oh-please-make-it-stop'})
-    }.to raise_error(Puppet::Error, /should be no more than 80 characters/)
+      type_class.new(name: '/dc/vm/a-far-too-long-name-with-lots-of-words-in-it-that-apparently-goes-on-for-ever-and-a-day-oh-please-make-it-stop')
+    }.to raise_error(Puppet::Error, %r{should be no more than 80 characters})
   end
 
   [
@@ -103,111 +102,111 @@ describe type_class do
     end
   end
 
-  it 'should require CPUs to be greater than 0' do
+  it 'requires CPUs to be greater than 0' do
     expect {
       type_class.new({})
     }.to raise_error(Puppet::Error, 'Title or name must be provided')
   end
 
-  it 'should require memory to be greater than 0' do
+  it 'requires memory to be greater than 0' do
     expect {
-      type_class.new({name: 'sample', memory: 0})
-    }.to raise_error(Puppet::Error, /memory should be greater than 0/)
+      type_class.new(name: 'sample', memory: 0)
+    }.to raise_error(Puppet::Error, %r{memory should be greater than 0})
   end
 
-  it 'should require number of cpus to be greater than 0' do
+  it 'requires number of cpus to be greater than 0' do
     expect {
-      type_class.new({name: 'sample', cpus: 0})
-    }.to raise_error(Puppet::Error, /cpus should be greater than 0/)
+      type_class.new(name: 'sample', cpus: 0)
+    }.to raise_error(Puppet::Error, %r{cpus should be greater than 0})
   end
 
-  it 'should support :running as a value to :ensure' do
-    type_class.new(:name => 'sample', :ensure => :running)
+  it 'supports :running as a value to :ensure' do
+    type_class.new(name: 'sample', ensure: :running)
   end
 
-  it 'should support :stopped as a value to :ensure' do
-    type_class.new(:name => 'sample', :ensure => :running)
+  it 'supports :stopped as a value to :ensure' do
+    type_class.new(name: 'sample', ensure: :running)
   end
 
-  it 'should default template to false' do
-    machine = type_class.new(:name => 'sample')
+  it 'defaults template to false' do
+    machine = type_class.new(name: 'sample')
     expect(machine[:template]).to eq(:false)
   end
 
-  it 'should default source_type to vm' do
-    machine = type_class.new(:name => 'sample')
+  it 'defaults source_type to vm' do
+    machine = type_class.new(name: 'sample')
     expect(machine[:source_type]).to eq(:vm)
   end
 
-  it 'should default delete_from_disk to true' do
-    machine = type_class.new(:name => 'sample')
+  it 'defaults delete_from_disk to true' do
+    machine = type_class.new(name: 'sample')
     expect(machine[:delete_from_disk]).to eq(:true)
   end
 
-  it 'should default linked_clone to false' do
-    machine = type_class.new(:name => 'sample')
+  it 'defaults linked_clone to false' do
+    machine = type_class.new(name: 'sample')
     expect(machine[:linked_clone]).to eq(:false)
   end
 
-  it 'should default ensure to present' do
-    machine = type_class.new(:name => 'sample')
+  it 'defaults ensure to present' do
+    machine = type_class.new(name: 'sample')
     expect(machine[:ensure]).to eq(:present)
   end
 
-  it 'should support true as a value to template' do
-    expect{type_class.new(:name => 'sample', :template => true)}.to_not raise_error
+  it 'supports true as a value to template' do
+    expect { type_class.new(name: 'sample', template: true) }.not_to raise_error
   end
 
-  it 'should support false as a value to template' do
-    expect{type_class.new(:name => 'sample', :template => false)}.to_not raise_error
+  it 'supports false as a value to template' do
+    expect { type_class.new(name: 'sample', template: false) }.not_to raise_error
   end
 
-  it 'should require template to be a boolean' do
-    expect{type_class.new(:name => 'sample', :template => 'sample')}.to raise_error
+  it 'requires template to be a boolean' do
+    expect { type_class.new(name: 'sample', template: 'sample') }.to raise_error
   end
 
-  it 'should support vm as a value to source_type' do
-    expect{type_class.new(:name => 'sample', :source_type => 'vm')}.to_not raise_error
+  it 'supports vm as a value to source_type' do
+    expect { type_class.new(name: 'sample', source_type: 'vm') }.not_to raise_error
   end
 
-  it 'should support template as a value to source_type' do
-    expect{type_class.new(:name => 'sample', :source_type => 'template')}.to_not raise_error
+  it 'supports template as a value to source_type' do
+    expect { type_class.new(name: 'sample', source_type: 'template') }.not_to raise_error
   end
 
-  it 'should support folder as a value to source_type' do
-    expect{type_class.new(:name => 'sample', :source_type => 'folder')}.to_not raise_error
+  it 'supports folder as a value to source_type' do
+    expect { type_class.new(name: 'sample', source_type: 'folder') }.not_to raise_error
   end
 
-  it 'should require vm, template, or folder as a value to source_type' do
-    expect{type_class.new(:name => 'sample', :source_type => 'magic')}.to raise_error
+  it 'requires vm, template, or folder as a value to source_type' do
+    expect { type_class.new(name: 'sample', source_type: 'magic') }.to raise_error
   end
 
-  it 'should support true as a value to delete_from_disk' do
-    expect{type_class.new(:name => 'sample', :delete_from_disk => true)}.to_not raise_error
+  it 'supports true as a value to delete_from_disk' do
+    expect { type_class.new(name: 'sample', delete_from_disk: true) }.not_to raise_error
   end
 
-  it 'should support false as a value to delete_from_disk' do
-    expect{type_class.new(:name => 'sample', :delete_from_disk => false)}.to_not raise_error
+  it 'supports false as a value to delete_from_disk' do
+    expect { type_class.new(name: 'sample', delete_from_disk: false) }.not_to raise_error
   end
 
-  it 'should require delete_from_disk to be a boolean' do
-    expect{type_class.new(:name => 'sample', :delete_from_disk => 'sample')}.to raise_error
+  it 'requires delete_from_disk to be a boolean' do
+    expect { type_class.new(name: 'sample', delete_from_disk: 'sample') }.to raise_error
   end
 
-  it 'should support true as a value to linked_clone' do
-    expect{type_class.new(:name => 'sample', :linked_clone => true)}.to_not raise_error
+  it 'supports true as a value to linked_clone' do
+    expect { type_class.new(name: 'sample', linked_clone: true) }.not_to raise_error
   end
 
-  it 'should support false as a value to linked_clone' do
-    expect{type_class.new(:name => 'sample', :linked_clone => false)}.to_not raise_error
+  it 'supports false as a value to linked_clone' do
+    expect { type_class.new(name: 'sample', linked_clone: false) }.not_to raise_error
   end
 
-  it 'should require linked_clone to be a boolean' do
-    expect{type_class.new(:name => 'sample', :linked_clone => 'sample')}.to raise_error
+  it 'requires linked_clone to be a boolean' do
+    expect { type_class.new(name: 'sample', linked_clone: 'sample') }.to raise_error
   end
 
-  it 'should require datastore to be a string' do
-    expect{type_class.new(:name => 'sample', :datastore => true)}.to raise_error
+  it 'requires datastore to be a string' do
+    expect { type_class.new(name: 'sample', datastore: true) }.to raise_error
   end
 
   [
@@ -234,45 +233,43 @@ describe type_class do
     end
   end
 
-  it 'should acknowledge stopped instance to be present' do
-    machine = type_class.new(:name => 'sample', :ensure => :present)
+  it 'acknowledges stopped instance to be present' do
+    machine = type_class.new(name: 'sample', ensure: :present)
     expect(machine.property(:ensure).insync?(:stopped)).to be true
   end
 
   context 'with a full set of properties' do
     before :all do
-      @machine = type_class.new({
-        ensure: :present,
-        name: 'garethr-test',
-        resource_pool: 'general',
-        memory: '1024',
-        cpus: '1',
-        source: '/dc/org/templates/template',
-      })
+      @machine = type_class.new(ensure: :present,
+                                name: 'garethr-test',
+                                resource_pool: 'general',
+                                memory: '1024',
+                                cpus: '1',
+                                source: '/dc/org/templates/template')
     end
 
-    it 'should permit strings for memory' do
+    it 'permits strings for memory' do
       expect(@machine.property(:memory).insync?('1024')).to be true
     end
 
-    it 'should permit integers for memory' do
+    it 'permits integers for memory' do
       expect(@machine.property(:memory).insync?(1024)).to be true
     end
 
-    it 'should permit integers for cpus' do
+    it 'permits integers for cpus' do
       expect(@machine.property(:cpus).insync?(1)).to be true
     end
 
-    it 'should permit strings for cpus' do
+    it 'permits strings for cpus' do
       expect(@machine.property(:cpus).insync?('1')).to be true
     end
 
-    it 'should alias running to present for ensure values' do
+    it 'aliases running to present for ensure values' do
       expect(@machine.property(:ensure).insync?(:running)).to be true
     end
 
     context 'when out of sync' do
-      it 'should report actual state if desired state is present, as present is overloaded' do
+      it 'reports actual state if desired state is present, as present is overloaded' do
         expect(@machine.property(:ensure).change_to_s(:running, :present)).to eq(:running)
       end
 
@@ -284,38 +281,37 @@ describe type_class do
         expect(@machine.property(:ensure).change_to_s(:stopped, :running)).to eq('changed stopped to running')
       end
     end
-
   end
 
-  it 'should prohibit specifying resource pool for templates' do
+  it 'prohibits specifying resource pool for templates' do
     expect {
-      type_class.new({name: 'sample', resource_pool: 'something', template: true})
-    }.to raise_error(Puppet::Error, /Cannot provide the following properties for a template: resource_pool/)
+      type_class.new(name: 'sample', resource_pool: 'something', template: true)
+    }.to raise_error(Puppet::Error, %r{Cannot provide the following properties for a template: resource_pool})
   end
 
-  it 'should prohibit specifying cpu for templates' do
+  it 'prohibits specifying cpu for templates' do
     expect {
-      type_class.new({name: 'sample', cpus: 2, template: true})
-    }.to raise_error(Puppet::Error, /Cannot provide the following properties for a template: cpus/)
+      type_class.new(name: 'sample', cpus: 2, template: true)
+    }.to raise_error(Puppet::Error, %r{Cannot provide the following properties for a template: cpus})
   end
 
-  it 'should prohibit specifying memory for templates' do
+  it 'prohibits specifying memory for templates' do
     expect {
-      type_class.new({name: 'sample', memory: 512, template: true})
-    }.to raise_error(Puppet::Error, /Cannot provide the following properties for a template: memory/)
+      type_class.new(name: 'sample', memory: 512, template: true)
+    }.to raise_error(Puppet::Error, %r{Cannot provide the following properties for a template: memory})
   end
 
-  it 'should report mutiple invalid properties for templates' do
+  it 'reports mutiple invalid properties for templates' do
     expect {
-      type_class.new({name: 'sample', memory: 512, cpus: 2, template: true})
-    }.to raise_error(Puppet::Error, /Cannot provide the following properties for a template: cpus, memory/)
+      type_class.new(name: 'sample', memory: 512, cpus: 2, template: true)
+    }.to raise_error(Puppet::Error, %r{Cannot provide the following properties for a template: cpus, memory})
   end
 
   ['running', 'stopped'].each do |state|
     it "should prohibit specifying ensure as #{state} for templates" do
       expect {
-        type_class.new({name: 'sample', ensure: state, template: true})
-      }.to raise_error(Puppet::Error, /Templates can only be absent or present./)
+        type_class.new(name: 'sample', ensure: state, template: true)
+      }.to raise_error(Puppet::Error, %r{Templates can only be absent or present.})
     end
   end
 
@@ -329,8 +325,8 @@ describe type_class do
           command: '/bin/ps',
           user: 'root',
           password: 'password',
-        }
-     }
+        },
+      }
     end
 
     ['command', 'user', 'password'].each do |key|
@@ -339,7 +335,7 @@ describe type_class do
           config = Marshal.load(Marshal.dump(@config))
           config[:create_command].delete(key.to_sym)
           type_class.new(config)
-        }.to raise_error(Puppet::Error, /for create_command you are missing the following keys: #{key}/)
+        }.to raise_error(Puppet::Error, %r{for create_command you are missing the following keys: #{key}})
       end
     end
   end

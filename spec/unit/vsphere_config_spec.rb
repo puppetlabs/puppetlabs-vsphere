@@ -13,19 +13,19 @@ def nil_environment_variables
 end
 
 def create_config_file(path, config)
-  file_contents = %{
+  file_contents = %(
 vcenter: {
   host: #{config[:host]}
   user: #{config[:user]}
   password: #{config[:password]}
   datacenter: #{config[:datacenter_name]}
 }
-  }
+  )
   File.open(path, 'w') { |f| f.write(file_contents) }
 end
 
 def create_full_config_file(path, config)
-  file_contents = %{
+  file_contents = %(
 vcenter: {
   host: #{config[:host]}
   user: #{config[:user]}
@@ -35,25 +35,24 @@ vcenter: {
   port: #{config[:port]}
   ssl: #{config[:ssl]}
 }
-  }
+  )
   File.open(path, 'w') { |f| f.write(file_contents) }
 end
 
 def create_incomplete_config_file(path, config)
-  file_contents = %{
+  file_contents = %(
 vcenter: {
   host: #{config[:host]}
 }
-  }
+  )
   File.open(path, 'w') { |f| f.write(file_contents) }
 end
-
 
 describe PuppetX::Puppetlabs::VsphereConfig do
   let(:config_file_path) { File.join(Dir.pwd, '.puppet_vsphere.conf') }
 
   context 'with the relevant environment variables set' do
-    let(:config) { PuppetX::Puppetlabs::VsphereConfig.new }
+    let(:config) { described_class.new }
 
     before(:all) do
       @config = {
@@ -75,46 +74,46 @@ describe PuppetX::Puppetlabs::VsphereConfig do
       ENV['VCENTER_INSECURE'] = @config[:insecure]
     end
 
-    it 'should allow for calling default_config_file more than once' do
+    it 'allows for calling default_config_file more than once' do
       config.default_config_file
       expect { config.default_config_file }.not_to raise_error
     end
 
-    it 'should return the host from an ENV variable' do
+    it 'returns the host from an ENV variable' do
       expect(config.host).to eq(@config[:host])
     end
 
-    it 'should return the user from an ENV variable' do
+    it 'returns the user from an ENV variable' do
       expect(config.user).to eq(@config[:user])
     end
 
-    it 'should return the password from an ENV variable' do
+    it 'returns the password from an ENV variable' do
       expect(config.password).to eq(@config[:password])
     end
 
-    it 'should return the datacenter from an ENV variable' do
+    it 'returns the datacenter from an ENV variable' do
       expect(config.datacenter).to eq(@config[:datacenter_name])
     end
 
-    it 'should return the insecure value from an ENV variable' do
+    it 'returns the insecure value from an ENV variable' do
       expect(config.insecure).to eq(@config[:insecure])
     end
 
-    it 'should return the ssl value from an ENV variable' do
+    it 'returns the ssl value from an ENV variable' do
       expect(config.ssl).to eq(@config[:ssl])
     end
 
-    it 'should return the port value from an ENV variable' do
+    it 'returns the port value from an ENV variable' do
       expect(config.port).to eq(@config[:port])
     end
 
-    it 'should set the default config file location to confdir' do
+    it 'sets the default config file location to confdir' do
       expect(File.dirname(config.default_config_file)).to eq(Puppet[:confdir])
     end
   end
 
   context 'without the optional datacenter environment variables set' do
-    let(:config) { PuppetX::Puppetlabs::VsphereConfig.new }
+    let(:config) { described_class.new }
 
     before(:all) do
       nil_environment_variables
@@ -123,25 +122,25 @@ describe PuppetX::Puppetlabs::VsphereConfig do
       ENV['VCENTER_PASSWORD'] = 'password'
     end
 
-    it 'should default datacenter to nil' do
+    it 'defaults datacenter to nil' do
       expect(config.datacenter).to eq(nil)
     end
 
-    it 'should default insecure to true' do
+    it 'defaults insecure to true' do
       expect(config.insecure).to eq(true)
     end
 
-    it 'should default ssl to true' do
+    it 'defaults ssl to true' do
       expect(config.ssl).to eq(true)
     end
 
-    it 'should default port to nil' do
+    it 'defaults port to nil' do
       expect(config.port).to be_nil
     end
   end
 
   context 'with no environment variables and a valid config file with all optional properties' do
-    let(:config) { PuppetX::Puppetlabs::VsphereConfig.new(config_file_path) }
+    let(:config) { described_class.new(config_file_path) }
 
     before(:all) do
       @config = {
@@ -162,37 +161,37 @@ describe PuppetX::Puppetlabs::VsphereConfig do
       File.delete(@path)
     end
 
-    it 'should return the host from the config file' do
+    it 'returns the host from the config file' do
       expect(config.host).to eq(@config[:host])
     end
 
-    it 'should return the user from the config file' do
+    it 'returns the user from the config file' do
       expect(config.user).to eq(@config[:user])
     end
 
-    it 'should return the password from the config file' do
+    it 'returns the password from the config file' do
       expect(config.password).to eq(@config[:password])
     end
 
-    it 'should return the datacenter from the config file' do
+    it 'returns the datacenter from the config file' do
       expect(config.datacenter).to eq(@config[:datacenter_name])
     end
 
-    it 'should return the insecure value from the config file' do
+    it 'returns the insecure value from the config file' do
       expect(config.insecure).to eq(@config[:insecure])
     end
 
-    it 'should return the ssl value from the config file' do
+    it 'returns the ssl value from the config file' do
       expect(config.ssl).to eq(@config[:ssl])
     end
 
-    it 'should return the port value from the config file' do
+    it 'returns the port value from the config file' do
       expect(config.port).to eq(@config[:port])
     end
   end
 
   context 'with no environment variables and a valid config file present' do
-    let(:config) { PuppetX::Puppetlabs::VsphereConfig.new(config_file_path) }
+    let(:config) { described_class.new(config_file_path) }
 
     before(:all) do
       @config = {
@@ -210,31 +209,31 @@ describe PuppetX::Puppetlabs::VsphereConfig do
       File.delete(@path)
     end
 
-    it 'should return the host from the config file' do
+    it 'returns the host from the config file' do
       expect(config.host).to eq(@config[:host])
     end
 
-    it 'should return the user from the config file' do
+    it 'returns the user from the config file' do
       expect(config.user).to eq(@config[:user])
     end
 
-    it 'should return the password from the config file' do
+    it 'returns the password from the config file' do
       expect(config.password).to eq(@config[:password])
     end
 
-    it 'should return the datacenter from the config file' do
+    it 'returns the datacenter from the config file' do
       expect(config.datacenter).to eq(@config[:datacenter_name])
     end
 
-    it 'should default insecure to true' do
+    it 'defaults insecure to true' do
       expect(config.insecure).to eq(true)
     end
 
-    it 'should default ssl to true' do
+    it 'defaults ssl to true' do
       expect(config.ssl).to eq(true)
     end
 
-    it 'should default port to nil' do
+    it 'defaults port to nil' do
       expect(config.port).to be_nil
     end
   end
@@ -244,10 +243,10 @@ describe PuppetX::Puppetlabs::VsphereConfig do
       nil_environment_variables
     end
 
-    it 'should raise a suitable error' do
+    it 'raises a suitable error' do
       expect {
-        PuppetX::Puppetlabs::VsphereConfig.new
-      }.to raise_error(Puppet::Error, /You must provide credentials in either environment variables or a config file/)
+        described_class.new
+      }.to raise_error(Puppet::Error, %r{You must provide credentials in either environment variables or a config file})
     end
   end
 
@@ -258,10 +257,10 @@ describe PuppetX::Puppetlabs::VsphereConfig do
       ENV['VCENTER_PASSWORD'] = nil
     end
 
-    it 'should raise an error about the missing variables' do
+    it 'raises an error about the missing variables' do
       expect {
-        PuppetX::Puppetlabs::VsphereConfig.new
-      }.to raise_error(Puppet::Error, /To use this module you must provide the following settings: user password/)
+        described_class.new
+      }.to raise_error(Puppet::Error, %r{To use this module you must provide the following settings: user password})
     end
   end
 
@@ -279,10 +278,10 @@ describe PuppetX::Puppetlabs::VsphereConfig do
       File.delete(@path)
     end
 
-    it 'should raise an error about the missing variables' do
+    it 'raises an error about the missing variables' do
       expect {
-        PuppetX::Puppetlabs::VsphereConfig.new(@path)
-      }.to raise_error(Puppet::Error, /To use this module you must provide the following settings: user password/)
+        described_class.new(@path)
+      }.to raise_error(Puppet::Error, %r{To use this module you must provide the following settings: user password})
     end
   end
 
@@ -301,11 +300,10 @@ describe PuppetX::Puppetlabs::VsphereConfig do
       File.delete(@path)
     end
 
-    it 'should raise an error about the invalid config file' do
+    it 'raises an error about the invalid config file' do
       expect {
-        PuppetX::Puppetlabs::VsphereConfig.new(config_file_path)
-      }.to raise_error(Puppet::Error, /Your configuration file at .+ is invalid/)
+        described_class.new(config_file_path)
+      }.to raise_error(Puppet::Error, %r{Your configuration file at .+ is invalid})
     end
   end
-
 end

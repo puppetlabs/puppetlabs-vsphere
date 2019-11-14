@@ -8,10 +8,10 @@ shared_context 'a running vm' do
     @name = "MODULES-#{SecureRandom.hex(8)}"
     @path = "/opdx/vm/vsphere-module-testing/#{@name}"
     @config = {
-      :name     => @path,
-      :optional => {
-        :source      => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-        :source_type => :template,
+      name: @path,
+      optional: {
+        source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+        source_type: :template,
       },
     }
     datacenter = @client.datacenter
@@ -19,17 +19,19 @@ shared_context 'a running vm' do
     path.slice!('/opdx/vm')
     template = datacenter.find_vm(path)
     pool = datacenter.hostFolder.children.first.resourcePool
-    relocate_spec = RbVmomi::VIM.VirtualMachineRelocateSpec(:pool => pool)
+    relocate_spec = RbVmomi::VIM.VirtualMachineRelocateSpec(pool: pool)
     clone_spec = RbVmomi::VIM.VirtualMachineCloneSpec(
-      :location => relocate_spec,
-      :powerOn  => true,
-      :template => false)
+      location: relocate_spec,
+      powerOn: true,
+      template: false,
+    )
     clone_spec.config = RbVmomi::VIM.VirtualMachineConfigSpec(deviceChange: [])
     target_folder = datacenter.vmFolder.find('vsphere-module-testing')
     template.CloneVM_Task(
-      :folder => target_folder,
-      :name   => @name,
-      :spec   => clone_spec).wait_for_progress
+      folder: target_folder,
+      name: @name,
+      spec: clone_spec,
+    ).wait_for_progress
 
     @datastore = @client.datacenter.datastore.first
     @machine = @client.get_machine(@path)
@@ -46,53 +48,51 @@ describe 'vsphere_vm' do
 
     before(:all) do
       @unregister_config = {
-        :name     => @path,
-        :ensure   => :absent,
-        :optional => {
-          :delete_from_disk => false,
+        name: @path,
+        ensure: :absent,
+        optional: {
+          delete_from_disk: false,
         },
       }
       PuppetManifest.new(@template, @unregister_config).apply
     end
 
-    it 'should be removed' do
+    it 'is removed' do
       machine = @client.get_machine(@path)
       expect(machine).to be_nil
     end
 
-    it 'should not fail to be applied multiple times' do
+    it 'does not fail to be applied multiple times' do
       success = PuppetManifest.new(@template, @unregister_config).apply[:exit_status].success?
       expect(success).to eq(true)
     end
 
-    it 'should keep the machine\'s vmx file around' do
-      vmx = @datastore.browser.SearchDatastoreSubFolders_Task({:datastorePath => "[#{@datastore.name}] #{@name}", :searchSpec => { :matchPattern => ["#{@name}.vmx"] } }).wait_for_completion
+    it 'keeps the machine\'s vmx file around' do
+      vmx = @datastore.browser.SearchDatastoreSubFolders_Task(datastorePath: "[#{@datastore.name}] #{@name}", searchSpec: { matchPattern: ["#{@name}.vmx"] }).wait_for_completion
       expect(vmx).not_to be_nil
       expect(vmx.first.file.first.path).to eq("#{@name}.vmx")
     end
 
-    it 'should keep the machine\'s vmdk file around' do
-      vmdk = @datastore.browser.SearchDatastoreSubFolders_Task({:datastorePath => "[#{@datastore.name}] #{@name}", :searchSpec => { :matchPattern => ["#{@name}_19.vmdk"] } }).wait_for_completion
+    it 'keeps the machine\'s vmdk file around' do
+      vmdk = @datastore.browser.SearchDatastoreSubFolders_Task(datastorePath: "[#{@datastore.name}] #{@name}", searchSpec: { matchPattern: ["#{@name}_19.vmdk"] }).wait_for_completion
       expect(vmdk).not_to be_nil
       expect(vmdk.first.file.first.path).to eq("#{@name}_19.vmdk")
     end
 
     context 'when looked for using puppet resource' do
       before(:all) do
-        @result = TestExecutor.puppet_resource('vsphere_vm', {:name => @path})
+        @result = TestExecutor.puppet_resource('vsphere_vm', name: @path)
       end
 
-      it 'should not return an error' do
-        expect(@result.stderr).not_to match(/\b/)
+      it 'does not return an error' do
+        expect(@result.stderr).not_to match(%r{\b})
       end
 
-      it 'should report the correct ensure value' do
-        regex = /(ensure)(\s*)(=>)(\s*)('absent')/
+      it 'reports the correct ensure value' do
+        regex = %r{(ensure)(\s*)(=>)(\s*)('absent')}
         expect(@result.stdout).to match(regex)
       end
-
     end
-
   end
 
   describe 'should be able to delete a machine' do
@@ -100,16 +100,16 @@ describe 'vsphere_vm' do
 
     before(:all) do
       @absent_config = {
-        :name     => @path,
-        :ensure   => :absent,
-        :optional => {
-          :delete_from_disk => true,
+        name: @path,
+        ensure: :absent,
+        optional: {
+          delete_from_disk: true,
         },
       }
       PuppetManifest.new(@template, @absent_config).apply
     end
 
-    it 'should be removed' do
+    it 'is removed' do
       @machine = @client.get_machine(@path)
       expect(@machine).to be_nil
     end
@@ -119,32 +119,31 @@ describe 'vsphere_vm' do
       expect(success).to eq(true)
     end
 
-    it 'should have removed the machine\'s vmx file' do
+    it 'has removed the machine\'s vmx file' do
       expect {
-        @datastore.browser.SearchDatastoreSubFolders_Task({:datastorePath => "[#{@datastore.name}] #{@name}", :searchSpec => { :matchPattern => ["#{@name}.vmx"] } }).wait_for_completion
-      }.to raise_error(RbVmomi::Fault, /FileNotFound/)
+        @datastore.browser.SearchDatastoreSubFolders_Task(datastorePath: "[#{@datastore.name}] #{@name}", searchSpec: { matchPattern: ["#{@name}.vmx"] }).wait_for_completion
+      }.to raise_error(RbVmomi::Fault, %r{FileNotFound})
     end
 
-    it 'should have removed the machine\'s vmdk file' do
+    it 'has removed the machine\'s vmdk file' do
       expect {
-        @datastore.browser.SearchDatastoreSubFolders_Task({:datastorePath => "[#{@datastore.name}] #{@name}", :searchSpec => { :matchPattern => ["#{@name}_19.vmdk"] } }).wait_for_completion
-      }.to raise_error(RbVmomi::Fault, /FileNotFound/)
+        @datastore.browser.SearchDatastoreSubFolders_Task(datastorePath: "[#{@datastore.name}] #{@name}", searchSpec: { matchPattern: ["#{@name}_19.vmdk"] }).wait_for_completion
+      }.to raise_error(RbVmomi::Fault, %r{FileNotFound})
     end
 
     context 'when looked for using puppet resource' do
       before(:all) do
-        @result = TestExecutor.puppet_resource('vsphere_vm', {:name => @path})
+        @result = TestExecutor.puppet_resource('vsphere_vm', name: @path)
       end
 
-      it 'should not return an error' do
-        expect(@result.stderr).not_to match(/\b/)
+      it 'does not return an error' do
+        expect(@result.stderr).not_to match(%r{\b})
       end
 
-      it 'should report the correct ensure value' do
-        regex = /(ensure)(\s*)(=>)(\s*)('absent')/
+      it 'reports the correct ensure value' do
+        regex = %r{(ensure)(\s*)(=>)(\s*)('absent')}
         expect(@result.stdout).to match(regex)
       end
     end
-
   end
 end

@@ -45,7 +45,7 @@ def machine_exists?(datacenter, name, path)
   passwd  = ENV['VCENTER_PASSWORD']
 
   vim = RbVmomi::VIM.connect insecure: 'true', host: server, user: userid, password: passwd
-  dc = vim.serviceInstance.find_datacenter(datacenter) or fail "datacenter not found"
+  (dc = vim.serviceInstance.find_datacenter(datacenter)) || raise('datacenter not found')
   vm = dc.find_vm("#{path}/#{name}")
   fail_test "Cannot find the machine: #{name}" unless vm
 end
@@ -107,11 +107,11 @@ def vm_powerstate?(datacenter, name, desired_state)
   userid  = ENV['VCENTER_USER']
   passwd  = ENV['VCENTER_PASSWORD']
 
-  vim   = RbVmomi::VIM.connect insecure: 'true', host: server, user: userid, password: passwd
-  dc    = vim.serviceInstance.find_datacenter(datacenter) or fail "datacenter not found"
-  vm    = dc.find_vm("/eng/integration/vm/#{name}")
+  vim = RbVmomi::VIM.connect insecure: 'true', host: server, user: userid, password: passwd
+  (dc = vim.serviceInstance.find_datacenter(datacenter)) || raise('datacenter not found')
+  vm = dc.find_vm("/eng/integration/vm/#{name}")
   powerState = vm.runtime.powerState
-  fail_test "The current VM power state is '#{powerState}'" unless (powerState == desired_state)
+  fail_test "The current VM power state is '#{powerState}'" unless powerState == desired_state
 end
 
 # Method vm_config?(datacenter, name, fact, desired_config)
@@ -133,17 +133,17 @@ def vm_config?(datacenter, name, fact, desired_config)
   passwd  = ENV['VCENTER_PASSWORD']
 
   vim     = RbVmomi::VIM.connect insecure: 'true', host: server, user: userid, password: passwd
-  dc      = vim.serviceInstance.find_datacenter(datacenter) or fail "datacenter not found"
-  vm      = dc.find_vm("/eng/integration/vm/#{name}")
+  (dc = vim.serviceInstance.find_datacenter(datacenter)) || raise('datacenter not found')
+  vm = dc.find_vm("/eng/integration/vm/#{name}")
   case fact
-    when 'memory_fact'
-      config = vm.summary.config.memorySizeMB
-      fail_test "The current VM memmory is #{config}" unless (config == desired_config)
-    when 'cpu_fact'
-      config = vm.summary.config.numCpu
-      fail_test "The current VM number of CPUs:  #{config}" unless (config == desired_config)
-    else
-      fail_test "Unrecorgnized Config"
+  when 'memory_fact'
+    config = vm.summary.config.memorySizeMB
+    fail_test "The current VM memmory is #{config}" unless config == desired_config
+  when 'cpu_fact'
+    config = vm.summary.config.numCpu
+    fail_test "The current VM number of CPUs:  #{config}" unless config == desired_config
+  else
+    fail_test 'Unrecorgnized Config'
   end
 end
 

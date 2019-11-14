@@ -2,7 +2,7 @@
 # CI task will have its own credentials
 require 'erb'
 
-confine :except, :roles => %w{master dashboard database}
+confine :except, roles: ['master', 'dashboard', 'database']
 
 step 'Exporting credentials'
 server    = ENV['VCENTER_SERVER']
