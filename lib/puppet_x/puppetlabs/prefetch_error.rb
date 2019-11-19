@@ -6,16 +6,16 @@ module PuppetX
     # If we throw something based on StandardError prior to Puppet 4
     # the exception will prevent the prefetch, but the provider will
     # continue to run with incorrect data.
-    class PrefetchError < Exception
-      def initialize(type, message=nil)
+    class PrefetchError < RuntimeError
+      def initialize(type, message = nil)
         @message = message
         @type = type
       end
 
       # Prefetch Error
       def to_s
-        """Puppet detected a problem with the information returned from vSphere when accessing #{@type}. The specific error was:
-#{@message}"""
+        ''"Puppet detected a problem with the information returned from vSphere when accessing #{@type}. The specific error was:
+#{@message}"''
       end
     end
   end

@@ -12,12 +12,12 @@ describe 'vsphere_machine' do
     @name = "MODULES-#{SecureRandom.hex(8)}"
     @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
     @config = {
-      :name     => @path,
-      :ensure   => :present,
-      :optional => {
-        :source             => source,
-        :source_type        => :template,
-        :customization_spec => customization_spec,
+      name: @path,
+      ensure: :present,
+      optional: {
+        source: source,
+        source_type: :template,
+        customization_spec: customization_spec,
       },
     }
     @template = 'machine.pp.tmpl'
@@ -25,8 +25,8 @@ describe 'vsphere_machine' do
   end
 
   [
-    [ 'ubuntu-16.04-x86_64', 'MODULES-test-linux' ],
-    [ 'win-2012r2-x86_64', 'MODULES-test-windows' ],
+    ['ubuntu-16.04-x86_64', 'MODULES-test-linux'],
+    ['win-2012r2-x86_64', 'MODULES-test-windows'],
   ].each do |template, spec|
     context "when cloning #{template} using the #{spec} customization specification" do
       before(:all) do
@@ -37,15 +37,14 @@ describe 'vsphere_machine' do
         @client.destroy_machine(@path)
       end
 
-      it 'should create a VM with the hostname set to the value from the customization spec' do
+      it 'creates a VM with the hostname set to the value from the customization spec' do
         # The large timeout is to account for the installation time of the Windows 2012 VM
         hostname = with_retries(max_tries: 60,
-                     max_sleep_seconds: 60,
-                     rescue: NotFinished,
-                    ) do
+                                max_sleep_seconds: 60,
+                                rescue: NotFinished) do
           machine = @client.get_machine(@path)
           hostname = machine.summary.guest.hostName
-          raise NotFinished.new unless hostname == 'MODULES-custom' # Windows host has a non-empty hostname from the template
+          raise NotFinished unless hostname == 'MODULES-custom' # Windows host has a non-empty hostname from the template
           hostname
         end
         expect(hostname).to eq('MODULES-custom')

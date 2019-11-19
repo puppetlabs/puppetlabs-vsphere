@@ -4,11 +4,10 @@ require 'rbvmomi'
 require 'retries'
 
 # This exception is used to signal expected continuations when waiting for events on the vCenter
-class NotFinished < Exception
+class NotFinished < RuntimeError
 end
 
 class PuppetManifest < Mustache
-
   def initialize(file, config)
     @template_file = File.join(Dir.getwd, 'spec', 'acceptance', 'fixtures', file)
     config.each do |key, value|
@@ -19,11 +18,11 @@ class PuppetManifest < Mustache
   end
 
   def apply
-    manifest = self.render.gsub("\n", '')
+    manifest = render.delete("\n")
     cmd = "bundle exec puppet apply --detailed-exitcodes -e \"#{manifest}\" --modulepath spec/fixtures/modules --libdir lib --debug"
     result = { output: [], exit_status: nil }
 
-    Open3.popen2e(cmd) do |stdin, stdout_err, wait_thr|
+    Open3.popen2e(cmd) do |_stdin, stdout_err, wait_thr|
       while line = stdout_err.gets
         result[:output].push(line)
         puts line
@@ -48,7 +47,7 @@ class PuppetManifest < Mustache
   # returns an array of :k =>, :v => hashes given a Hash
   # { :a => 'b', :c => 'd' } -> [{:k => 'a', :v => 'b'}, {:k => 'c', :v => 'd'}]
   def self.to_generalized_hash_list(hash)
-    hash.map { |k, v| { :k => k, :v => v }}
+    hash.map { |k, v| { k: k, v: v } }
   end
 
   # necessary to build like [{ :values => Array }] rather than [[]] when there
@@ -58,14 +57,13 @@ class PuppetManifest < Mustache
     arr.map do |item|
       if item.class == Hash
         {
-          :values => to_generalized_hash_list(item)
+          values: to_generalized_hash_list(item),
         }
       else
         item
       end
     end
   end
-
 end
 
 class VsphereHelper
@@ -110,14 +108,13 @@ class VsphereHelper
     auth = RbVmomi::VIM::NamePasswordAuthentication(machine_credentials)
     with_retries(max_tries: 10,
                  max_sleep_seconds: 10,
-                 rescue: NotFinished,
-                ) do
+                 rescue: NotFinished) do
       begin
         manager.authManager.ValidateCredentialsInGuest(vm: machine, auth: auth)
         manager.processManager.ListProcessesInGuest(vm: machine, auth: auth)
       rescue RbVmomi::Fault => exception
         if exception.message.split(':').first == 'GuestOperationsUnavailable'
-          raise NotFinished.new
+          raise NotFinished
         else
           raise
         end
@@ -133,28 +130,26 @@ class VsphereHelper
     pid = manager.processManager.StartProgramInGuest(vm: machine, auth: auth, spec: { programPath: program_path, arguments: arguments })
     with_retries(max_tries: 10,
                  max_sleep_seconds: 10,
-                 rescue: NotFinished,
-                ) do
+                 rescue: NotFinished) do
       info = manager.processManager.ListProcessesInGuest(vm: machine, auth: auth, pids: [pid]).first
-      raise NotFinished.new unless info.exitCode
+      raise NotFinished unless info.exitCode
       info
     end
   end
 end
 
 class TestExecutor
-
   def self.shell(cmd)
-    Open3.popen3(cmd) do |stdin, stdout, stderr, wait_thr|
+    Open3.popen3(cmd) do |_stdin, stdout, stderr, wait_thr|
       @out = read_stream(stdout)
       @error = read_stream(stderr)
-      @code = /(exit)(\s)(\d+)/.match(wait_thr.value.to_s)[3]
+      @code = %r{(exit)(\s)(\d+)}.match(wait_thr.value.to_s)[3]
     end
     TestExecutor::Response.new(@out, @error, @code, cmd)
   end
 
   def self.read_stream(stream)
-    result = String.new
+    result = ''
     while line = stream.gets
       result << line if line.class == String
       puts line
@@ -168,12 +163,12 @@ class TestExecutor
   def self.puppet_resource(resource, opts = {}, command_flags = '')
     raise 'A name for the resource must be specified' unless opts[:name]
     cmd = "puppet resource #{resource} "
-    options = String.new
-    opts.each do |k,v|
+    options = ''
+    opts.each do |k, v|
       if k.to_s == 'name'
         @name = v
       else
-        options << "#{k.to_s}=#{v.to_s} "
+        options << "#{k}=#{v} "
       end
     end
     cmd << "#{@name} "
@@ -183,7 +178,6 @@ class TestExecutor
     response = shell(cmd)
     response
   end
-
 end
 
 class TestExecutor::Response
@@ -195,5 +189,4 @@ class TestExecutor::Response
     @exit_code = exit
     @command = cmd
   end
-
 end

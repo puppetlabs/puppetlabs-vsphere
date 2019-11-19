@@ -1,4 +1,4 @@
-test_name "QA-1912 - C64678 - Install vSphere module dependencies"
+test_name 'QA-1912 - C64678 - Install vSphere module dependencies'
 
 agents.each do |agent|
   path = if agent.file_exist?("#{agent['privatebindir']}/gem")
