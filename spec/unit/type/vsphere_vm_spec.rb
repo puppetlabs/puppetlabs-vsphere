@@ -280,32 +280,32 @@ describe type_class do
   it 'prohibits specifying resource pool for templates' do
     expect {
       type_class.new(name: 'sample', resource_pool: 'something', template: true)
-    }.to raise_error(Puppet::Error, %r{Cannot provide the following properties for a template: resource_pool})
+    }.to raise_error(RuntimeError, %r{Cannot provide the following properties for a template: resource_pool})
   end
 
   it 'prohibits specifying cpu for templates' do
     expect {
       type_class.new(name: 'sample', cpus: 2, template: true)
-    }.to raise_error(Puppet::Error, %r{Cannot provide the following properties for a template: cpus})
+    }.to raise_error(RuntimeError, %r{Cannot provide the following properties for a template: cpus})
   end
 
   it 'prohibits specifying memory for templates' do
     expect {
       type_class.new(name: 'sample', memory: 512, template: true)
-    }.to raise_error(Puppet::Error, %r{Cannot provide the following properties for a template: memory})
+    }.to raise_error(RuntimeError, %r{Cannot provide the following properties for a template: memory})
   end
 
   it 'reports mutiple invalid properties for templates' do
     expect {
       type_class.new(name: 'sample', memory: 512, cpus: 2, template: true)
-    }.to raise_error(Puppet::Error, %r{Cannot provide the following properties for a template: cpus, memory})
+    }.to raise_error(RuntimeError, %r{Cannot provide the following properties for a template: cpus, memory})
   end
 
   ['running', 'stopped'].each do |state|
     it "should prohibit specifying ensure as #{state} for templates" do
       expect {
         type_class.new(name: 'sample', ensure: state, template: true)
-      }.to raise_error(Puppet::Error, %r{Templates can only be absent or present.})
+      }.to raise_error(RuntimeError, %r{Templates can only be absent or present.})
     end
   end
 
