@@ -26,7 +26,8 @@ describe 'vsphere_machine' do
 
   [
     ['ubuntu-16.04-x86_64', 'MODULES-test-linux'],
-    ['win-2012r2-x86_64', 'MODULES-test-windows'],
+    # IAC-568: Issues applying the customization spec to Windows VMs; will re-enable once IAC-568 is resolved.
+    # ['win-2012r2-x86_64', 'MODULES-test-windows'],
   ].each do |template, spec|
     context "when cloning #{template} using the #{spec} customization specification" do
       before(:all) do
@@ -38,8 +39,7 @@ describe 'vsphere_machine' do
       end
 
       it 'creates a VM with the hostname set to the value from the customization spec' do
-        # The large timeout is to account for the installation time of the Windows 2012 VM
-        hostname = with_retries(max_tries: 60,
+        hostname = with_retries(max_tries: 20,
                                 max_sleep_seconds: 60,
                                 rescue: NotFinished) do
           machine = @client.get_machine(@path)

@@ -1,9 +1,0 @@
-vsphere_vm { '<%= path %>':
-  ensure          => <%= status %>,
-  source          => '<%= source_path %>',
-  memory          => '<%= memory %>',
-  cpus            =>  '<%= cpus %>',
-  template        => '<%= is_template %>',
-  annotation      => '<%= annotation %>',
-  max_tries       => '<%= max_tries%>'
-}

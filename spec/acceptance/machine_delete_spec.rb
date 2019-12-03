@@ -63,8 +63,9 @@ describe 'vsphere_vm' do
     end
 
     it 'does not fail to be applied multiple times' do
-      success = PuppetManifest.new(@template, @unregister_config).apply[:exit_status].success?
-      expect(success).to eq(true)
+      result = PuppetManifest.new(@template, @unregister_config).idempotent_apply
+      successful_exit_code = [0, 2].include? result.exit_code.to_i
+      expect(successful_exit_code).to eq(true)
     end
 
     it 'keeps the machine\'s vmx file around' do
@@ -115,8 +116,7 @@ describe 'vsphere_vm' do
     end
 
     it 'and should not fail to be applied multiple times' do
-      success = PuppetManifest.new(@template, @absent_config).apply[:exit_status].success?
-      expect(success).to eq(true)
+      PuppetManifest.new(@template, @absent_config).idempotent_apply
     end
 
     it 'has removed the machine\'s vmx file' do

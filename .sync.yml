@@ -1,9 +1,15 @@
 ---
 appveyor.yml:
   delete: true
+".gitlab-ci.yml":
+  delete: true
 ".travis.yml":
+  stages:
+    - static
+    - spec
   deploy_to_forge:
     enabled: false
+  simplecov: true
   docker_sets: []
   notifications:
     slack:
@@ -16,8 +22,11 @@ Gemfile:
     ":development":
     - gem: rbvmomi
     - gem: hocon
+    - gem: retries
+    - gem: github_changelog_generator
+      git: https://github.com/skywinder/github-changelog-generator
+      ref: 20ee04ba1234e9e83eb2ffb5056e23d641c7a018
+      condition: Gem::Version.new(RUBY_VERSION.dup) >= Gem::Version.new('2.2.2')
     ":acceptance":
     - gem: mustache
       version: 0.99.8
-LICENSE:
-  license_type: puppetpe
