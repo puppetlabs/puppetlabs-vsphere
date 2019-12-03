@@ -1,5 +1,6 @@
 require 'spec_helper_acceptance'
 require 'securerandom'
+require 'spec_helper_local'
 
 shared_context 'a running vm' do
   before(:all) do

@@ -1,5 +1,6 @@
 require 'spec_helper_acceptance'
 require 'securerandom'
+require 'spec_helper_local'
 
 # This set of tests requires two manually configured customization specifications on the target vCenter installation.
 # They need to be called "MODULES-test-linux" and "MODULES-test-windows" respectively for the Linux and Windows
@@ -40,7 +41,7 @@ describe 'vsphere_machine' do
       it 'creates a VM with the hostname set to the value from the customization spec' do
         # The large timeout is to account for the installation time of the Windows 2012 VM
         hostname = with_retries(max_tries: 60,
-                                max_sleep_seconds: 60,
+                                max_sleep_seconds: 160,
                                 rescue: NotFinished) do
           machine = @client.get_machine(@path)
           hostname = machine.summary.guest.hostName

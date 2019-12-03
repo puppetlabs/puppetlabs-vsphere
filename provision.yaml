@@ -1,0 +1,13 @@
+---
+default:
+  provisioner: docker
+  images: ['centos:7']
+travis_deb:
+  provisioner: docker
+  images: ['debian:8', 'debian:10', 'ubuntu:16.04', 'ubuntu:18.04']
+travis_el:
+  provisioner: docker
+  images: ['centos:6', 'oraclelinux:6', 'scientificlinux/sl:6', 'centos:7', 'oraclelinux:7', 'scientificlinux/sl:7']
+release_checks:
+  provisioner: vmpooler
+  images: ['ubuntu-1604-x86_64']

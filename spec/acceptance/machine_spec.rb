@@ -1,4 +1,5 @@
 require 'spec_helper_acceptance'
+require 'spec_helper_local'
 require 'securerandom'
 
 describe 'vsphere_vm' do

@@ -3,6 +3,7 @@ appveyor.yml:
   delete: true
 .travis.yml:
   docker_sets: []
+  unmanaged: true
 .rubocop.yml:
   include_todos: true
 
