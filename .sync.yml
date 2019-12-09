@@ -2,6 +2,8 @@
 appveyor.yml:
   delete: true
 .travis.yml:
+  deploy_to_forge:
+    enabled: false
   docker_sets: []
 .rubocop.yml:
   include_todos: true
