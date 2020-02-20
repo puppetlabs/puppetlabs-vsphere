@@ -62,9 +62,9 @@ module Beaker
 end
 
 PE_RELEASES = {
-  '3.8.3' => 'http://pe-releases.puppetlabs.lan/3.8.3/',
-  '2015.2' => 'http://pe-releases.puppetlabs.lan/2015.2.3/',
-  '2015.3' => 'http://pe-releases.puppetlabs.lan/2015.3.0/',
+  '3.8.3' => 'https://artifactory.delivery.puppetlabs.net/artifactory/generic_enterprise__local/archives/releases/3.8.3/',
+  '2015.2' => 'https://artifactory.delivery.puppetlabs.net/artifactory/generic_enterprise__local/archives/releases/2015.2.3/',
+  '2015.3' => 'https://artifactory.delivery.puppetlabs.net/artifactory/generic_enterprise__local/archives/releases/2015.3.0/',
 }.freeze
 
 namespace :integration do
