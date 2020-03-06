@@ -60,8 +60,9 @@ describe 'vsphere_vm' do
     end
 
     it 'and should not fail to be applied multiple times' do
-      success = PuppetManifest.new(@template, @config).apply[:exit_status].success?
-      expect(success).to eq(true)
+      result = PuppetManifest.new(@template, @config).idempotent_apply
+      successful_exit_code = [0, 2].include? result.exit_code.to_i
+      expect(successful_exit_code).to eq(true)
     end
 
     context 'when looked for using puppet resource' do
@@ -151,40 +152,40 @@ describe 'vsphere_vm' do
 
   # Test cannot be run as our vCenter licence does not support creating resource pools
   # FM-8635: Commenting out all test steps
-  it 'is able to create a machine within a nested resource pool' do
-    pending('FM-8635: Test cannot be run as our vCenter licence does not support creating resource pools')
-    raise
-    #   before(:all) do
-    #     @name = "MODULES-#{SecureRandom.hex(8)}"
-    #     @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
-    #     @config = {
-    #       :name     => @path,
-    #       :ensure   => 'present',
-    #       :optional => {
-    #         :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
-    #         :source_type   => :template,
-    #         :resource_pool => '/acceptance1/Resources',
-    #         :memory        => 512,
-    #         :cpus          => 1,
-    #       }
-    #     }
-    #     PuppetManifest.new(@template, @config).apply
-    #     @machine = @client.get_machine(@path)
-    #   end
+  # it 'is able to create a machine within a nested resource pool' do
+  #   pending('FM-8635: Test cannot be run as our vCenter licence does not support creating resource pools')
+  #   raise
+  #     before(:all) do
+  #       @name = "MODULES-#{SecureRandom.hex(8)}"
+  #       @path = "/opdx/vm/vsphere-module-testing/eng/tests/#{@name}"
+  #       @config = {
+  #         :name     => @path,
+  #         :ensure   => 'present',
+  #         :optional => {
+  #           :source        => '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
+  #           :source_type   => :template,
+  #           :resource_pool => '/acceptance1/Resources',
+  #           :memory        => 512,
+  #           :cpus          => 1,
+  #         }
+  #       }
+  #       PuppetManifest.new(@template, @config).apply
+  #       @machine = @client.get_machine(@path)
+  #     end
 
-    #   after(:all) do
-    #     @client.destroy_machine(@path)
-    #   end
+  #     after(:all) do
+  #       @client.destroy_machine(@path)
+  #     end
 
-    #   it 'with the specified name' do
-    #     expect(@machine.name).to eq(@name)
-    #   end
+  #     it 'with the specified name' do
+  #       expect(@machine.name).to eq(@name)
+  #     end
 
-    #   it 'should report the correct resource_pool value' do
-    #     regex = /(resource_pool)(\s*)(=>)(\s*)('#{@config[:optional][:resource_pool]}')/
-    #     expect(@result.stdout).to match(regex)
-    #   end
-  end
+  #     it 'should report the correct resource_pool value' do
+  #       regex = /(resource_pool)(\s*)(=>)(\s*)('#{@config[:optional][:resource_pool]}')/
+  #       expect(@result.stdout).to match(regex)
+  #     end
+  # end
 
   describe 'should be able to create a machine from another machine' do
     before(:all) do
@@ -696,7 +697,7 @@ describe 'vsphere_vm' do
             password: 'invalid',
           },
         }
-        @apply = PuppetManifest.new(@template, @config).apply
+        @apply = PuppetManifest.new(@template, @config).apply(expect_failures: true)
       end
 
       after(:all) do
@@ -708,12 +709,12 @@ describe 'vsphere_vm' do
       end
 
       it 'fails to apply successfully' do
-        success = @apply[:exit_status].success?
-        expect(success).to eq(false)
+        successful_exit_code = [0, 2].include? @apply.exit_code.to_i
+        expect(successful_exit_code).to eq(false)
       end
 
       it 'reports the incorrect credentials' do
-        expect(@apply[:output].map { |i| i.include? 'InvalidGuestLogin: Failed to authenticate with the guest operating system using the supplied credentials' }.include?(true)).to eq(true)
+        expect(@apply.stderr.include?('Incorrect credentials for the guest machine')).to eq(true)
       end
     end
   end
@@ -730,7 +731,7 @@ describe 'vsphere_vm' do
             source: '/opdx/vm/vsphere-module-testing/eng/templates/superdupercomputer-x10000',
           },
         }
-        @apply = PuppetManifest.new(@template, @config).apply
+        @apply = PuppetManifest.new(@template, @config).apply(expect_failures: true)
       end
 
       it 'does not create a machine' do
@@ -738,12 +739,12 @@ describe 'vsphere_vm' do
       end
 
       it 'fails to apply successfully' do
-        success = @apply[:exit_status].success?
-        expect(success).to eq(false)
+        successful_exit_code = [0, 2].include? @apply.exit_code.to_i
+        expect(successful_exit_code).to eq(false)
       end
 
       it 'reports the problem' do
-        expect(@apply[:output].map { |i| i.include? 'No machine found at /vsphere-module-testing/eng/templates/superdupercomputer-x10000' }.include?(true)).to eq(true)
+        expect(@apply.stderr.include?('No machine found at /vsphere-module-testing/eng/templates/superdupercomputer-x10000')).to eq(true)
       end
     end
 
@@ -755,7 +756,7 @@ describe 'vsphere_vm' do
           name: @path,
           ensure: 'present',
         }
-        @apply = PuppetManifest.new(@template, @config).apply
+        @apply = PuppetManifest.new(@template, @config).apply(expect_failures: true)
       end
 
       it 'does not create a machine' do
@@ -763,12 +764,12 @@ describe 'vsphere_vm' do
       end
 
       it 'fails to apply successfully' do
-        success = @apply[:exit_status].success?
-        expect(success).to eq(false)
+        successful_exit_code = [0, 2].include? @apply.exit_code.to_i
+        expect(successful_exit_code).to eq(false)
       end
 
       it 'reports the problem' do
-        expect(@apply[:output].map { |i| i.include? 'Must provide a source machine, template or datastore folder to base the machine on' }.include?(true)).to eq(true)
+        expect(@apply.stderr.include?('Must provide a source machine, template or datastore folder to base the machine on')).to eq(true)
       end
     end
 
@@ -784,7 +785,7 @@ describe 'vsphere_vm' do
             source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           },
         }
-        @apply = PuppetManifest.new(@template, @config).apply
+        @apply = PuppetManifest.new(@template, @config).apply(expect_failures: true)
       end
 
       it 'does not create a machine' do
@@ -792,12 +793,12 @@ describe 'vsphere_vm' do
       end
 
       it 'fails to apply successfully' do
-        success = @apply[:exit_status].success?
-        expect(success).to eq(false)
+        successful_exit_code = [0, 2].include? @apply.exit_code.to_i
+        expect(successful_exit_code).to eq(false)
       end
 
       it 'reports the problem' do
-        expect(@apply[:output].map { |i| i.include? "No compute resource found named #{@config[:optional][:resource_pool]}" }.include?(true)).to eq(true)
+        expect(@apply.stderr.include?("No compute resource found named #{@config[:optional][:resource_pool]}")).to eq(true)
       end
     end
 
@@ -813,7 +814,7 @@ describe 'vsphere_vm' do
             source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           },
         }
-        @apply = PuppetManifest.new(@template, @config).apply
+        @apply = PuppetManifest.new(@template, @config).apply(expect_failures: true)
       end
 
       it 'does not create a machine' do
@@ -821,12 +822,12 @@ describe 'vsphere_vm' do
       end
 
       it 'fails to apply successfully' do
-        success = @apply[:exit_status].success?
-        expect(success).to eq(false)
+        successful_exit_code = [0, 2].include? @apply.exit_code.to_i
+        expect(successful_exit_code).to eq(false)
       end
 
       it 'reports the problem' do
-        expect(@apply[:output].map { |i| i.include? "No resource pool found named #{@config[:optional][:resource_pool]}" }.include?(true)).to eq(true)
+        expect(@apply.stderr.include?("No resource pool found named #{@config[:optional][:resource_pool]}")).to eq(true)
       end
     end
 
@@ -842,7 +843,7 @@ describe 'vsphere_vm' do
             source: '/opdx/vm/vsphere-module-testing/eng/templates/debian-8-x86_64',
           },
         }
-        @apply = PuppetManifest.new(@template, @config).apply
+        @apply = PuppetManifest.new(@template, @config).apply(expect_failures: true)
       end
 
       it 'does not create a machine' do
@@ -850,12 +851,12 @@ describe 'vsphere_vm' do
       end
 
       it 'fails to apply successfully' do
-        success = @apply[:exit_status].success?
-        expect(success).to eq(false)
+        successful_exit_code = [0, 2].include? @apply.exit_code.to_i
+        expect(successful_exit_code).to eq(false)
       end
 
       it 'reports the problem' do
-        expect(@apply[:output].map { |i| i.include? 'uuid is read-only and is only available via puppet resource.' }.include?(true)).to eq(true)
+        expect(@apply.stderr.include?('uuid is read-only and is only available via puppet resource.')).to eq(true)
       end
     end
 
@@ -871,7 +872,7 @@ describe 'vsphere_vm' do
             template: true,
           },
         }
-        @apply = PuppetManifest.new(@template, @config).apply
+        @apply = PuppetManifest.new(@template, @config).apply(expect_failures: true)
       end
 
       it 'does not create a template' do
@@ -879,12 +880,12 @@ describe 'vsphere_vm' do
       end
 
       it 'fails to apply successfully' do
-        success = @apply[:exit_status].success?
-        expect(success).to eq(false)
+        successful_exit_code = [0, 2].include? @apply.exit_code.to_i
+        expect(successful_exit_code).to eq(false)
       end
 
       it 'reports the problem' do
-        expect(@apply[:output].map { |i| i.include? 'No machine found at /vsphere-module-testing/eng/templates/invalid' }.include?(true)).to eq(true)
+        expect(@apply.stderr.include?('No machine found at /vsphere-module-testing/eng/templates/invalid')).to eq(true)
       end
     end
   end

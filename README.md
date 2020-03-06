@@ -24,28 +24,28 @@ Status](https://travis-ci.com/puppetlabs/puppetlabs-vsphere.svg?token=eSG6MMwAUK
 7. [Development](#development)
 8. [Known Issues](#known-issues)
 
-## Overview
+# Overview
 
 VMware vSphere is a cloud computing virtualization platform.
 
-## Module Description
+# Module Description
 
 The vSphere module allows you to manage vSphere machines using Puppet.
 
-## Setup
+# Setup
 
-### Requirements
+## Requirements
 
 * Puppet Enterprise 3.7 or greater
 * Ruby 1.9 or greater
 * Rbvmomi Ruby gem 1.8 or greater
-* vSphere 5.5
+* vSphere 5.5 - 6.7
 
-### Installing the vSphere module
+## Installing the vSphere module
 
 The following are *dependencies* of the module. Install these on the system which you configure the module on. For example, in a master-agent setup, install the dependencies on the agent.
 
-#### On Debian 7 and 8, Ubuntu 14.04 LTS, and similar
+### On Debian 7 and 8, Ubuntu 14.04 LTS, and similar
 
 1. Install the required dependencies:
 
@@ -56,15 +56,15 @@ The following are *dependencies* of the module. Install these on the system whic
 
   On RHEL 6 and 7, CentOS, and similar
   ```
-  yum install zlib-devel libxslt-devel patch gcc
+  yum install zlib-devel libxslt-devel patch gc gcc-c++ kernel-devel make
   ```
 
 2. Install the required gems with this command:
 
   ```
-  /opt/puppet/bin/gem install rbvmomi --no-ri --no-rdoc
-  /opt/puppet/bin/gem install hocon --version='~>1.0.0' --no-ri --no-rdoc
-  ```
+  /opt/puppetlabs/puppet/bin/gem rbvmomi --no-ri --no-rdoc
+  /opt/puppetlabs/puppet/bin/gem hocon --version='~>1.0.0' --no-ri --no-rdoc
+  ``` 
 
   If you are running Puppet Enterprise 2015.2.0 you need to use the updated path:
 
@@ -75,7 +75,16 @@ The following are *dependencies* of the module. Install these on the system whic
 
 **Note:** Example pins the hocon gem version to prevent possible incompatibilities.
 
-#### Configuring credentials
+#### Special Case for RHEL 7.x dervied Docker containers
+It may be necessary to install the `nokogiri` gem first, **BEFORE** the `rbvmomi` and `hocon` gems.
+It has been observed on RHEL 7.x derived OS Docker containers that the `nokogiri` gem installation fails if it is installed as part of the dependency resolution for the `rbvmomi` or `hocon` gems:
+```
+  /opt/puppetlabs/puppet/bin/gem install nokogiri --no-ri --no-rdoc
+  /opt/puppetlabs/puppet/bin/gem rbvmomi --no-ri --no-rdoc
+  /opt/puppetlabs/puppet/bin/gem hocon --version='~>1.0.0' --no-ri --no-rdoc
+```
+
+### Configuring credentials
 
 1. Set the following environment variables specific to your vSphere installation:
 
@@ -147,7 +156,7 @@ The following are *dependencies* of the module. Install these on the system whic
   `puppet module install puppetlabs-vsphere`
 
 
-### Getting started with vSphere
+## Getting started with vSphere
 
 This module allows for describing a vSphere machine using the Puppet
 DSL. To create a new machine from a template or other machine and keep it
@@ -181,9 +190,9 @@ vsphere_vm { '/opdx1/vm/eng/sample':
 ```
 
 
-## Usage
+# Usage
 
-### List and manage vSphere machines
+## List and manage vSphere machines
 
 In addition to creating new machines, as above, this module supports listing and managing machines via `puppet resource`:
 
@@ -216,7 +225,7 @@ vsphere_vm { '/opdx1/vm/eng/sample':
 
 The read-only properties are documented in the reference section below.
 
-### Customize vSphere machines
+## Customize vSphere machines
 
 You can customize vSphere machines using the Puppet DSL. Note that customizing a running vSphere machine reboots the machine.
 
@@ -233,7 +242,7 @@ vsphere_vm { '/opdx1/vm/eng/sample':
 }
 ```
 
-### Create linked clones
+## Create linked clones
 
 You can also specify that a newly launched machine should be a linked clone. Linked clones share a disk with the source machine.
 
@@ -245,7 +254,7 @@ vsphere_vm { '/opdx1/vm/eng/sample':
 }
 ```
 
-### Delete vSphere machines
+## Delete vSphere machines
 
 You can also delete the machine we created above by setting the `ensure`
 property to `absent` in the manifest or using `puppet resouce` like so:
@@ -259,7 +268,7 @@ and disk files in place, you can set `ensure` to `unregistered`:
 
 Please note that the module currently provides no mechanism to clean up the files left behind by this operation.
 
-### Purge unmanaged virtual machines
+## Purge unmanaged virtual machines
 
 If you are using Puppet as the only tool to manage the machines in your
 vSphere installation, you can have Puppet automatically delete any
@@ -308,7 +317,7 @@ Debug: Storing state
 Debug: Stored state in 0.43 seconds
 ```
 
-### A note on datacenters
+## A note on datacenters
 
 By default, this module uses the default datacenter for your installation. If this fails or if you have multiple virtual datacenters on vSphere, you can specify which datacenter you are managing using the `VCENTER_DATACENTER` environment variable like so:
 
@@ -320,17 +329,19 @@ If the datacenter is nested within folders (groups) in vSphere, specify the full
 
 `export VCENTER_DATACENTER=Australia/Perth/DC1`
 
-## Reference
+# Reference
 
 For information on the classes and types, see the [REFERENCE.md](https://github.com/puppetlabs/puppetlabs-vsphere/blob/master/REFERENCE.md).
 
-## Limitations
+# Limitations
 
 For an extensive list of supported operating systems, see [metadata.json](https://github.com/puppetlabs/puppetlabs-vsphere/blob/master/metadata.json)
 
 The vSphere module is only available for Puppet Enterprise 3.7 and later. This module has been tested with vSphere 5.5.
 
-## Development
+# Development
+
+To run the acceptance tests follow the instructions [here](https://github.com/puppetlabs/puppet_litmus/wiki/Tutorial:-use-Litmus-to-execute-acceptance-tests-with-a-sample-module-(MoTD)#install-the-necessary-gems-for-the-module).
 
 This module was built by Puppet Labs specifically for use with Puppet Enterprise (PE).
 Puppet modules on the Puppet Forge are open projects, and community contributions are essential for keeping them great. To contribute to Puppet projects, see our [module contribution guide.](https://github.com/puppetlabs/puppetlabs-vsphere/blob/master/CONTRIBUTING.md)
@@ -338,7 +349,7 @@ Puppet modules on the Puppet Forge are open projects, and community contribution
 If you run into an issue with this module, or if you would like to request a feature, please [file a ticket](https://tickets.puppetlabs.com/browse/MODULES/).
 If you have problems getting this module up and running, please [contact Support](http://puppetlabs.com/services/customer-support).
 
-## Known Issues	
+# Known Issues	
 
 When using the vSphere module with the Puppet Server, you first need to	
 ensure the module is successfully loaded. Run the Puppet agent on the master node, for instance, with `puppet agent	
