@@ -34,7 +34,7 @@ end
 print "\nWould you like to delete these VMs? [Y/N]: "
 confirm = gets.chomp
 
-exit(0) unless confirm.casecmp('y')
+exit(0) unless confirm.casecmp('y') == 0
 
 3.downto(1) do |i|
   print "\rDeleting VMs in #{i}"
