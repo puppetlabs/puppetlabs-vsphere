@@ -1,7 +1,7 @@
 {
   "name": "puppetlabs-vsphere",
   "version": "1.4.0",
-  "author": "Puppet Labs",
+  "author": "puppetlabs",
   "summary": "Create and manage machines running on VMWare vSphere with Puppet",
   "license": "proprietary",
   "source": "https://github.com/puppetlabs/puppetlabs-vsphere",
