@@ -1,3 +1,16 @@
+# Change log
+
+All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
+
+## [v1.5.0](https://github.com/puppetlabs/puppetlabs-vsphere/tree/v1.5.0) (2020-06-25)
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-vsphere/compare/v1.4.0...v1.5.0)
+
+### Added
+
+- \(FM-8684\) - Addition of Support for CentOS 8 [\#169](https://github.com/puppetlabs/puppetlabs-vsphere/pull/169) ([david22swan](https://github.com/david22swan))
+- pdksync - Add support on Debian10 [\#163](https://github.com/puppetlabs/puppetlabs-vsphere/pull/163) ([lionce](https://github.com/lionce))
+
 ## [v1.4.0](https://github.com/puppetlabs/puppetlabs-vsphere/tree/v1.4.0) (2019-08-14)
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-vsphere/compare/1.3.1...v1.4.0)

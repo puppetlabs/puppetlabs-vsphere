@@ -7,6 +7,10 @@
 
 * [`vsphere_vm`](#vsphere_vm): Type representing a virtual machine in VMware vSphere.
 
+**Tasks**
+
+* [`install_deps`](#install_deps): Installs aws-sdk and retries gem for the puppetlabs/aws module
+
 ## Resource types
 
 ### vsphere_vm
@@ -102,4 +106,16 @@ Default value: `false`
 ##### `create_command`
 
 Command to run on the machine when it is first created.
+
+##### `max_tries`
+
+Maxim number of retries to connect to the newly created machine.
+
+## Tasks
+
+### install_deps
+
+Installs aws-sdk and retries gem for the puppetlabs/aws module
+
+**Supports noop?** false
 
