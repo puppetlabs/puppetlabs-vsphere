@@ -30,3 +30,5 @@ Gemfile:
     ":acceptance":
     - gem: mustache
       version: 0.99.8
+Rakefile:
+  changelog_since_tag: 'v1.4.0'
