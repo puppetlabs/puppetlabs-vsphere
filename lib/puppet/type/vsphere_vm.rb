@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative '../../puppet_x/puppetlabs/property/read_only'
 
 Puppet::Type.newtype(:vsphere_vm) do
@@ -10,7 +12,7 @@ Puppet::Type.newtype(:vsphere_vm) do
       required << 'cpus' if self[:cpus]
       required << 'memory' if self[:memory]
       raise "Cannot provide the following properties for a template: #{required.join(', ')}" unless required.empty?
-      raise 'Templates can only be absent or present.' unless self[:ensure] =~ %r{^(absent|present)$}
+      raise 'Templates can only be absent or present.' unless self[:ensure].match?(%r{^(absent|present)$})
     end
   end
 
@@ -153,7 +155,7 @@ Puppet::Type.newtype(:vsphere_vm) do
     desc 'The name of the resource pool with which to associate the virtual machine.'
     validate do |value|
       raise 'Virtual machine resource_pool should be a String' unless value.is_a? String
-      raise 'Virtual machine resource_pool may not contain slashes if it doesn\'t start with one' if value =~ %r{^[^/]+/}
+      raise 'Virtual machine resource_pool may not contain slashes if it doesn\'t start with one' if value.match?(%r{^[^/]+/})
       warning 'Virtual machine resource_pool should be a fully qualified resource pool path' unless value[0] == '/'
     end
 

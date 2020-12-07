@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rbvmomi'
 
 RSpec::Matchers.define :require_string_for do |property|

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'puppet_x/puppetlabs/prefetch_error'
 require 'puppet_x/puppetlabs/vsphere'
 require 'retries'

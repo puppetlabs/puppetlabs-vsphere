@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rake/task_arguments'
 require 'rake/tasklib'
 require 'rake'

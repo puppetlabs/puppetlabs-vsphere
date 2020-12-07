@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require 'puppet_x/puppetlabs/vsphere_config'
 require 'hocon/config_factory'
@@ -54,7 +56,7 @@ describe PuppetX::Puppetlabs::VsphereConfig do
   context 'with the relevant environment variables set' do
     let(:config) { described_class.new }
 
-    before(:all) do
+    before(:each) do
       @config = {
         host: 'vsphere.example.com',
         user: 'user',
@@ -115,7 +117,7 @@ describe PuppetX::Puppetlabs::VsphereConfig do
   context 'without the optional datacenter environment variables set' do
     let(:config) { described_class.new }
 
-    before(:all) do
+    before(:each) do
       nil_environment_variables
       ENV['VCENTER_SERVER'] = 'vsphere.example.com'
       ENV['VCENTER_USER'] = 'user'
@@ -142,7 +144,7 @@ describe PuppetX::Puppetlabs::VsphereConfig do
   context 'with no environment variables and a valid config file with all optional properties' do
     let(:config) { described_class.new(config_file_path) }
 
-    before(:all) do
+    before(:each) do
       @config = {
         host: 'vsphere2.example.com',
         user: 'user2',
@@ -157,7 +159,7 @@ describe PuppetX::Puppetlabs::VsphereConfig do
       nil_environment_variables
     end
 
-    after(:all) do
+    after(:each) do
       File.delete(@path)
     end
 
@@ -193,7 +195,7 @@ describe PuppetX::Puppetlabs::VsphereConfig do
   context 'with no environment variables and a valid config file present' do
     let(:config) { described_class.new(config_file_path) }
 
-    before(:all) do
+    before(:each) do
       @config = {
         host: 'vsphere2.example.com',
         user: 'user2',
@@ -205,7 +207,7 @@ describe PuppetX::Puppetlabs::VsphereConfig do
       nil_environment_variables
     end
 
-    after(:all) do
+    after(:each) do
       File.delete(@path)
     end
 

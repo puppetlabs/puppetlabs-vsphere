@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rbvmomi'
 
 credentials = {
@@ -10,7 +12,7 @@ datacenter = ENV['VCENTER_DATACENTER']
 vim = RbVmomi::VIM.connect credentials
 datacenter = vim.serviceInstance.find_datacenter(datacenter)
 
-TEST_VM_LOC = 'vsphere-module-testing/eng/tests/'.freeze
+TEST_VM_LOC = 'vsphere-module-testing/eng/tests/'
 
 puts "Connecting to vCenter server: #{ENV['VCENTER_SERVER']}"
 
