@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'puppet_x/puppetlabs/vsphere_config'
 
 # The Puppet Extensions Module.

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Copyright (c) 2012 Ooyala, Inc.
 #
 # MIT License
@@ -24,7 +26,7 @@
 # Retries class
 class Retries
   # default value 1.0.0
-  VERSION = '1.0.0'.freeze
+  VERSION = '1.0.0'
   class << self
     # You can use this to turn off all sleeping in with_retries. This can be useful in tests. Defaults to
     # `true`.
@@ -71,7 +73,7 @@ module Kernel
       return yield(attempts)
     rescue *exception_types_to_rescue => exception
       raise exception if attempts >= max_tries
-      handler.call(exception, attempts, Time.now - start_time) if handler
+      handler&.call(exception, attempts, Time.now - start_time)
       # Don't sleep at all if sleeping is disabled (used in testing).
       if Retries.sleep_enabled
         # The sleep time is an exponentially-increasing function of base_sleep_seconds. But, it never exceeds

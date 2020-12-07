@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 type_class = Puppet::Type.type(:vsphere_vm)
