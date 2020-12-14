@@ -105,6 +105,21 @@ Default value: `false`
 
 ##### `create_command`
 
+Valid type: `hash`
+
+Required options: `command, user, password`
+
+Example usage with vsphere_vm:
+```
+create_command => {
+  command => "",
+  arguments => "",
+  working_directory => "",
+  user => "",
+  password => "",
+}
+```
+
 Command to run on the machine when it is first created.
 
 ##### `max_tries`
