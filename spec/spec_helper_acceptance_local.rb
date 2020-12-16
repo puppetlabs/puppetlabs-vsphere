@@ -58,9 +58,9 @@ def install_module_deps
   # FM-8880: When the nokogiri gem is installed as part of the installation of rbvmomi or hocon (as it's a dep of both),
   # the installation fails on RHEL 7.x derived OSs. We need to install nokogiri first, standalone before installing the
   # subsequent gems.
-  Helper.instance.run_shell('/opt/puppetlabs/puppet/bin/gem install nokogiri --no-ri --no-rdoc')
-  Helper.instance.run_shell('/opt/puppetlabs/puppet/bin/gem install rbvmomi --no-ri --no-rdoc')
-  Helper.instance.run_shell("/opt/puppetlabs/puppet/bin/gem install hocon --version='~>1.0.0' --no-ri --no-rdoc")
+  Helper.instance.run_shell('/opt/puppetlabs/puppet/bin/gem install nokogiri --no-document')
+  Helper.instance.run_shell('/opt/puppetlabs/puppet/bin/gem install rbvmomi --no-document')
+  Helper.instance.run_shell("/opt/puppetlabs/puppet/bin/gem install hocon --version='~>1.0.0' --no-document")
 end
 
 RSpec.configure do |c|
