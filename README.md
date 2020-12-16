@@ -1,5 +1,5 @@
 [![Build
-Status](https://travis-ci.com/puppetlabs/puppetlabs-vsphere.svg?token=eSG6MMwAUKyfRwi9jMcv&branch=master)](https://travis-ci.org/puppetlabs/puppetlabs-vsphere)
+Status](https://travis-ci.com/puppetlabs/puppetlabs-vsphere.svg?token=eSG6MMwAUKyfRwi9jMcv&branch=main)](https://travis-ci.org/puppetlabs/puppetlabs-vsphere)
 
 # vsphere
 
@@ -43,7 +43,7 @@ The vSphere module allows you to manage vSphere machines using Puppet.
 
 ## Installing the vSphere module
 
-The following are *dependencies* of the module. Install these on the system which you configure the module on. For example, in a master-agent setup, install the dependencies on the agent.
+The following are *dependencies* of the module. Install these on the system which you configure the module on. For example, in a server-agent setup, install the dependencies on the agent.
 
 ### On Debian 7 and 8, Ubuntu 14.04 LTS, and similar
 
@@ -331,11 +331,11 @@ If the datacenter is nested within folders (groups) in vSphere, specify the full
 
 # Reference
 
-For information on the classes and types, see the [REFERENCE.md](https://github.com/puppetlabs/puppetlabs-vsphere/blob/master/REFERENCE.md).
+For information on the classes and types, see the [REFERENCE.md](https://github.com/puppetlabs/puppetlabs-vsphere/blob/main/REFERENCE.md).
 
 # Limitations
 
-For an extensive list of supported operating systems, see [metadata.json](https://github.com/puppetlabs/puppetlabs-vsphere/blob/master/metadata.json)
+For an extensive list of supported operating systems, see [metadata.json](https://github.com/puppetlabs/puppetlabs-vsphere/blob/main/metadata.json)
 
 The vSphere module is only available for Puppet Enterprise 3.7 and later. This module has been tested with vSphere 5.5.
 
@@ -344,7 +344,7 @@ The vSphere module is only available for Puppet Enterprise 3.7 and later. This m
 To run the acceptance tests follow the instructions [here](https://github.com/puppetlabs/puppet_litmus/wiki/Tutorial:-use-Litmus-to-execute-acceptance-tests-with-a-sample-module-(MoTD)#install-the-necessary-gems-for-the-module).
 
 This module was built by Puppet Labs specifically for use with Puppet Enterprise (PE).
-Puppet modules on the Puppet Forge are open projects, and community contributions are essential for keeping them great. To contribute to Puppet projects, see our [module contribution guide.](https://github.com/puppetlabs/puppetlabs-vsphere/blob/master/CONTRIBUTING.md)
+Puppet modules on the Puppet Forge are open projects, and community contributions are essential for keeping them great. To contribute to Puppet projects, see our [module contribution guide.](https://github.com/puppetlabs/puppetlabs-vsphere/blob/main/CONTRIBUTING.md)
 
 If you run into an issue with this module, or if you would like to request a feature, please [file a ticket](https://tickets.puppetlabs.com/browse/MODULES/).
 If you have problems getting this module up and running, please [contact Support](http://puppetlabs.com/services/customer-support).
@@ -352,7 +352,7 @@ If you have problems getting this module up and running, please [contact Support
 # Known Issues	
 
 When using the vSphere module with the Puppet Server, you first need to	
-ensure the module is successfully loaded. Run the Puppet agent on the master node, for instance, with `puppet agent	
+ensure the module is successfully loaded. Run the Puppet agent on the server node, for instance, with `puppet agent	
 -t`. If you do not do this, the first, and only the first, run of	
 the `vsphere_vm` resource fails on the agent with the following error:	
 
