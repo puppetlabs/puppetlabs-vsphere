@@ -377,7 +377,7 @@ describe 'vsphere_vm' do
       :numEthernetCards,
       :numVirtualDisks,
     ].each do |property|
-      it "should have #{property} unchanged" do
+      it "has #{property} unchanged" do
         expect(@config_after[property]).to eq(@config_before[property])
       end
     end
@@ -386,7 +386,7 @@ describe 'vsphere_vm' do
       :numCpu,
       :memorySizeMB,
     ].each do |property|
-      it "should have changed #{property}" do
+      it "has changed #{property}" do
         expect(@config_after[property]).not_to eq(@config_before[property])
         expect(@config_after[property].to_i).to eq(@config_before[property].to_i * 2)
       end

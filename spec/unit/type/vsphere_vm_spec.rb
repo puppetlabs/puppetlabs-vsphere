@@ -81,7 +81,7 @@ describe type_class do
     'resource_pool',
     'annotation',
   ].each do |property|
-    it "should require #{property} to be a string" do
+    it "requires #{property} to be a string" do
       expect(type_class).to require_string_for(property)
     end
   end
@@ -90,7 +90,7 @@ describe type_class do
     'cpus',
     'memory',
   ].each do |property|
-    it "should require #{property} to be a number" do
+    it "requires #{property} to be a number" do
       expect(type_class).to require_integer_for(property)
     end
   end
@@ -99,7 +99,7 @@ describe type_class do
     'extra_config',
     'create_command',
   ].each do |param|
-    it "should require #{param}' to be a hash" do
+    it "requires #{param}' to be a hash" do
       expect(type_class).to require_hash_for(param)
     end
   end
@@ -224,7 +224,7 @@ describe type_class do
     :memory_affinity,
     :cpu_affinity,
   ].each do |property|
-    it "should require #{property} to be read only" do
+    it "requires #{property} to be read only" do
       expect(type_class).to be_read_only(property)
     end
   end
@@ -304,7 +304,7 @@ describe type_class do
   end
 
   ['running', 'stopped'].each do |state|
-    it "should prohibit specifying ensure as #{state} for templates" do
+    it "prohibits specifying ensure as #{state} for templates" do
       expect {
         type_class.new(name: 'sample', ensure: state, template: true)
       }.to raise_error(RuntimeError, %r{Templates can only be absent or present.})
@@ -326,7 +326,7 @@ describe type_class do
     end
 
     ['command', 'user', 'password'].each do |key|
-      it "should require create_command to have a #{key} key" do
+      it "requires create_command to have a #{key} key" do
         expect {
           config = Marshal.load(Marshal.dump(@config))
           config[:create_command].delete(key.to_sym)
