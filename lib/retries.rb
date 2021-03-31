@@ -70,7 +70,7 @@ module Kernel
     start_time = Time.now
     begin
       attempts += 1
-      return yield(attempts)
+      yield(attempts)
     rescue *exception_types_to_rescue => exception
       raise exception if attempts >= max_tries
       handler&.call(exception, attempts, Time.now - start_time)

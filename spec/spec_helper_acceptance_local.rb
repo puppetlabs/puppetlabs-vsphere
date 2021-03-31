@@ -128,7 +128,7 @@ class VsphereHelper
 end
 
 class PuppetManifest < Mustache
-  def initialize(file, config)
+  def initialize(file, config) # rubocop:disable Lint/MissingSuper
     @template_file = File.join(Dir.getwd, 'spec', 'acceptance', 'fixtures', file)
     config.each do |key, value|
       config_value = self.class.to_generalized_data(value)

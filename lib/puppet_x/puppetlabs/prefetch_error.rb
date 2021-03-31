@@ -9,7 +9,7 @@ module PuppetX
     # the exception will prevent the prefetch, but the provider will
     # continue to run with incorrect data.
     class PrefetchError < RuntimeError
-      def initialize(type, message = nil)
+      def initialize(type, message = nil) # rubocop:disable Lint/MissingSuper
         @message = message
         @type = type
       end
