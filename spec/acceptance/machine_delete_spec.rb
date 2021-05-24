@@ -17,7 +17,7 @@ shared_context 'a running vm' do
       },
     }
     datacenter = @client.datacenter
-    path = @config[:optional][:source]
+    path = @config[:optional][:source].dup
     path.slice!('/opdx/vm')
     template = datacenter.find_vm(path)
     pool = datacenter.hostFolder.children.first.resourcePool
