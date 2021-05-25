@@ -2,6 +2,7 @@
 
 require 'spec_helper_acceptance'
 require 'securerandom'
+require_relative '../../lib/retries.rb'
 
 # This set of tests requires two manually configured customization specifications on the target vCenter installation.
 # They need to be called "MODULES-test-linux" and "MODULES-test-windows" respectively for the Linux and Windows
@@ -41,7 +42,7 @@ describe 'vsphere_machine' do
       end
 
       it 'creates a VM with the hostname set to the value from the customization spec' do
-        hostname = with_retries(max_tries: 20,
+        hostname = Kernel.with_retries(max_tries: 20,
                                 max_sleep_seconds: 60,
                                 rescue: NotFinished) do
           machine = @client.get_machine(@path)

@@ -193,8 +193,8 @@ class TestExecutor
         options << "#{k}=#{v} "
       end
     end
-    cmd << "#{@name} "
-    cmd << options
+    cmd += "#{@name} "
+    cmd += options
     # apply the command
     Helper.instance.run_shell(cmd)
   end
