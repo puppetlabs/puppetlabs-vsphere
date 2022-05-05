@@ -113,16 +113,14 @@ class VsphereHelper
     with_retries(max_tries: 10,
                  max_sleep_seconds: 10,
                  rescue: NotFinished) do
-      begin
-        manager.authManager.ValidateCredentialsInGuest(vm: machine, auth: auth)
-        manager.processManager.ListProcessesInGuest(vm: machine, auth: auth)
-      rescue RbVmomi::Fault => exception
-        raise NotFinished if exception.message.split(':').first == 'GuestOperationsUnavailable'
-        # raise NotFinished
-        # else
-        raise unless exception.message.split(':').first == 'GuestOperationsUnavailable'
-        # end
-      end
+      manager.authManager.ValidateCredentialsInGuest(vm: machine, auth: auth)
+      manager.processManager.ListProcessesInGuest(vm: machine, auth: auth)
+    rescue RbVmomi::Fault => exception
+      raise NotFinished if exception.message.split(':').first == 'GuestOperationsUnavailable'
+      # raise NotFinished
+      # else
+      raise unless exception.message.split(':').first == 'GuestOperationsUnavailable'
+      # end
     end
   end
 end

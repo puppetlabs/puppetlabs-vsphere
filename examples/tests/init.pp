@@ -4,4 +4,3 @@ vsphere_vm { '/opdx1/vm/eng/garethr/garethr-test':
   memory => 512,
   cpus   => 2,
 }
-
