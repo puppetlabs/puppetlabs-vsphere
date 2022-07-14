@@ -7,22 +7,23 @@ Status](https://travis-ci.com/puppetlabs/puppetlabs-vsphere.svg?token=eSG6MMwAUK
 
 1. [Overview](#overview)
 2. [Module Description](#module-description)
-3. [Setup](#setup)
+3. [Support](#support)
+4. [Setup](#setup)
     * [Requirements](#requirements)
     * [Installing the vsphere module](#installing-the-vsphere-module)
     * [Getting Started with vSphere](#getting-started-with-vsphere)
-4. [Usage](#usage)
+5. [Usage](#usage)
     * [List and manage vSphere machines](#list-and-manage-vsphere-machines)
     * [Customize vSphere machines](#customize-vsphere-machines)
     * [Create linked clones](#create-linked-clones)
     * [Delete vSphere machines](#delete-vsphere-machines)
     * [Purge unmanaged virtual machines](#purge-unmanaged-virtual-machines)
-5. [Reference](#reference)
+6. [Reference](#reference)
     * [Types](#types)
     * [Parameters](#parameters)
-6. [Limitations](#limitations)
-7. [Development](#development)
-8. [Known Issues](#known-issues)
+7. [Limitations](#limitations)
+8. [Development](#development)
+9. [Known Issues](#known-issues)
 
 # Overview
 
@@ -31,6 +32,13 @@ VMware vSphere is a cloud computing virtualization platform.
 # Module Description
 
 The vSphere module allows you to manage vSphere machines using Puppet.
+
+# Support
+
+This module is not supported or maintained by Puppet and does not qualify for Puppet Support plans.
+It's provided without guarantee or warranty and you can use it at your own risk.
+All bugfixes, updates, and new feature development will come from community contributions.
+[tier:community]
 
 # Setup
 
